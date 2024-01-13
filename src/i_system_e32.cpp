@@ -90,19 +90,21 @@ unsigned short* I_GetFrontBuffer()
 
 //**************************************************************************************
 
+char prog_name[] = {'P', '2', 'k', 'D', 'o', 'o', 'm', '\0'};
+
 void I_CreateWindow_e32()
 {
-    int z = 0;
+    int argc = 1;
+    char *argv[] = { prog_name, (char *) '\0' };
 
-    app = new QApplication (z, nullptr);
+    app = new QApplication (argc, argv);
 
     window = new DoomWindow();
 
-    window->setAttribute(Qt::WA_PaintOnScreen);
+//    window->setAttribute(Qt::WA_PaintOnScreen);
+//    window->resize(vid_width * 8, vid_height * 4);
 
-
-
-    window->resize(vid_width * 8, vid_height * 4);
+    window->resize(220 * 2, 176 * 2);
 
     window->show();
 }
@@ -130,6 +132,7 @@ void I_FinishUpdate_e32(const byte* srcBuffer, const byte* pallete, const unsign
     if(arrayCount == 0)
         return;
 
+#if 0
     //dump the _g->viewangletox var
     QFile f("C:\\temp\\gfx_stbar.c");
     f.open(QIODevice::ReadWrite);
@@ -151,7 +154,7 @@ void I_FinishUpdate_e32(const byte* srcBuffer, const byte* pallete, const unsign
     f.write("\n};\n");
 
     f.close();
-
+#endif
 }
 
 //**************************************************************************************
@@ -197,7 +200,7 @@ void I_Error (const char *error, ...)
 	
 	va_end(v);
 
-    printf("%s\n", msg);
+    fprintf(stderr, "%s\n", msg);
 
 
     fflush( stderr );

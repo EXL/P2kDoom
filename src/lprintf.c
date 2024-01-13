@@ -64,7 +64,7 @@ int lprintf(OutputLevels pri, const char *s, ...)
 
     int len = strlen(msg);
 
-    printf("%s\n", msg);
+    fprintf(stderr, "%s\n", msg);
 
     return 0;
 }

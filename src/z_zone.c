@@ -133,7 +133,7 @@ void Z_Free (void* ptr)
 
 #ifndef GBA
     running_count -= block->size;
-    printf("Free: %d\n", running_count);
+    fprintf(stderr, "Free: %d\n", running_count);
 #endif
 
     other = block->prev;
@@ -276,7 +276,7 @@ void* Z_Malloc(int size, int tag, void **user)
 
 #ifndef GBA
     running_count += base->size;
-    printf("Alloc: %d (%d)\n", base->size, running_count);
+    fprintf(stderr, "Alloc: %d (%d)\n", base->size, running_count);
 #endif
 
     return (void *) ((byte *)base + sizeof(memblock_t));

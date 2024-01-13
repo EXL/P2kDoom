@@ -296,7 +296,7 @@ int R_LoadTextureByName(const char* tex_name)
 
     if(tnum == -1)
     {
-        printf("texture name: %s not found.\n", tex_name);
+        fprintf(stderr, "texture name: %s not found.\n", tex_name);
         return NO_TEXTURE;
     }
 
