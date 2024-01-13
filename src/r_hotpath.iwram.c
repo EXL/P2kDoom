@@ -298,7 +298,11 @@ static const fixed_t skyiscale = (FRACUNIT*200)/((SCREENHEIGHT-ST_HEIGHT)+16);
 // it saves an OR and Shift per pixel.
 //********************************************
 #ifdef GBA
+#ifdef P2K
+    typedef unsigned short pixel;
+#else
     typedef byte pixel;
+#endif
 #else
     typedef unsigned short pixel;
 #endif
@@ -553,7 +557,13 @@ inline static void R_DrawColumnPixel(unsigned short* dest, const byte* source, c
     pixel* d = (pixel*)dest;
 
 #ifdef GBA
+#ifdef P2K
+	unsigned int color = colormap[source[frac>>COLBITS]];
+
+	*d = (color | (color << 8));
+#else
     *d = colormap[source[frac>>COLBITS]];
+#endif
 #else
     unsigned int color = colormap[source[frac>>COLBITS]];
 
@@ -1294,7 +1304,13 @@ inline static void R_DrawSpanPixel(unsigned short* dest, const byte* source, con
  pixel* d = (pixel*)dest;
 
 #ifdef GBA
+#ifdef P2K
+    unsigned int color = colormap[source[((position >> 4) & 0x0fc0) | (position >> 26)]];
+
+    *d = (color | (color << 8));
+#else
     *d = colormap[source[((position >> 4) & 0x0fc0) | (position >> 26)]];
+#endif
 #else
     unsigned int color = colormap[source[((position >> 4) & 0x0fc0) | (position >> 26)]];
 

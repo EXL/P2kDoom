@@ -48,10 +48,10 @@ void I_FinishUpdate_e32(const byte* srcBuffer, const byte* pallete, const unsign
 		palette_sdl[p].a = 0xFF;
 		// fprintf(stderr, "%d %d %d\n", palette_sdl[p].r, palette_sdl[p].g, palette_sdl[p].b);
 	}
-	SDL_SetPaletteColors(surface->format->palette, palette_sdl, 0, sizeof(palette_sdl));
+	SDL_SetPaletteColors(surface->format->palette, palette_sdl, 0, 256);
 
-	SDL_FillRect(surface, NULL, 0);
-	memcpy(surface->pixels, pb, screen_width * screen_height);
+	//SDL_FillRect(surface, NULL, 0);
+	//memcpy(surface->pixels, pb, screen_width * screen_height);
 	SDL_BlitSurface(surface, NULL, video, NULL);
 	SDL_UpdateTexture(texture, NULL, video->pixels, video->pitch);
 	SDL_RenderCopy(render, texture, NULL, NULL);
@@ -74,7 +74,7 @@ void I_InitScreen_e32()
 
 void I_CreateBackBuffer_e32()
 {
-	backbuffer = malloc(screen_width * screen_height);
+//	backbuffer = malloc(screen_width * screen_height);
 	frontbuffer = malloc(screen_width * screen_height);
 
 	window = SDL_CreateWindow(
@@ -106,6 +106,7 @@ void I_CreateBackBuffer_e32()
 		SDL_Log("SDL_CreateRGBSurface (surface) failed: %s", SDL_GetError());
 		return;
 	}
+	backbuffer = surface->pixels;
 
 	texture = SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888,
 								SDL_TEXTUREACCESS_STREAMING, screen_width, screen_height);
@@ -135,6 +136,7 @@ void I_ProcessKeyEvents()
 {
 	SDL_Event event;
 	event_t ev;
+	ev.data1 = 0;
 
 	while (SDL_PollEvent(&event) != 0) {
 		switch (event.type) {
@@ -175,6 +177,11 @@ void I_ProcessKeyEvents()
 					default:
 						break;
 				}
+				ev.data2 = 0;
+				ev.data3 = 0;
+
+				if(ev.data1 != 0)
+					D_PostEvent(&ev);
 				break;
 			case SDL_QUIT:
 				I_Quit_e32();
@@ -183,12 +190,6 @@ void I_ProcessKeyEvents()
 				break;
 		}
 	}
-
-	ev.data2 = 0;
-	ev.data3 = 0;
-
-	if(ev.data1 != 0)
-		D_PostEvent(&ev);
 }
 
 unsigned short* I_GetBackBuffer()
@@ -231,7 +232,7 @@ void I_Error (const char *error, ...)
 
 void I_Quit_e32()
 {
-	free(backbuffer);
+//	free(backbuffer);
 	free(frontbuffer);
 	free(palette_sdl);
 
