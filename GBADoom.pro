@@ -3,9 +3,12 @@ QT += core gui widgets
 CONFIG -= app_bundle
 CONFIG -= force_debug_info
 
+INCLUDEPATH += inc
+
 DEFINES += RANGECHECK
 
 SOURCES += \
+#	src/fixeddiv.s \
 	src/am_map.c \
 	src/d_client.c \
 	src/d_items.c \
@@ -70,6 +73,7 @@ SOURCES += \
 	src/z_zone.c
 
 HEADERS += \
+	inc/stbar.h \
 	inc/am_map.h \
 	inc/config.h \
 	inc/d_englsh.h \

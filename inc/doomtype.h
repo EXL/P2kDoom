@@ -90,6 +90,9 @@ typedef unsigned char byte;
 /* CPhipps - use limits.h instead of depreciated values.h */
 #include <limits.h>
 
+/* EXL - for size_t */
+#include <stdlib.h>
+
 /* cph - from v_video.h, needed by gl_struct.h */
 enum patch_translation_e {
   VPT_NONE    = 0, // Normal

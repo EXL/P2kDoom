@@ -1,6 +1,8 @@
 #ifndef I_SYSTEM_WIN_H
 #define I_SYSTEM_WIN_H
 
+#include "doomtype.h"
+
 #include <QtCore>
 #include <QtGui>
 #include <QApplication>

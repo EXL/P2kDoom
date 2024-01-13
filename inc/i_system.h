@@ -38,6 +38,8 @@
 #pragma interface
 #endif
 
+#include "doomtype.h"
+
 boolean I_StartDisplay(void);
 void I_EndDisplay(void);
 int I_GetTime(void);     /* killough */

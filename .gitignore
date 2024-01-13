@@ -1,1 +1,4 @@
+*.user*
+
 src/doom1.c
+
