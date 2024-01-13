@@ -85,7 +85,10 @@ inline static fixed_t CONSTFUNC FixedDiv(fixed_t a, fixed_t b)
     return ((unsigned)D_abs(a)>>14) >= (unsigned)D_abs(b) ? ((a^b)>>31) ^ INT_MAX :
                                                   (fixed_t)(((int_64_t) a << FRACBITS) / b);
 #else
-
+#ifdef P2K
+  return ((unsigned)D_abs(a)>>14) >= (unsigned)D_abs(b) ? ((a^b)>>31) ^ INT_MAX :
+                                                  (fixed_t)(((int_64_t) a << FRACBITS) / b);
+#else
     unsigned int udiv64_arm (unsigned int a, unsigned int b, unsigned int c);
 
     int q;
@@ -103,6 +106,7 @@ inline static fixed_t CONSTFUNC FixedDiv(fixed_t a, fixed_t b)
         q = -q;
 
     return q;
+#endif
 #endif
 }
 

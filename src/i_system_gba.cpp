@@ -3,7 +3,7 @@
 #include <cstring>
 
 #ifdef GBA
-
+#ifndef P2K
 extern "C"
 {
     #include "doomdef.h"
@@ -362,5 +362,5 @@ void I_Quit_e32()
 }
 
 //**************************************************************************************
-
+#endif
 #endif

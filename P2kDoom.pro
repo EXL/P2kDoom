@@ -1,11 +1,16 @@
-QT += core gui widgets
+#QT += core gui widgets
+CONFIG -= qt
 
 CONFIG -= app_bundle
-CONFIG -= force_debug_info
+CONFIG += force_debug_info
 
 INCLUDEPATH += inc
 
-DEFINES += RANGECHECK
+#DEFINES += RANGECHECK
+DEFINES += GBA
+DEFINES += P2K
+
+QMAKE_LIBS += -lSDL2
 
 SOURCES += \
 #	src/fixeddiv.s \
@@ -23,8 +28,9 @@ SOURCES += \
 	src/i_audio.c \
 	src/i_main.c \
 	src/i_system.c \
-	src/i_system_e32.cpp \
-	src/i_system_gba.cpp \
+#	src/i_system_e32.cpp \
+#	src/i_system_gba.cpp \
+	src/i_system_sdl2.c \
 	src/i_video.c \
 	src/info.c \
 	src/lprintf.c \
@@ -73,6 +79,7 @@ SOURCES += \
 	src/z_zone.c
 
 HEADERS += \
+    inc/i_system_sdl2.h \
 	inc/stbar.h \
 	inc/am_map.h \
 	inc/config.h \
@@ -102,8 +109,8 @@ HEADERS += \
 	inc/i_network.h \
 	inc/i_sound.h \
 	inc/i_system.h \
-	inc/i_system_e32.h \
-	inc/i_system_win.h \
+#	inc/i_system_e32.h \
+#	inc/i_system_win.h \
 	inc/i_video.h \
 	inc/info.h \
 	inc/lprintf.h \

@@ -64,7 +64,7 @@
 //#define __arm__
 
 #ifdef GBA
-
+#ifndef P2K
 #include <gba.h>
 #include <maxmod.h>    // Maxmod definitions for GBA
 
@@ -266,7 +266,7 @@ static const audio_map_t soundMap[NUMSFX] =
     {sfx_skeatk, SFX_DSSKEATK},
     {sfx_radio, SFX_DSRADIO},
 };
-
+#endif
 #endif
 
 //
@@ -279,7 +279,7 @@ static const audio_map_t soundMap[NUMSFX] =
 static int addsfx(int sfxid, int channel, int volume, int sep)
 {
 #ifdef GBA
-
+#ifndef P2K
     int mmvol = volume * 4;
 
     if(mmvol > 255)
@@ -293,6 +293,7 @@ static int addsfx(int sfxid, int channel, int volume, int sep)
     sound.panning = sep;
 
     mmEffectEx( &sound );
+#endif
 #endif
 
 	return channel;
@@ -327,7 +328,9 @@ void I_InitSound(void)
 {
 
 #ifdef GBA
+#ifndef P2K
     mmInitDefault(soundbank_bin, 12);
+#endif
 #endif
 
 	// Finished initialization.
@@ -340,11 +343,13 @@ void I_PlaySong(int handle, int looping)
         return;
 
 #ifdef GBA
+#ifndef P2K
     mm_pmode mode = looping ? MM_PLAY_LOOP : MM_PLAY_ONCE;
 
     unsigned int song = musicMap[handle].mm_num;
 
     mmStart(song, mode);
+#endif
 #endif
 }
 
@@ -352,29 +357,37 @@ void I_PlaySong(int handle, int looping)
 void I_PauseSong (int handle)
 {
 #ifdef GBA
+#ifndef P2K
     mmPause();
+#endif
 #endif
 }
 
 void I_ResumeSong (int handle)
 {
 #ifdef GBA
+#ifndef P2K
     mmResume();
+#endif
 #endif
 }
 
 void I_StopSong(int handle)
 {
 #ifdef GBA
+#ifndef P2K
     mmStop();
+#endif
 #endif
 }
 
 void I_SetMusicVolume(int volume)
 {
 #ifdef GBA
+#ifndef P2K
     int mmvol = volume * 32;
 
     mmSetModuleVolume(mmvol);
+#endif
 #endif
 }

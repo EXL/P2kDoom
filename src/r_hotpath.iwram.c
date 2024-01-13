@@ -46,6 +46,9 @@
     #include <time.h>
 #endif
 
+// TODO: P2K
+#include <time.h>
+
 #include "doomstat.h"
 #include "d_net.h"
 #include "w_wad.h"
@@ -81,9 +84,15 @@ static byte vram1_spare[2560];
 static byte vram2_spare[2560];
 static byte vram3_spare[1024];
 #else
+#ifdef P2K // TODO: P2K
+    static byte vram1_spare[2560];
+    static byte vram2_spare[2560];
+    static byte vram3_spare[1024];
+#else
     #define vram1_spare ((byte*)0x6000000+0x9600)
     #define vram2_spare ((byte*)0x600A000+0x9600)
     #define vram3_spare ((byte*)0x7000000)
+#endif
 #endif
 
 //Stuff alloc'd in OAM memory.
@@ -142,7 +151,11 @@ short* negonearray = (short*)&vram2_spare[240];
 #ifndef GBA
 static byte columnCache[128*128];
 #else
+#ifdef P2K
+    static byte columnCache[128*128];
+#else
     #define columnCache ((byte*)0x6014000)
+#endif
 #endif
 
 
@@ -3315,7 +3328,11 @@ int I_GetTime(void)
 
     thistimereply = (int)((double)now / ((double)CLOCKS_PER_SEC / (double)TICRATE));
 #else
-    thistimereply = I_GetTime_e32();
+	// TODO: P2K
+//    thistimereply = I_GetTime_e32();
+	clock_t now = clock();
+
+	thistimereply = (int)((double)now / ((double)CLOCKS_PER_SEC / (double)TICRATE));
 #endif
 
     if (thistimereply < _g->lasttimereply)
