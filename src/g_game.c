@@ -862,8 +862,8 @@ void G_UpdateSaveGameStrings()
             if(_g->gamemode == commercial)
             {
                 strcpy(_g->savegamestrings[i], "MAP ");
-
-                itoa(saveslots[i].gamemap, &_g->savegamestrings[i][4], 10);
+                snprintf (&_g->savegamestrings[i][4], 8, "%d", saveslots[i].gamemap);
+                // itoa(saveslots[i].gamemap, &_g->savegamestrings[i][4], 10);
             }
             else
             {

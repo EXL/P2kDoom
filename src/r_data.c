@@ -230,11 +230,13 @@ static int R_GetTextureNumForName(const char* tex_name)
 
     //Convert name to uppercase for comparison.
     char tex_name_upper[9];
+    char *tex_name_upper_ptr = tex_name_upper;
 
     strncpy(tex_name_upper, tex_name, 8);
     tex_name_upper[8] = 0; //Ensure null terminated.
 
-    strupr(tex_name_upper);
+    while(*tex_name_upper_ptr) *tex_name_upper_ptr++ = toupper(*tex_name_upper_ptr);
+//    strupr(tex_name_upper);
 
     if(_g->tex_lookup_last_name && (!strncmp(_g->tex_lookup_last_name, tex_name_upper, 8)))
     {
