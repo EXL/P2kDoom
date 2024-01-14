@@ -38,4 +38,6 @@
 
 void I_Init(void);
 
+int init_main(int argc, const char * const * argv);
+
 #endif

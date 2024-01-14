@@ -3,6 +3,8 @@
 #include "d_main.h"
 
 #include "i_system_sdl2.h"
+#include "i_main.h"
+#include "d_main.h"
 
 //GBA Keys
 #define KEYD_A          1
@@ -248,3 +250,10 @@ void I_Quit_e32()
 }
 
 //**************************************************************************************
+
+int main(int argc, const char *const argv[]) {
+	init_main(argc, argv);
+	while ("DOOM is Rock")
+		D_DoomStep();
+	return 0;
+}

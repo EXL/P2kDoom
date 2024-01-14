@@ -80,7 +80,7 @@ static void PrintVer(void)
     lprintf(LO_INFO,"%s",I_GetVersionString(vbuf,200));
 }
 
-int main(int argc, const char * const * argv)
+int init_main(int argc, const char * const * argv)
 {
     /* cphipps - call to video specific startup code */
     I_PreInitGraphics();
@@ -94,6 +94,7 @@ int main(int argc, const char * const * argv)
 
     InitGlobals();
 
-    D_DoomMain ();
+//    D_DoomMain ();
+    D_DoomMainSetup();
     return 0;
 }

@@ -63,6 +63,7 @@ void D_PageTicker(void);
 void D_StartTitle(void);
 void D_DoomMain(void);
 
-
+void D_DoomMainSetup(void);
+void D_DoomStep(void);
 
 #endif

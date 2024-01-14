@@ -253,6 +253,44 @@ static void D_Display (void)
 //  calls I_GetTime, I_StartFrame, and I_StartTic
 //
 
+void D_DoomStep(void)
+{
+	// frame syncronous IO operations
+
+	I_StartFrame();
+
+	// process one or more tics
+	if (_g->singletics)
+	{
+		I_StartTic ();
+		G_BuildTiccmd (&_g->netcmd);
+
+		if (_g->advancedemo)
+			D_DoAdvanceDemo ();
+
+		M_Ticker ();
+		G_Ticker ();
+
+		_g->gametic++;
+		_g->maketic++;
+	}
+	else
+		TryRunTics (); // will run at least one tic
+
+	// killough 3/16/98: change consoleplayer to displayplayer
+	if (_g->player.mo) // cph 2002/08/10
+		S_UpdateSounds(_g->player.mo);// move positional sounds
+
+	// Update display, next frame, with current state.
+	D_Display();
+
+
+	if(_g->fps_show)
+	{
+		D_UpdateFPS();
+	}
+}
+
 static void D_DoomLoop(void)
 {
     for (;;)
@@ -618,7 +656,7 @@ static void IdentifyVersion()
 // CPhipps - the old contents of D_DoomMain, but moved out of the main
 //  line of execution so its stack space can be freed
 
-static void D_DoomMainSetup(void)
+void D_DoomMainSetup(void)
 {
     IdentifyVersion();
 
