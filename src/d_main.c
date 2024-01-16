@@ -123,6 +123,40 @@ void D_PostEvent(event_t *ev)
 }
 
 //
+// D_AddFile
+//
+// Rewritten by Lee Killough
+//
+// Ty 08/29/98 - add source parm to indicate where this came from
+// CPhipps - static, const char* parameter
+//         - source is an enum
+//         - modified to allocate & use new wadfiles array
+void D_AddFile (const char *file, wad_source_t source)
+{
+	char *gwa_filename=NULL;
+
+	wadfiles = realloc(wadfiles, sizeof(*wadfiles)*(numwadfiles+1));
+	wadfiles[numwadfiles].name =
+		AddDefaultExtension(strcpy(malloc(strlen(file)+5), file), ".wad");
+	wadfiles[numwadfiles].src = source; // Ty 08/29/98
+	numwadfiles++;
+	// proff: automatically try to add the gwa files
+	// proff - moved from w_wad.c
+	gwa_filename=AddDefaultExtension(strcpy(malloc(strlen(file)+5), file), ".wad");
+	if (strlen(gwa_filename)>4)
+		if (!strcasecmp(gwa_filename+(strlen(gwa_filename)-4),".wad"))
+		{
+			char *ext;
+			ext = &gwa_filename[strlen(gwa_filename)-4];
+			ext[1] = 'g'; ext[2] = 'w'; ext[3] = 'a';
+			wadfiles = realloc(wadfiles, sizeof(*wadfiles)*(numwadfiles+1));
+			wadfiles[numwadfiles].name = gwa_filename;
+			wadfiles[numwadfiles].src = source; // Ty 08/29/98
+			numwadfiles++;
+		}
+}
+
+//
 // D_Wipe
 //
 // CPhipps - moved the screen wipe code from D_Display to here
@@ -522,16 +556,24 @@ void D_StartTitle (void)
 // the gamemode from it. Also note if DOOM II, whether secret levels exist
 // CPhipps - const char* for iwadname, made static
 
-static void CheckIWAD2(const unsigned char* iwad_data, const unsigned int iwad_len, GameMode_t *gmode,boolean *hassec)
+static void CheckIWAD2(const char* iwadname, GameMode_t *gmode, boolean *hassec)
 {
-    const wadinfo_t* header = (const wadinfo_t*)iwad_data;
+	wadinfo_t header;
+	FILE* fp = fopen(iwadname, "rb");
+	fread(&header, sizeof(header), 1, fp);
 
     int ud=0,rg=0,sw=0,cm=0,sc=0;
 
-    if(!strncmp(header->identification, "IWAD", 4))
+    if(!strncmp(header.identification, "IWAD", 4))
     {
-        size_t length = header->numlumps;
-        const filelump_t* fileinfo = (const filelump_t*)&iwad_data[header->infotableofs];
+		filelump_t *fileinfo;
+        size_t length = header.numlumps;
+		fileinfo = malloc(length*sizeof(filelump_t));
+		fseek (fp, header.infotableofs, SEEK_SET);
+		fread (fileinfo, sizeof(filelump_t), length, fp);
+		fclose(fp);
+
+//        const filelump_t* fileinfo = (const filelump_t*)&iwad_data[header->infotableofs];
 
         while (length--)
         {
@@ -573,6 +615,8 @@ static void CheckIWAD2(const unsigned char* iwad_data, const unsigned int iwad_l
 				return;
             }
         }
+
+		free(fileinfo);
     }
     else
     {
@@ -622,7 +666,9 @@ static void CheckIWAD2(const unsigned char* iwad_data, const unsigned int iwad_l
 
 static void IdentifyVersion()
 {
-    CheckIWAD2(doom_iwad, doom_iwad_len, &_g->gamemode, &_g->haswolflevels);
+	const char *iwad_name = "doom1.wad";
+
+    CheckIWAD2(iwad_name, &_g->gamemode, &_g->haswolflevels);
 
     /* jff 8/23/98 set gamemission global appropriately in all cases
      * cphipps 12/1999 - no version output here, leave that to the caller
@@ -648,6 +694,8 @@ static void IdentifyVersion()
         //jff 9/3/98 use logical output routine
         lprintf(LO_WARN,"Unknown Game Version, may not work\n");
     }
+
+	D_AddFile(iwad_name,source_iwad);
 }
 
 //

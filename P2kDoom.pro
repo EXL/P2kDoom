@@ -18,7 +18,7 @@ SOURCES += \
 	src/d_client.c \
 	src/d_items.c \
 	src/d_main.c \
-	src/doom_iwad.c \
+#	src/doom_iwad.c \
 	src/f_finale.c \
 	src/f_wipe.c \
 	src/g_game.c \
@@ -73,6 +73,7 @@ SOURCES += \
 	src/tables.c \
 	src/v_video.c \
 	src/version.c \
+	src/w_memcache.c \
 	src/w_wad.c \
 	src/wi_stuff.c \
 	src/z_bmalloc.c \
@@ -91,7 +92,7 @@ HEADERS += \
 	inc/d_player.h \
 	inc/d_think.h \
 	inc/d_ticcmd.h \
-	inc/doom_iwad.h \
+#	inc/doom_iwad.h \
 	inc/doomdata.h \
 	inc/doomdef.h \
 	inc/doomstat.h \

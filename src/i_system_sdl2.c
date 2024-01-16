@@ -6,6 +6,11 @@
 #include "i_main.h"
 #include "d_main.h"
 
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 //GBA Keys
 #define KEYD_A          1
 #define KEYD_B          2
@@ -250,6 +255,40 @@ void I_Quit_e32()
 }
 
 //**************************************************************************************
+
+/*
+ * I_Read
+ *
+ * cph 2001/11/18 - wrapper for read(2) which handles partial reads and aborts
+ * on error.
+ */
+void I_Read(int fd, void* vbuf, size_t sz)
+{
+	unsigned char* buf = vbuf;
+
+	while (sz) {
+		int rc = read(fd,buf,sz);
+		if (rc <= 0) {
+			I_Error("I_Read: read failed: %s", rc ? strerror(errno) : "EOF");
+		}
+		sz -= rc; buf += rc;
+	}
+}
+
+/*
+ * I_Filelength
+ *
+ * Return length of an open file.
+ */
+
+int I_Filelength(int handle)
+{
+	struct stat   fileinfo;
+	if (fstat(handle,&fileinfo) == -1)
+		I_Error("I_Filelength: %s",strerror(errno));
+	return fileinfo.st_size;
+}
+
 
 int main(int argc, const char *const argv[]) {
 	init_main(argc, argv);
