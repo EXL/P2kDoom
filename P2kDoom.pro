@@ -4,6 +4,11 @@ CONFIG -= qt
 CONFIG -= app_bundle
 CONFIG += force_debug_info
 
+QMAKE_CFLAGS_RELEASE -= -O1
+QMAKE_CFLAGS_RELEASE -= -O2
+QMAKE_CFLAGS_RELEASE -= -O3
+QMAKE_CFLAGS_RELEASE += -O0
+
 INCLUDEPATH += inc
 
 #DEFINES += RANGECHECK
@@ -80,7 +85,7 @@ SOURCES += \
 	src/z_zone.c
 
 HEADERS += \
-    inc/i_system_sdl2.h \
+	inc/i_system_sdl2.h \
 	inc/stbar.h \
 	inc/am_map.h \
 	inc/config.h \

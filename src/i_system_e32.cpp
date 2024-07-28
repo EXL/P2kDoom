@@ -1,6 +1,6 @@
 // PsionDoomDoc.cpp
 //
-// Copyright 17/02/2019 
+// Copyright 17/02/2019
 //
 
 //#ifndef GBA
@@ -60,7 +60,7 @@ void I_BlitScreenBmp_e32()
 //**************************************************************************************
 
 void I_StartWServEvents_e32()
-{        
+{
 
 }
 
@@ -90,12 +90,12 @@ unsigned short* I_GetFrontBuffer()
 
 //**************************************************************************************
 
+int argc = 1;
 char prog_name[] = {'P', '2', 'k', 'D', 'o', 'o', 'm', '\0'};
+char *argv[] = { prog_name, (char *) '\0' };
 
 void I_CreateWindow_e32()
 {
-    int argc = 1;
-    char *argv[] = { prog_name, (char *) '\0' };
 
     app = new QApplication (argc, argv);
 
@@ -112,7 +112,7 @@ void I_CreateWindow_e32()
 //**************************************************************************************
 
 void I_CreateBackBuffer_e32()
-{	
+{
 	I_CreateWindow_e32();
 }
 
@@ -192,12 +192,12 @@ void I_ProcessKeyEvents()
 void I_Error (const char *error, ...)
 {
 	char msg[MAX_MESSAGE_SIZE];
- 
+
 	va_list v;
 	va_start(v, error);
-	
+
 	vsprintf(msg, error, v);
-	
+
 	va_end(v);
 
     fprintf(stderr, "%s\n", msg);

@@ -339,7 +339,7 @@ static void P_LoadBlockMap (int lump)
 // P_LoadReject - load the reject table, padding it if it is too short
 // totallines must be the number returned by P_GroupLines()
 // an underflow will be padded with zeroes, or a doom.exe z_zone header
-// 
+//
 // this function incorporates e6y's RejectOverrunAddInt code:
 // e6y: REJECT overrun emulation code
 // It's emulated successfully if the size of overflow no more than 16 bytes.

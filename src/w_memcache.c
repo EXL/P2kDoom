@@ -100,6 +100,7 @@ void W_InitCache(void)
 
 void W_DoneCache(void)
 {
+  free(cachelump);
 }
 
 /* W_CacheLumpNum

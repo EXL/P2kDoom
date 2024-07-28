@@ -126,13 +126,13 @@ void I_CreateBackBuffer_e32()
 
 	unsigned short* bb = I_GetBackBuffer();
 
-	memset(bb, 0, 240*160);
+	memset(bb, 0, screen_width*screen_height);
 
 //	I_FinishUpdate_e32(NULL, NULL, 0, 0);
 
 	bb = I_GetFrontBuffer();
 
-	memset(bb, 0, 240*160);
+	memset(bb, 0, screen_width*screen_height);
 
 //	I_FinishUpdate_e32(NULL, NULL, 0, 0);
 }
