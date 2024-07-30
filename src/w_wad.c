@@ -347,6 +347,11 @@ void W_HashLumps(void)
 	for (i=0; i<numlumps; i++)
 	{                                           // hash function:
 		int j = W_LumpNameHash(lumpinfo[i].name) % (unsigned) numlumps;
+
+//		fprintf(stderr, "C| %4d: {%8.8s : %4d %4d }\t%4d: {%8.8s: %4d %4d }\n",
+//			i, lumpinfo[i].name, lumpinfo[i].index, lumpinfo[i].next,
+//			j, lumpinfo[j].name, lumpinfo[j].index, lumpinfo[j].next);
+
 		lumpinfo[i].next = lumpinfo[j].index;     // Prepend to list
 		lumpinfo[j].index = i;
 	}

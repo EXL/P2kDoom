@@ -502,7 +502,7 @@ void R_InitData(void)
 
 int R_FlatNumForName(const char *name)    // killough -- const added
 {
-  int i = W_CheckNumForName(name);
+  int i = (W_CheckNumForName)(name, ns_flats);
 
   if (i == -1)
     I_Error("R_FlatNumForName: %.8s not found", name);

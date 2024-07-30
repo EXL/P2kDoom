@@ -108,6 +108,7 @@ void W_DoneCache(void)
  * CPhipps - modified for new lump locking scheme
  *           returns a const*
  */
+static int cache_lump_size = 0;
 
 const void *W_CacheLumpNum(int lump)
 {
@@ -117,8 +118,11 @@ const void *W_CacheLumpNum(int lump)
     I_Error ("W_CacheLumpNum: %i >= numlumps",lump);
 #endif
 
-  if (!cachelump[lump].cache)      // read the lump in
+  if (!cachelump[lump].cache) {     // read the lump in
     W_ReadLump(lump, Z_Malloc(W_LumpLength(lump), PU_CACHE, &cachelump[lump].cache));
+    cache_lump_size += W_LumpLength(lump);
+    fprintf(stderr, "Trying to cache! %.8s:%d:%d -- %d\n", lumpinfo[lump].name, lump, W_LumpLength(lump), cache_lump_size);
+  }
 #if 0
   /* cph - if wasn't locked but now is, tell z_zone to hold it */
   if (!cachelump[lump].locks && locks) {
