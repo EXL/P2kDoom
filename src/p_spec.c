@@ -154,7 +154,7 @@ void P_InitPicAnims (void)
         }
         else
         {
-            if (W_CheckNumForName(animdefs[i].startname) == -1)
+            if ((W_CheckNumForName)(animdefs[i].startname, ns_flats) == -1)
                 continue;
 
             _g->lastanim->picnum = R_FlatNumForName (animdefs[i].endname);
