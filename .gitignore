@@ -1,4 +1,6 @@
+.qmake.stash*
 *.user*
+*.o
+P2kDoom
 
 src/doom1.c
-
