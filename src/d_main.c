@@ -562,6 +562,10 @@ static void CheckIWAD2(const char* iwadname, GameMode_t *gmode, boolean *hassec)
 	FILE* fp = fopen(iwadname, "rb");
 	fread(&header, sizeof(header), 1, fp);
 
+	fprintf(stderr, "header.identification: %.4s\n", header.identification);
+	fprintf(stderr, "header.numlumps: %d\n", header.numlumps);
+	fprintf(stderr, "header.infotableofs: %d\n", header.infotableofs);
+
     int ud=0,rg=0,sw=0,cm=0,sc=0;
 
     if(!strncmp(header.identification, "IWAD", 4))
