@@ -2,5 +2,6 @@
 *.user*
 *.o
 P2kDoom
+doom1.wad
 
 src/doom1.c

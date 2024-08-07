@@ -10,7 +10,7 @@
 
 CC            = gcc
 CXX           = g++
-DEFINES       = -DRANGECHECK -DGBA -DP2K
+DEFINES       = -DRANGECHECK -DGBA -DP2K -DWORDS_BIGENDIAN
 CFLAGS        = -pipe -O2 -g -Wall -Wextra -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -O2 -g -Wall -Wextra -fPIC $(DEFINES)
 INCPATH       = -I. -Iinc 

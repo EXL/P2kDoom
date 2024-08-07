@@ -563,8 +563,11 @@ static void CheckIWAD2(const char* iwadname, GameMode_t *gmode, boolean *hassec)
 	fread(&header, sizeof(header), 1, fp);
 
 	fprintf(stderr, "header.identification: %.4s\n", header.identification);
-	fprintf(stderr, "header.numlumps: %d\n", header.numlumps);
-	fprintf(stderr, "header.infotableofs: %d\n", header.infotableofs);
+	fprintf(stderr, "header.numlumps: %ld\n", LONG(header.numlumps));
+	fprintf(stderr, "header.infotableofs: %ld\n", LONG(header.infotableofs));
+
+	header.numlumps = LONG(header.numlumps);
+	header.infotableofs = LONG(header.infotableofs);
 
     int ud=0,rg=0,sw=0,cm=0,sc=0;
 

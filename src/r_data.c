@@ -247,6 +247,7 @@ static int R_GetTextureNumForName(const char* tex_name)
     numtextures1 = *maptex1;
     directory1 = maptex1+1;
 
+    numtextures1 = LONG(numtextures1);
 
     if (W_CheckNumForName("TEXTURE2") != -1)
     {
@@ -272,6 +273,7 @@ static int R_GetTextureNumForName(const char* tex_name)
         }
 
         int offset = *directory;
+        offset = LONG(offset);
 
         const maptexture_t* mtexture = (const maptexture_t *) ( (const byte *)maptex + offset);
 
@@ -415,6 +417,9 @@ static void R_InitTextures()
         const int* mtex2 = W_CacheLumpName("TEXTURE2");
         numtextures2 = *mtex2;
     }
+
+    numtextures1 = LONG(numtextures1);
+    numtextures2 = LONG(numtextures2);
 
     _g->numtextures = numtextures1 + numtextures2;
 
