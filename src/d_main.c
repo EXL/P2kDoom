@@ -537,8 +537,12 @@ void D_DoAdvanceDemo(void)
 //
 void D_StartTitle (void)
 {
-    _g->gameaction = ga_nothing;
-    _g->demosequence = -1;
+//    _g->gameaction = ga_nothing;
+//    _g->demosequence = -1;
+
+    _g->gameaction = ga_loadlevel;
+    _g->player.playerstate = PST_REBORN;
+
     D_AdvanceDemo();
 }
 

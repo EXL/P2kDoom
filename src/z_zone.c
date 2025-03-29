@@ -206,6 +206,7 @@ void* Z_Malloc(int size, int tag, void **user)
         if (rover == start)
         {
             // scanned all the way around the list
+            *((int *) 0x0) = 1;
             I_Error ("Z_Malloc: failed on allocation of %i bytes", size);
         }
 

@@ -46,6 +46,7 @@
 #include "w_wad.h"
 #include "z_zone.h"
 #include "lprintf.h"
+#include "r_defs.h"
 
 static struct {
   void *cache;
@@ -109,6 +110,22 @@ void W_DoneCache(void)
  *           returns a const*
  */
 static int cache_lump_size = 0;
+
+const void *W_CacheLumpNumPatch(int lump, int n) {
+    if (n == 0) {
+        if (!cachelump[lump].cache) {
+            patch_t *patch = (patch_t *) W_CacheLumpNum(lump);
+            ((patch_t *) patch)->width = SHORT(((patch_t *) patch)->width);
+            ((patch_t *) patch)->height = SHORT(((patch_t *) patch)->height);
+            ((patch_t *) patch)->topoffset = SHORT(((patch_t *) patch)->topoffset);
+            ((patch_t *) patch)->leftoffset = SHORT(((patch_t *) patch)->leftoffset);
+            for (int i = 0; i < 8; ++i)
+                ((patch_t *) patch)->columnofs[i] = LONG(((patch_t *) patch)->columnofs[i]);
+            return (void *) patch;
+        }
+    }
+    return W_CacheLumpNum(lump);
+}
 
 const void *W_CacheLumpNum(int lump)
 {

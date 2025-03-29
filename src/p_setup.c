@@ -325,9 +325,10 @@ static void P_LoadBlockMap (int lump)
 
     _g->bmaporgx = _g->blockmaplump[0]<<FRACBITS;
     _g->bmaporgy = _g->blockmaplump[1]<<FRACBITS;
-    _g->bmapwidth = _g->blockmaplump[2];
-    _g->bmapheight = _g->blockmaplump[3];
+    _g->bmapwidth = LONG(_g->blockmaplump[2]);
+    _g->bmapheight = LONG(_g->blockmaplump[3]);
 
+    D("%d %X %d %d %d %d\n", lump, _g->blockmaplump, _g->bmaporgx, _g->bmaporgy, _g->bmapwidth, _g->bmapheight);
 
     // clear out mobj chains - CPhipps - use calloc
     _g->blocklinks = Z_Calloc (_g->bmapwidth*_g->bmapheight,sizeof(*_g->blocklinks),PU_LEVEL,0);

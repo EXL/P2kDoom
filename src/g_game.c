@@ -329,6 +329,8 @@ static void G_DoLoadLevel (void)
     //  we look for an actual index, instead of simply
     //  setting one.
 
+    D("%d %d\n", _g->gamemode, _g->gameepisode);
+
     _g->skyflatnum = R_FlatNumForName ( SKYFLATNAME );
 
     // DOOM determines the sky texture to be used
@@ -1181,12 +1183,16 @@ static const byte* G_ReadDemoHeader(const byte *demo_p, size_t size, boolean fai
     // Old demos turn on demo_compatibility => compatibility; new demos load
     // compatibility flag, and other flags as well, as a part of the demo.
 
+    D("%d %d\n",  _g->basetic, _g->gametic);
+
     //e6y: check for overrun
     if (CheckForOverrun(header_p, demo_p, size, 1, failonerror))
         return NULL;
 
     _g->demover = *demo_p++;
     _g->longtics = 0;
+
+    D("%d %d\n",  _g->demover, _g->longtics);
 
     // e6y
     // Handling of unrecognized demo formats
@@ -1300,9 +1306,13 @@ static const byte* G_ReadDemoHeader(const byte *demo_p, size_t size, boolean fai
             demo_p += 256-GAME_OPTION_SIZE;
     }
 
+    D("%d %d\n",  size, failonerror);
+
     //e6y: check for overrun
     if (CheckForOverrun(header_p, demo_p, size, MAXPLAYERS, failonerror))
         return NULL;
+
+    D("%d %d\n",  size, failonerror);
 
     _g->playeringame = *demo_p++;
     demo_p += MIN_MAXPLAYERS - MAXPLAYERS;

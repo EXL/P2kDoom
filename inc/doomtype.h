@@ -101,4 +101,18 @@ enum patch_translation_e {
   VPT_STRETCH = 4, // Stretch to compensate for high-res
 };
 
+#define D(format, ...) \
+	do { \
+		fprintf(stderr, "%s:%d: " format, __func__, __LINE__, ##__VA_ARGS__); \
+	} while(0);
+
+#define DDD(x, y) \
+	do { \
+		unsigned char *c = (unsigned char *) x; \
+		fprintf(stderr, "%s", "Data: "); \
+		for (int i = 0; i < y; ++i) \
+			fprintf(stderr, "%02X ", c[i]); \
+		fprintf(stderr, "%s", "\n"); \
+	} while(0);
+
 #endif

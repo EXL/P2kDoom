@@ -90,6 +90,9 @@ void V_DrawBackground(const char* flatname)
 
 void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
 {
+    fprintf(stderr, "Patch: %d %d %d %d %d %d %d %d %d %d %d %d\n", patch->width, patch->height, patch->topoffset, patch->leftoffset,
+        patch->columnofs[0],patch->columnofs[1],patch->columnofs[2],patch->columnofs[3],patch->columnofs[4],patch->columnofs[5],patch->columnofs[6],patch->columnofs[7]);
+
     y -= patch->topoffset;
     x -= patch->leftoffset;
 
@@ -114,7 +117,11 @@ void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
         if(dc_x < 0)
             continue;
 
+        if (colindex > 8)
+            continue;
+
         const column_t* column = (const column_t *)((const byte*)patch + patch->columnofs[colindex]);
+//        fprintf(stderr, "Column: %d %ld\n", colindex, patch->columnofs[colindex]);
 
         if (dc_x >= 240)
             break;
@@ -154,7 +161,9 @@ void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
 
                     unsigned short old = *dest16;
 
-                    *dest16 = (old & 0xff) | (color << 8);
+                    old = SHORT(old);
+                    *dest16 = SHORT((old & 0xff) | (color << 8));
+//                    *dest16 = (old & 0xff) | (color << 8);
                 }
                 else
                 {
@@ -162,7 +171,9 @@ void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
 
                     unsigned short old = *dest16;
 
-                    *dest16 = ((color & 0xff) | (old & 0xff00));
+                    old = SHORT(old);
+                    *dest16 = SHORT(((color & 0xff) | (old & 0xff00)));
+//                    *dest16 = ((color & 0xff) | (old & 0xff00));
                 }
 
                 dest += byte_pitch;
@@ -174,6 +185,7 @@ void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
     }
 }
 
+const void *W_CacheLumpNumPatch(int lump, int n);
 
 // CPhipps - some simple, useful wrappers for that function, for drawing patches from wads
 
@@ -184,7 +196,7 @@ void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
 void V_DrawNumPatch(int x, int y, int scrn, int lump,
          int cm, enum patch_translation_e flags)
 {
-    V_DrawPatch(x, y, scrn, W_CacheLumpNum(lump));
+    V_DrawPatch(x, y, scrn, W_CacheLumpNumPatch(lump, 0));
 }
 
 //

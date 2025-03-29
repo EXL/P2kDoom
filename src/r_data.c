@@ -104,18 +104,26 @@ static const texture_t* R_LoadTexture(int texture_num)
     directory1 = maptex1+1;
 
 
+    numtextures1 = LONG(numtextures1);
+	D("%d, %d\n", texture_num, numtextures1);
+
     if (W_CheckNumForName("TEXTURE2") != -1)
     {
         maptex2 = W_CacheLumpName("TEXTURE2");
         numtextures2 = *maptex2;
         directory2 = maptex2+1;
+        D("%s\n", "Branch1");
     }
     else
     {
         maptex2 = NULL;
         numtextures2 = 0;
         directory2 = NULL;
+        D("%s\n", "Branch2");
     }
+
+    numtextures2 = LONG(numtextures2);
+    D("%d, %d\n", texture_num, numtextures2);
 
     int offset = 0;
     const int  *maptex = maptex1;
@@ -123,23 +131,40 @@ static const texture_t* R_LoadTexture(int texture_num)
     if(texture_num < numtextures1)
     {
         offset = directory1[texture_num];
+        D("%s\n", "Branch3");
     }
     else if(maptex2 && ((texture_num-numtextures1) < numtextures2) )
     {
         maptex = maptex2;
         offset = directory2[texture_num-numtextures1];
+        D("%s\n", "Branch4");
     }
     else
     {
         I_Error("R_LoadTexture: Texture %d not in range.", texture_num);
     }
 
-    const maptexture_t *mtexture = (const maptexture_t *) ((const byte *)maptex + offset);
+    DDD(maptex, 8);
+
+    offset = LONG(offset);
+
+    D("%d, %d, %d, %X, %d\n", texture_num, numtextures1, numtextures2, maptex, offset);
+
+    maptexture_t *mtexture = (const maptexture_t *) ((const byte *)maptex + offset);
+
+    DDD(mtexture, 8);
+
+    D("%d\n", mtexture->patchcount);
+    D("%d\n", SHORT(mtexture->patchcount));
+
+    mtexture->patchcount = SHORT(mtexture->patchcount);
+
+//    D("%d, %d, %d %d\n", texture_num, numtextures1, numtextures2, sizeof(const texpatch_t)*(mtexture->patchcount-1));
 
     texture_t* texture = Z_Malloc(sizeof(const texture_t) + sizeof(const texpatch_t)*(mtexture->patchcount-1), PU_LEVEL, (void**)&textures[texture_num]);
 
-    texture->width = mtexture->width;
-    texture->height = mtexture->height;
+    texture->width = SHORT(mtexture->width);
+    texture->height = SHORT(mtexture->height);
     texture->patchcount = mtexture->patchcount;
     texture->name = mtexture->name;
 
@@ -148,26 +173,45 @@ static const texture_t* R_LoadTexture(int texture_num)
 
     texture->overlapped = 0;
 
-
+    D("%d %d %d %d %s\n", texture->patchcount, texture->width, texture->height, texture->patchcount, texture->name);
 
     for (int j=0 ; j < texture->patchcount ; j++, mpatch++, patch++)
     {
-        patch->originx = mpatch->originx;
-        patch->originy = mpatch->originy;
+        patch->originx = SHORT(mpatch->originx);
+        patch->originy = SHORT(mpatch->originy);
+
+        D("%d %d\n", patch->originx, patch->originy);
 
         char pname[8];
-        strncpy(pname, (const char*)&pnames[mpatch->patch * 8], 8);
+        strncpy(pname, (const char*)&pnames[SHORT(mpatch->patch) * 8], 8);
+
+        D("%s\n", pname);
 
         patch->patch = (const patch_t*)W_CacheLumpName(pname);
+
+        ((patch_t *) patch->patch)->width = SHORT(((patch_t *) patch->patch)->width);
+        ((patch_t *) patch->patch)->height = SHORT(((patch_t *) patch->patch)->height);
+        ((patch_t *) patch->patch)->topoffset = SHORT(((patch_t *) patch->patch)->topoffset);
+        ((patch_t *) patch->patch)->leftoffset = SHORT(((patch_t *) patch->patch)->leftoffset);
+        for (int i = 0; i < 8; ++i)
+            ((patch_t *) patch->patch)->columnofs[i] = LONG(((patch_t *) patch->patch)->columnofs[i]);
     }
 
     for (int j=0 ; j < texture->patchcount ; j++)
     {
         const texpatch_t* patch = &texture->patches[j];
 
+        DDD(patch, 8);
+        DDD(patch->patch, 8);
+
         //Check for patch overlaps.
         int l1 = patch->originx;
+
+        D("%d\n", l1);
+
         int r1 = l1 + patch->patch->width;
+
+        D("%d %d\n", l1, r1);
 
         for(int k = j+1; k < texture->patchcount; k++)
         {
@@ -213,6 +257,9 @@ const texture_t* R_GetTexture(int texture)
 
     if(textures[texture])
         return textures[texture];
+
+
+    D("%d\n", _g->numtextures);
 
     const texture_t* t = R_LoadTexture(texture);
 
@@ -291,10 +338,16 @@ static int R_GetTextureNumForName(const char* tex_name)
 
 int R_LoadTextureByName(const char* tex_name)
 {
+    D("%s\n", "Here");
+
     if(tex_name[0] == '-')
         return NO_TEXTURE;
 
+    D("%s\n", "Here");
+
     int tnum = R_GetTextureNumForName(tex_name);
+
+    D("%s %d\n", "Here", tnum);
 
     if(tnum == -1)
     {
