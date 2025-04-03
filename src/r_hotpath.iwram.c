@@ -661,7 +661,11 @@ static void R_DrawColumnHiRes(const draw_column_vars_t *dcvars)
     unsigned int mask;
     unsigned int shift;
 
+#if defined(USE_BIG_ENDIAN)
+    if(dcvars->odd_pixel)
+#else
     if(!dcvars->odd_pixel)
+#endif
     {
         mask = 0xff00;
         shift = 0;
@@ -3002,10 +3006,17 @@ void V_DrawPatchNoScale(int x, int y, const patch_t* patch)
 
                 //The GBA must write in 16bits.
                 if(odd_addr)
+#if defined(USE_BIG_ENDIAN)
+                    *dest16 = (old & 0xff00) | color;
+#else
                     *dest16 = (old & 0xff) | (color << 8);
+#endif
                 else
+#if defined(USE_BIG_ENDIAN)
+                    *dest16 = (color << 8) | (old & 0xff);
+#else
                     *dest16 = ((color & 0xff) | (old & 0xff00));
-
+#endif
                 dest += 240;
             }
 

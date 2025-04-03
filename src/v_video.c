@@ -154,7 +154,11 @@ void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
 
                     unsigned short old = *dest16;
 
+#if defined(USE_BIG_ENDIAN)
+                    *dest16 = (old & 0xff00) | color;
+#else
                     *dest16 = (old & 0xff) | (color << 8);
+#endif
                 }
                 else
                 {
@@ -162,7 +166,11 @@ void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
 
                     unsigned short old = *dest16;
 
+#if defined(USE_BIG_ENDIAN)
+                    *dest16 = (color << 8) | (old & 0xff);
+#else
                     *dest16 = ((color & 0xff) | (old & 0xff00));
+#endif
                 }
 
                 dest += byte_pitch;
@@ -249,15 +257,22 @@ static void V_PlotPixel(int x, int y, int color)
 
         unsigned short old = *dest16;
 
+#if defined(USE_BIG_ENDIAN)
+        *dest16 = (old & 0xff00) | color;
+#else
         *dest16 = (old & 0xff) | (color << 8);
+#endif
     }
     else
     {
         unsigned short* dest16 = (unsigned short*)dest;
 
         unsigned short old = *dest16;
-
+#if defined(USE_BIG_ENDIAN)
+        *dest16 = (color << 8) | (old & 0xff);
+#else
         *dest16 = ((color & 0xff) | (old & 0xff00));
+#endif
     }
 }
 
