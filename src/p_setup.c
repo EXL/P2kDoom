@@ -158,7 +158,7 @@ static void P_LoadNodes (int lump)
   {
     // allow trivial maps
     if (_g->numsubsectors == 1)
-      lprintf(LO_INFO,
+      lprintf("%s",
           "P_LoadNodes: trivial map (no nodes, one subsector)\n");
     else
       I_Error("P_LoadNodes: no nodes in level");
@@ -277,7 +277,7 @@ static void P_LoadSideDefs2(int lump)
             unsigned short sector_num = SHORT(msd->sector);
             if (sector_num >= _g->numsectors)
             {
-                lprintf(LO_WARN,"P_LoadSideDefs2: sidedef %i has out-of-range sector num %u\n", i, sector_num);
+                lprintf("P_LoadSideDefs2: sidedef %i has out-of-range sector num %u\n", i, sector_num);
                 sector_num = 0;
             }
             sd->sector = sec = &_g->sectors[sector_num];
@@ -564,12 +564,12 @@ void P_SetupLevel(int episode, int map, int playermask, skill_t skill)
 //
 void P_Init (void)
 {
-    lprintf(LO_INFO, "P_InitSwitchList");
+    lprintf("%s\n", "P_InitSwitchList");
     P_InitSwitchList();
 
-    lprintf(LO_INFO, "P_InitPicAnims");
+    lprintf("%s\n", "P_InitPicAnims");
     P_InitPicAnims();
 
-    lprintf(LO_INFO, "R_InitSprites");
+    lprintf("%s\n", "R_InitSprites");
     R_InitSprites(sprnames);
 }

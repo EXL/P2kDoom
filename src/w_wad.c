@@ -159,6 +159,7 @@ static void W_AddFile(wadfile_info_t *wadfile)
 	wadfile->handle = open(wadfile->name, O_RDONLY | O_BINARY);
 #else
 	WCHAR wpath[64];
+	u_atou(wadfile->name, wpath);
 	wadfile->handle = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
 #endif
 
@@ -173,7 +174,7 @@ static void W_AddFile(wadfile_info_t *wadfile)
 //	}
 
 	//jff 8/3/98 use logical output routine
-	lprintf (LO_INFO," adding %s\n",wadfile->name);
+	lprintf (" adding %s\n",wadfile->name);
 	startlump = numlumps;
 
 	if (  strlen(wadfile->name)<=4)
@@ -465,7 +466,7 @@ void W_Init(void)
 	W_HashLumps();
 
 	/* cph 2001/07/07 - separated cache setup */
-	lprintf(LO_INFO,"W_InitCache\n");
+	lprintf("%s\n","W_InitCache\n");
 	W_InitCache();
 }
 

@@ -79,7 +79,7 @@ void I_Init(void)
 static void PrintVer(void)
 {
     char vbuf[24];
-    lprintf(LO_INFO,"%s",I_GetVersionString(vbuf,200));
+    lprintf("%s\n",I_GetVersionString(vbuf,200));
 }
 
 int init_main(int argc, const char * const * argv)

@@ -183,7 +183,7 @@ void I_SetRes(void)
     _g->screens[0].width = SCREENWIDTH;
     _g->screens[0].height = SCREENHEIGHT;
 
-    lprintf(LO_INFO,"I_SetRes: Using resolution %dx%d", SCREENWIDTH, SCREENHEIGHT);
+    lprintf("I_SetRes: Using resolution %dx%d\n", SCREENWIDTH, SCREENHEIGHT);
 }
 
 void I_InitGraphics(void)
@@ -194,7 +194,7 @@ void I_InitGraphics(void)
     {
         firsttime = 0;
 
-        lprintf(LO_INFO, "I_InitGraphics: %dx%d", SCREENWIDTH, SCREENHEIGHT);
+        lprintf("I_InitGraphics: %dx%d\n", SCREENWIDTH, SCREENHEIGHT);
 
         /* Set the video mode */
         I_UpdateVideoMode();
@@ -208,9 +208,9 @@ void I_InitGraphics(void)
 
 void I_UpdateVideoMode(void)
 {
-    lprintf(LO_INFO, "I_SetRes: %dx%d", SCREENWIDTH, SCREENHEIGHT);
+    lprintf("I_SetRes: %dx%d\n", SCREENWIDTH, SCREENHEIGHT);
     I_SetRes();
 
-    lprintf(LO_INFO, "R_InitBuffer:");
+    lprintf("%s\n", "R_InitBuffer:");
     R_InitBuffer();
 }

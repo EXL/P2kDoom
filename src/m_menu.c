@@ -296,7 +296,7 @@ void M_Episode(int choice)
   // Yet another hack...
   if ( (_g->gamemode == registered) && (choice > 2))
     {
-    lprintf( LO_WARN,
+    lprintf( "%s\n",
      "M_Episode: 4th episode requires UltimateDOOM\n");
     choice = 0;
     }

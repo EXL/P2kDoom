@@ -3346,7 +3346,7 @@ void P_RunThinkers (void)
 
 static int I_GetTime_e32(void)
 {
-    int thistimereply = *((unsigned short*)(0x400010C));
+	int thistimereply = (int) suPalReadTime();
 
     return thistimereply;
 }
@@ -3354,6 +3354,9 @@ static int I_GetTime_e32(void)
 
 int I_GetTime(void)
 {
+
+	return (int) suPalReadTime();
+#if 0
     int thistimereply;
 
 #ifndef GBA
@@ -3392,6 +3395,7 @@ int I_GetTime(void)
     }
 
     return thistimereply;
+#endif
 }
 
 

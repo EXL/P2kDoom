@@ -94,7 +94,7 @@ void S_Init(int sfxVolume, int musicVolume)
     {
         int i;
 
-        lprintf(LO_CONFIRM, "S_Init: default sfx volume %d", sfxVolume);
+        lprintf("S_Init: default sfx volume %d\n", sfxVolume);
 
         S_SetSfxVolume(sfxVolume);
 

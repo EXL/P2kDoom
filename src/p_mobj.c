@@ -790,7 +790,7 @@ void P_SpawnMapThing (const mapthing_t* mthing)
 
     if (options & MTF_RESERVED)
     {
-        lprintf(LO_WARN, "P_SpawnMapThing: correcting bad flags (%u) (thing type %d)\n",
+        lprintf("P_SpawnMapThing: correcting bad flags (%u) (thing type %d)\n",
                 options, mthing->type);
         options &= MTF_EASY|MTF_NORMAL|MTF_HARD|MTF_AMBUSH|MTF_NOTSINGLE;
     }

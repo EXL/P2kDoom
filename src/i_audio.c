@@ -337,7 +337,7 @@ void I_InitSound(void)
 #endif
 
 	// Finished initialization.
-    lprintf(LO_INFO,"I_InitSound: sound ready");
+    lprintf("%s\n","I_InitSound: sound ready");
 }
 
 void I_PlaySong(int handle, int looping)

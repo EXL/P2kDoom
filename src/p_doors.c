@@ -541,7 +541,7 @@ int EV_VerticalDoor
           plat_t* p = (plat_t*)door;
           p->wait = outval;
         } else {
-          lprintf(LO_DEBUG, "EV_VerticalDoor: unknown thinker.function in thinker corruption emulation");
+          lprintf("%s\n", "EV_VerticalDoor: unknown thinker.function in thinker corruption emulation");
         }
 
         return 1;

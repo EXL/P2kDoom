@@ -491,13 +491,13 @@ void R_InitColormaps (void)
 
 void R_InitData(void)
 {
-  lprintf(LO_INFO, "Textures");
+  lprintf("%s\n", "Textures");
   R_InitTextures();
-  lprintf(LO_INFO, "Flats");
+  lprintf("%s\n", "Flats");
   R_InitFlats();
-  lprintf(LO_INFO, "Sprites");
+  lprintf("%s\n", "Sprites");
   R_InitSpriteLumps();
-  lprintf(LO_INFO, "Colormaps");
+  lprintf("%s\n", "Colormaps");
   R_InitColormaps();                    // killough 3/20/98
 }
 

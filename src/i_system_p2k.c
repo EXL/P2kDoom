@@ -17,7 +17,8 @@
  *   GUI + ATI, Nvidia + Java Heap + Videomode
  */
 
-#include <doomdef.h>
+#include "doomdef.h"
+#include "d_event.h"
 
 #include <loader.h>
 #include <apps.h>
@@ -58,7 +59,7 @@ void I_CreateBackBuffer_e32();
 #if defined(FPS_15)
 #define TIMER_FAST_UPDATE_MS              (1000 / 15) /* ~15 FPS. */
 #elif defined(FPS_30)
-#define TIMER_FAST_UPDATE_MS              (1000 / 30) /* ~30 FPS. */
+#define TIMER_FAST_UPDATE_MS              (1000 / 15) /* ~30 FPS. */
 #endif
 #define KEYPAD_BUTTONS                    (8)
 
@@ -171,7 +172,7 @@ static UINT32 GFX_Draw_Step(APPLICATION_T *app);
 static UINT32 InitResourses(void);
 static void FreeResourses(void);
 
-static const char g_app_name[APP_NAME_LEN] = "FireEffect";
+static const char g_app_name[APP_NAME_LEN] = "P2kDoom";
 
 #if defined(EP2)
 static ldrElf g_app_elf;
@@ -180,19 +181,6 @@ static ElfLoaderApp g_app_elf = { 0 };
 #elif defined(EM2)
 static ldrElf *g_app_elf = NULL;
 #endif
-
-typedef enum {
-	E_KEY_UP,
-	E_KEY_DOWN,
-	E_KEY_LEFT,
-	E_KEY_RIGHT,
-	E_KEY_FIRE,
-	E_KEY_JUMP,
-	E_KEY_LOOK_UP,
-	E_KEY_LOOK_DOWN,
-	E_KEY_MAX
-} GAME_KEYS_T;
-static BOOL g_keyboard[E_KEY_MAX] = { FALSE };
 
 static WCHAR g_res_file_path[FS_MAX_URI_NAME_LENGTH];
 
@@ -241,7 +229,7 @@ ldrElf *_start(WCHAR *uri, WCHAR *arguments) {
 	UINT32 reserve;
 
 	if (ldrIsLoaded(g_app_name)) {
-		cprint("Yeti3D: Error! Application has already been loaded!\n");
+		cprint("P2kDoom: Error! Application has already been loaded!\n");
 		return NULL;
 	}
 
@@ -520,6 +508,19 @@ static UINT32 CheckKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app) {
 }
 
 static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 key, BOOL pressed) {
+	event_t ev;
+	ev.data1 = 0;
+	// GBA Keys
+	#define KEYD_A          1
+	#define KEYD_B          2
+	#define KEYD_L          3
+	#define KEYD_R          4
+	#define KEYD_UP         5
+	#define KEYD_DOWN       6
+	#define KEYD_LEFT       7
+	#define KEYD_RIGHT      8
+	#define KEYD_START      9
+	#define KEYD_SELECT     10
 #if defined(EM1) || defined(EM2) || defined(FTR_C650)
 	#define KK_2 MULTIKEY_2
 	#define KK_UP MULTIKEY_UP
@@ -540,50 +541,63 @@ static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 k
 	#define KK_DOWN MULTIKEY_LEFT
 #endif
 
+	ev.type = (pressed) ? ev_keydown : ev_keyup;
+
 	switch (key) {
 		case MULTIKEY_0:
 		case MULTIKEY_SOFT_LEFT:
 			app->exit_status = TRUE;
 			break;
 		case MULTIKEY_1:
-			g_keyboard[E_KEY_LOOK_DOWN] = pressed;
+			ev.data1 = KEYD_START;
 			break;
 		case KK_2:
 		case KK_UP:
-			g_keyboard[E_KEY_UP] = pressed;
+			ev.data1 = KEYD_UP;
 			break;
 		case MULTIKEY_3:
-			g_keyboard[E_KEY_LOOK_UP] = pressed;
+			ev.data1 = KEYD_SELECT;
 			break;
 		case KK_4:
 		case KK_LEFT:
-			g_keyboard[E_KEY_LEFT] = pressed;
+			ev.data1 = KEYD_LEFT;
 			break;
 		case MULTIKEY_5:
 		case MULTIKEY_JOY_OK:
-			g_keyboard[E_KEY_FIRE] = pressed;
+			ev.data1 = KEYD_A;
 			break;
 		case KK_6:
 		case KK_RIGHT:
-			g_keyboard[E_KEY_RIGHT] = pressed;
+			ev.data1 = KEYD_RIGHT;
 			break;
 		case MULTIKEY_7:
+			ev.data1 = KEYD_L;
+			break;
 		case MULTIKEY_9:
-			g_keyboard[E_KEY_JUMP] = pressed;
+			ev.data1 = KEYD_R;
 			break;
 		case KK_8:
 		case KK_DOWN:
-			g_keyboard[E_KEY_DOWN] = pressed;
+			ev.data1 = KEYD_DOWN;
 			break;
 		case MULTIKEY_STAR:
+			ev.data1 = KEYD_A;
 			break;
 		case MULTIKEY_POUND:
+			ev.data1 = KEYD_B;
 			break;
 		case MULTIKEY_SOFT_RIGHT:
 			break;
 		default:
 			break;
 	}
+
+	ev.data2 = 0;
+	ev.data3 = 0;
+
+	if(ev.data1 != 0)
+		D_PostEvent(&ev);
+
 	return RESULT_OK;
 }
 
@@ -1272,16 +1286,22 @@ static void Free_Memory_Blocks(void) {
 }
 #endif
 
-static unsigned short *backbuffer;
+UINT16 *pp_bitmap;
 
 static UINT32 GFX_Draw_Start(APPLICATION_T *app) {
 	APP_INSTANCE_T *appi;
 
 	appi = (APP_INSTANCE_T *) app;
 
-	init_main(NULL, NULL);
+#if defined(EP1) || defined(EP2)
+	appi->p_bitmap = (UINT8 *) appi->ahi.bitmap.image;
+#elif defined(EM1) || defined(EM2)
+	appi->p_bitmap = (UINT8 *) appi->gfsdk.fb0;
+#endif
 
-	backbuffer = appi->p_bitmap;
+	pp_bitmap = (UINT16 *) appi->p_bitmap;
+
+	init_main(NULL, NULL);
 
 	return RESULT_OK;
 }
@@ -1290,6 +1310,8 @@ static UINT32 GFX_Draw_Stop(APPLICATION_T *app) {
 	APP_INSTANCE_T *appi;
 
 	appi = (APP_INSTANCE_T *) app;
+
+	LOG("%s\n", "STOP");
 
 	return RESULT_OK;
 }
@@ -1304,21 +1326,34 @@ static UINT32 GFX_Draw_Step(APPLICATION_T *app) {
 	return RESULT_OK;
 }
 
-static unsigned short *frontbuffer;
 
-static unsigned int vid_width = 0;
-static unsigned int vid_height = 0;
+unsigned short *backbuffer;
+unsigned short *frontbuffer;
 
-static unsigned int screen_width = 0;
-static unsigned int screen_height = 0;
+//static unsigned int vid_width = 0;
+//static unsigned int vid_height = 0;
 
-static unsigned char* pb = NULL;
-static unsigned char* pl = NULL;
+//static unsigned int screen_width = 0;
+//static unsigned int screen_height = 0;
 
-void I_FinishUpdate_e32(const byte* srcBuffer, const byte* pallete, const unsigned int width, const unsigned int height)
+//static unsigned char* pb = NULL;
+//static unsigned char* pl = NULL;
+
+void I_FinishUpdate_e32(const byte* srcBuffer, const byte* palette, const unsigned int width, const unsigned int height)
 {
-	pb = (unsigned char*)srcBuffer;
-	pl = (unsigned char*)pallete;
+//	LOG("%d %d\n", width, height);
+
+	for (int i = 0; i < 240*160; i++) {
+		UINT8 r = palette[srcBuffer[i] * 3];
+		UINT8 g = palette[srcBuffer[i] * 3 + 1];
+		UINT8 b = palette[srcBuffer[i] * 3 + 2];
+		pp_bitmap[i] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+	}
+
+
+//	LOG("%s %d %d\n", "Finish!", width, height);
+//	pb = (unsigned char*)srcBuffer;
+//	pl = (unsigned char*)pallete;
 
 //	for(int p = 0; p < 256; p++)
 //	{
@@ -1358,8 +1393,8 @@ void I_InitScreen_e32()
 
 void I_CreateBackBuffer_e32()
 {
-//	backbuffer = appi->p_bitmap;
-	frontbuffer = malloc(240 * 160);
+	backbuffer = malloc(240 * 160 * 2);
+	frontbuffer = malloc(240 * 160 * 2);
 
 	unsigned short* bb = I_GetBackBuffer();
 
@@ -1388,6 +1423,7 @@ unsigned short* I_GetFrontBuffer()
 	return frontbuffer;
 }
 
+#if 0
 #define MAX_MESSAGE_SIZE 128
 
 void I_Error (const char *error, ...)
@@ -1414,3 +1450,4 @@ void I_Error (const char *error, ...)
 
 	I_Quit_e32();
 }
+#endif

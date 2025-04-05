@@ -772,9 +772,9 @@ void G_DoCompleted (void)
     if (nodrawers && (_g->demoplayback || _g->timingdemo))
     {
         if (_g->gamemode == commercial)
-            lprintf(LO_INFO, "FINISHED: MAP%02d\n", _g->gamemap);
+            lprintf("FINISHED: MAP%02d\n", _g->gamemap);
         else
-            lprintf(LO_INFO, "FINISHED: E%dM%d\n", _g->gameepisode, _g->gamemap);
+            lprintf("FINISHED: E%dM%d\n", _g->gameepisode, _g->gamemap);
     }
 
     WI_Start (&_g->wminfo);
@@ -948,7 +948,7 @@ static void G_DoSaveGame(boolean menu)
 
     byte* savebuffer = Z_Malloc(savebuffersize, PU_STATIC, NULL);
 
-    LoadSRAM(savebuffer, savebuffersize, 0);
+    //LoadSRAM(savebuffer, savebuffersize, 0);
 
     gba_save_data_t* saveslots = (gba_save_data_t*)savebuffer;
 
@@ -990,14 +990,14 @@ void G_SaveSettings()
     settings.musicVolume = _g->snd_MusicVolume;
     settings.soundVolume = _g->snd_SfxVolume;
 
-    SaveSRAM((byte*)&settings, sizeof(settings), settings_sram_offset);
+    //SaveSRAM((byte*)&settings, sizeof(settings), settings_sram_offset);
 }
 
 void G_LoadSettings()
 {
     gba_save_settings_t settings;
 
-    LoadSRAM((byte*)&settings, sizeof(settings), settings_sram_offset);
+    //LoadSRAM((byte*)&settings, sizeof(settings), settings_sram_offset);
 
     if(settings.cookie == settings_cookie)
     {
@@ -1113,7 +1113,7 @@ void G_ReadDemoTiccmd (ticcmd_t* cmd)
         G_CheckDemoStatus();      // end of demo data stream
     else if (_g->demoplayback && _g->demo_p + (_g->longtics?5:4) > _g->demobuffer + _g->demolength)
     {
-        lprintf(LO_WARN, "G_ReadDemoTiccmd: missing DEMOMARKER\n");
+        lprintf("%s\n", "G_ReadDemoTiccmd: missing DEMOMARKER\n");
         G_CheckDemoStatus();
     }
     else

@@ -40,7 +40,7 @@
 
 #define ZONEID	0x1d4a11
 
-const unsigned int maxHeapSize = (2000 * 1024);
+const unsigned int maxHeapSize = (1300 * 1024);
 
 #ifndef GBA
     static int running_count = 0;
@@ -75,16 +75,16 @@ void Z_Init (void)
     unsigned int heapSize = maxHeapSize;
 
     //We can now alloc all of the rest fo the memory.
-    do
-    {
+//    do
+//    {
         mainzone = malloc(heapSize);
-        heapSize -= 4;
+//        heapSize -= 4;
 
-    } while(mainzone == NULL);
+//    } while(mainzone == NULL);
 
-    heapSize += 4;
+//    heapSize += 4;
 
-    lprintf(LO_INFO,"Z_Init: Heapsize is %d bytes.", heapSize);
+    lprintf("Z_Init: Heapsize is %d bytes.\n", heapSize);
 
     // set the entire zone to one free block
     mainzone->blocklist.next =

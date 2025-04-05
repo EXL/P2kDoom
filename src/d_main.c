@@ -690,8 +690,12 @@ static void CheckIWAD2(const char* iwadname, GameMode_t *gmode, boolean *hassec)
 
 static void IdentifyVersion()
 {
+#if !defined(__P2K__)
 	const char *iwad_name = "doom1.wad";
-
+#else
+	const char *iwad_name = "/a/elf/ELFs/doom1.wad";
+//	const char *iwad_name = "/e/doom2.wad";
+#endif
     CheckIWAD2(iwad_name, &_g->gamemode, &_g->haswolflevels);
 
     /* jff 8/23/98 set gamemission global appropriately in all cases
@@ -716,7 +720,7 @@ static void IdentifyVersion()
     if (_g->gamemode == indetermined)
     {
         //jff 9/3/98 use logical output routine
-        lprintf(LO_WARN,"Unknown Game Version, may not work\n");
+        lprintf("%s\n","Unknown Game Version, may not work\n");
     }
 
 	D_AddFile(iwad_name,source_iwad);
@@ -771,18 +775,18 @@ void D_DoomMainSetup(void)
 
     /* cphipps - the main display. This shows the build date, copyright, and game type */
 
-    lprintf(LO_ALWAYS,"PrBoom (built %s)", version_date);
-    lprintf(LO_ALWAYS, "Playing: %s", doomverstr);
-    lprintf(LO_ALWAYS, "PrBoom is released under the");
-    lprintf(LO_ALWAYS, "GNU GPL v2.0.");
+    lprintf("PrBoom (built %s)", version_date);
+    lprintf("Playing: %s", doomverstr);
+//    lprintf("%s\n", "PrBoom is released under the");
+//    lprintf("%s\n", "GNU GPL v2.0.");
 
-    lprintf(LO_ALWAYS, "You are welcome to");
-    lprintf(LO_ALWAYS, "redistribute it under");
-    lprintf(LO_ALWAYS, "certain conditions.");
+//    lprintf(LO_ALWAYS, "You are welcome to");
+//    lprintf(LO_ALWAYS, "redistribute it under");
+//    lprintf(LO_ALWAYS, "certain conditions.");
 
-    lprintf(LO_ALWAYS, "It comes with ABSOLUTELY\nNO WARRANTY.\nSee the file COPYING for\ndetails.");
+//    lprintf(LO_ALWAYS, "It comes with ABSOLUTELY\nNO WARRANTY.\nSee the file COPYING for\ndetails.");
 
-    lprintf(LO_ALWAYS, "\nPhew. Thats the nasty legal\nstuff out of the way.\nLets play Doom!\n");
+//    lprintf(LO_ALWAYS, "\nPhew. Thats the nasty legal\nstuff out of the way.\nLets play Doom!\n");
 
 
 
@@ -793,38 +797,38 @@ void D_DoomMainSetup(void)
 
     // CPhipps - move up netgame init
     //jff 9/3/98 use logical output routine
-    lprintf(LO_INFO,"D_InitNetGame.");
+    lprintf("%s\n","D_InitNetGame.");
     D_InitNetGame();
 
     //jff 9/3/98 use logical output routine
-    lprintf(LO_INFO,"W_Init: Init WADfiles.");
+    lprintf("%s\n","W_Init: Init WADfiles.");
     W_Init(); // CPhipps - handling of wadfiles init changed
 
     //jff 9/3/98 use logical output routine
-    lprintf(LO_INFO,"M_Init: Init misc info.");
+    lprintf("%s\n","M_Init: Init misc info.");
     M_Init();
 
     //jff 9/3/98 use logical output routine
-    lprintf(LO_INFO,"R_Init: DOOM refresh daemon.");
+    lprintf("%s\n","R_Init: DOOM refresh daemon.");
     R_Init();
 
     //jff 9/3/98 use logical output routine
-    lprintf(LO_INFO,"P_Init: Init Playloop state.");
+    lprintf("%s\n","P_Init: Init Playloop state.");
     P_Init();
 
     //jff 9/3/98 use logical output routine
-    lprintf(LO_INFO,"S_Init: Setting up sound.");
+    lprintf("%s\n","S_Init: Setting up sound.");
     S_Init(_g->snd_SfxVolume /* *8 */, _g->snd_MusicVolume /* *8*/ );
 
     //jff 9/3/98 use logical output routine
-    lprintf(LO_INFO,"HU_Init: Setting up HUD.");
+    lprintf("%s\n","HU_Init: Setting up HUD.");
     HU_Init();
 
     //jff 9/3/98 use logical output routine
-    lprintf(LO_INFO,"ST_Init: Init status bar.");
+    lprintf("%s\n","ST_Init: Init status bar.");
     ST_Init();
 
-    lprintf(LO_INFO,"G_LoadSettings: Loading settings.");
+    lprintf("%s\n","G_LoadSettings: Loading settings.");
     G_LoadSettings();
 
     _g->idmusnum = -1; //jff 3/17/98 insure idmus number is blank
@@ -833,6 +837,7 @@ void D_DoomMainSetup(void)
 
     _g->highDetail = false;
 
+	lprintf("%s\n","INIT GRAPHICS START.");
     I_InitGraphics();
 
     if (timedemo)
@@ -844,6 +849,7 @@ void D_DoomMainSetup(void)
     }
     else
     {
+		lprintf("%s\n","START TITLE!");
         D_StartTitle();                 // start up intro loop
     }
 }
@@ -911,7 +917,7 @@ void GetFirstMap(int *ep, int *map)
             }
         }
         //jff 9/3/98 use logical output routine
-        lprintf(LO_CONFIRM,"Auto-warping to first %slevel: %s\n",
+        lprintf("Auto-warping to first %slevel: %s\n",
                 newlevel ? "new " : "", name);  // Ty 10/04/98 - new level test
     }
 }

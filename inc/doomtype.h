@@ -45,6 +45,9 @@
 #include <mem.h>
 #include <utilities.h>
 
+#define I_Error PFprintf
+#define lprintf PFprintf
+
 #endif
 
 #ifndef __BYTEBOOL__

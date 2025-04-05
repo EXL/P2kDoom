@@ -65,13 +65,13 @@
 
 void R_Init (void)
 {
-  lprintf(LO_INFO, "R_LoadTrigTables");
+  lprintf("%s\n", "R_LoadTrigTables");
   R_LoadTrigTables();
-  lprintf(LO_INFO, "R_InitData");
+  lprintf("%s\n", "R_InitData");
   R_InitData();
-  lprintf(LO_INFO, "R_InitPlanes");
+  lprintf("%s\n", "R_InitPlanes");
   R_InitPlanes();
-  lprintf(LO_INFO, "R_InitBuffer");
+  lprintf("%s\n", "R_InitBuffer");
   R_InitBuffer();
 }
 
