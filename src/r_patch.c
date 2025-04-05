@@ -39,7 +39,8 @@
 #include "r_draw.h"
 #include "lprintf.h"
 #include "r_patch.h"
-#include <assert.h>
+
+//#include <assert.h>
 
 #include "global_data.h"
 

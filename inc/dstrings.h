@@ -71,6 +71,8 @@
  * replace hardcoded limit with extern var (silly hack, I know)
  */
 
+#if !defined(__P2K__)
 #include <stddef.h>
+#endif
 
 #endif

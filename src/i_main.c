@@ -57,9 +57,11 @@
 #include "lprintf.h"
 #include "global_data.h"
 
+#if !defined(__P2K__)
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#endif
 
 /* Most of the following has been rewritten by Lee Killough
  *

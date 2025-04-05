@@ -32,7 +32,9 @@
  *
  *-----------------------------------------------------------------------------*/
 
+#if !defined(__P2K__)
 #include <math.h>
+#endif
 
 #include "doomstat.h"
 #include "m_bbox.h"
@@ -183,7 +185,7 @@ static void P_LoadThings (int lump)
     _g->thingPool = Z_Calloc(numthings, sizeof(mobj_t), PU_LEVEL, NULL);
     _g->thingPoolSize = numthings;
 
-    for(int i = 0; i < numthings; i++)
+    for(i = 0; i < numthings; i++)
     {
         _g->thingPool[i].type = MT_NOTHING;
     }
@@ -428,10 +430,11 @@ static int P_GroupLines (void)
 
     for (i=0, sector = _g->sectors; i<_g->numsectors; i++, sector++)
     {
+        int l;
         fixed_t bbox[4];
         M_ClearBox(bbox);
 
-        for(int l = 0; l < sector->linecount; l++)
+        for(l = 0; l < sector->linecount; l++)
         {
             M_AddToBox (bbox, sector->lines[l]->v1.x, sector->lines[l]->v1.y);
             M_AddToBox (bbox, sector->lines[l]->v2.x, sector->lines[l]->v2.y);

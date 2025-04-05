@@ -39,6 +39,8 @@
 #pragma interface
 #endif
 
+#include "doomtype.h"
+
 //
 // TYPES
 //

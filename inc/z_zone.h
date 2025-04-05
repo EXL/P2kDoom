@@ -30,10 +30,14 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#if !defined(__P2K__)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#else
+#include "doomtype.h"
+#endif
 
 //
 // ZONE MEMORY

@@ -1,7 +1,10 @@
 #ifndef GBA_FUNCTIONS_H
 #define GBA_FUNCTIONS_H
 
+#if !defined(__P2K__)
 #include <string.h>
+#endif
+
 #include "doomtype.h"
 #include "m_fixed.h"
 

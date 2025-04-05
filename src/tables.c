@@ -49,11 +49,10 @@
 #include "config.h"
 #endif
 
-#include <stddef.h>
+//#include <stddef.h>
+
 #include "w_wad.h"
 #include "tables.h"
-
-
 
 const fixed_t finetangent[4096] =
 {

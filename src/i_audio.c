@@ -37,7 +37,10 @@
 #include "config.h"
 #endif
 
+#if !defined(__P2K__)
 #include <math.h>
+#endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

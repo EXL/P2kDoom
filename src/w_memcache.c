@@ -91,7 +91,11 @@ void W_InitCache(void)
   cachelump = calloc(sizeof *cachelump, numlumps);
   if (!cachelump)
     I_Error ("W_Init: Couldn't allocate lumpcache");
+#if !defined(__P2K__)
   fprintf(stderr, "cachelump size: %lu\n", (sizeof *cachelump) * numlumps);
+#else
+  LOG("cachelump size: %lu\n", (sizeof *cachelump) * numlumps);
+#endif
 
 #ifdef TIMEDIAG
   atexit(W_ReportLocks);
@@ -121,8 +125,13 @@ const void *W_CacheLumpNum(int lump)
   if (!cachelump[lump].cache) {     // read the lump in
     W_ReadLump(lump, Z_Malloc(W_LumpLength(lump), PU_CACHE, &cachelump[lump].cache));
     cache_lump_size += W_LumpLength(lump);
+#if !defined(__P2K__)
     fprintf(stderr, "===> Cached: %.8s:%d:%d -- %d bytes (~ %d KiB)\n",
         lumpinfo[lump].name, lump, W_LumpLength(lump), cache_lump_size, cache_lump_size / 1024);
+#else
+    LOG("===> Cached: %.8s:%d:%d -- %d bytes (~ %d KiB)\n",
+        lumpinfo[lump].name, lump, W_LumpLength(lump), cache_lump_size, cache_lump_size / 1024);
+#endif
   }
 #if 0
   /* cph - if wasn't locked but now is, tell z_zone to hold it */

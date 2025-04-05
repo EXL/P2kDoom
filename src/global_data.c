@@ -1,4 +1,7 @@
+#if !defined(__P2K__)
 #include <stdlib.h>
+#endif
+
 #include "global_data.h"
 
 #include "z_zone.h"

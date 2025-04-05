@@ -356,10 +356,11 @@ static void ST_doPaletteStuff(void)
 
 static void ST_drawWidgets(boolean refresh)
 {
+    int i;
     STlib_updateNum(&_g->w_ready, CR_RED, refresh);
 	
 	// Restore the ammo numbers for backpack stats I guess, etc ~Kippykip
-	for (int i=0;i<4;i++)
+	for (i=0;i<4;i++)
     {
 		STlib_updateNum(&_g->w_ammo[i], CR_DEFAULT, refresh);
 		STlib_updateNum(&_g->w_maxammo[i], CR_DEFAULT, refresh);
@@ -371,10 +372,10 @@ static void ST_drawWidgets(boolean refresh)
 
     STlib_updateMultIcon(&_g->w_faces, refresh);
 
-    for (int i=0;i<3;i++)
+    for (i=0;i<3;i++)
         STlib_updateMultIcon(&_g->w_keyboxes[i], refresh);
 
-    for (int i=0;i<6;i++)
+    for (i=0;i<6;i++)
         STlib_updateMultIcon(&_g->w_arms[i], refresh);
 }
 
@@ -390,6 +391,7 @@ static void ST_doRefresh(void)
 
 static boolean ST_NeedUpdate()
 {
+	int i;
 	// ready weapon ammo
 	if(_g->w_ready.oldnum != *_g->w_ready.num)
         return true;
@@ -404,7 +406,7 @@ static boolean ST_NeedUpdate()
         return true;
 	
 	// ammo
-    for(int i=0; i<4; i++)
+    for(i=0; i<4; i++)
     {
         if(_g->w_ammo[i].oldnum != *_g->w_ammo[i].num)
             return true;
@@ -413,13 +415,13 @@ static boolean ST_NeedUpdate()
     }
 
     // weapons owned
-    for(int i=0; i<6; i++)
+    for(i=0; i<6; i++)
     {
         if(_g->w_arms[i].oldinum != *_g->w_arms[i].inum)
             return true;
     }
 
-    for(int i = 0; i < 3; i++)
+    for(i = 0; i < 3; i++)
     {
         if(_g->w_keyboxes[i].oldinum != *_g->w_keyboxes[i].inum)
             return true;
@@ -475,7 +477,7 @@ void ST_Drawer(boolean statusbaron, boolean refresh)
 //
 static void ST_loadGraphics(boolean doload)
 {
-    int  i, facenum;
+    int  i, j, facenum;
     char namebuf[9];
 
     // Load the numbers, tall and short
@@ -521,7 +523,7 @@ static void ST_loadGraphics(boolean doload)
 
     for (i=0;i<ST_NUMPAINFACES;i++)
     {
-        for (int j=0;j<ST_NUMSTRAIGHTFACES;j++)
+        for (j=0;j<ST_NUMSTRAIGHTFACES;j++)
         {
             sprintf(namebuf, "STFST%d%d", i, j);
             _g->faces[facenum++] = W_CacheLumpName(namebuf);

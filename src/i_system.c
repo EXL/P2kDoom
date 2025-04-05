@@ -33,9 +33,10 @@
  *-----------------------------------------------------------------------------
  */
 
-
+#if !defined(__P2K__)
 #include <sys/stat.h>
 #include <errno.h>
+#endif
 
 #include "doomtype.h"
 #include "m_fixed.h"

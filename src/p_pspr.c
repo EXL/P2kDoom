@@ -285,9 +285,10 @@ int P_CheckCanSwitchWeapon(weapontype_t weapon, player_t* player)
 
 int P_WeaponCycleUp(player_t *player)
 {
+    int i;
     int w = player->readyweapon;
 
-    for(int i = 0; i < NUMWEAPONS; i++)
+    for(i = 0; i < NUMWEAPONS; i++)
     {
         w++;
         if(w >= NUMWEAPONS)
@@ -336,9 +337,10 @@ int P_WeaponCycleUp(player_t *player)
 
 int P_WeaponCycleDown(player_t *player)
 {
+    int i;
     int w = player->readyweapon;
 
-    for(int i = 0; i < NUMWEAPONS; i++)
+    for(i = 0; i < NUMWEAPONS; i++)
     {
         w--;
         if(w < 0)

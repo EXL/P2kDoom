@@ -37,9 +37,13 @@
 
 
 
+#if !defined(__P2K__)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#else
+#include <filesystem.h>
+#endif
 
 #include "doomdef.h"
 #include "doomtype.h"
@@ -133,27 +137,33 @@ void D_PostEvent(event_t *ev)
 //         - modified to allocate & use new wadfiles array
 void D_AddFile (const char *file, wad_source_t source)
 {
-	char *gwa_filename=NULL;
+//	char *gwa_filename=NULL;
 
-	wadfiles = realloc(wadfiles, sizeof(*wadfiles)*(numwadfiles+1));
+	if (wadfiles != NULL)
+		free(wadfiles);
+	wadfiles = malloc(sizeof(*wadfiles)*(numwadfiles+1));
+
 	wadfiles[numwadfiles].name =
 		AddDefaultExtension(strcpy(malloc(strlen(file)+5), file), ".wad");
 	wadfiles[numwadfiles].src = source; // Ty 08/29/98
 	numwadfiles++;
 	// proff: automatically try to add the gwa files
 	// proff - moved from w_wad.c
-	gwa_filename=AddDefaultExtension(strcpy(malloc(strlen(file)+5), file), ".wad");
-	if (strlen(gwa_filename)>4)
-		if (!strcasecmp(gwa_filename+(strlen(gwa_filename)-4),".wad"))
-		{
-			char *ext;
-			ext = &gwa_filename[strlen(gwa_filename)-4];
-			ext[1] = 'g'; ext[2] = 'w'; ext[3] = 'a';
-			wadfiles = realloc(wadfiles, sizeof(*wadfiles)*(numwadfiles+1));
-			wadfiles[numwadfiles].name = gwa_filename;
-			wadfiles[numwadfiles].src = source; // Ty 08/29/98
-			numwadfiles++;
-		}
+//	gwa_filename=AddDefaultExtension(strcpy(malloc(strlen(file)+5), file), ".wad");
+//	if (strlen(gwa_filename)>4)
+//		if (!strcasecmp(gwa_filename+(strlen(gwa_filename)-4),".wad"))
+//		{
+//			char *ext;
+//			ext = &gwa_filename[strlen(gwa_filename)-4];
+//			ext[1] = 'g'; ext[2] = 'w'; ext[3] = 'a';
+
+//			if (wadfiles!=NULL)
+//				free(wadfiles);
+//			wadfiles = malloc(sizeof(*wadfiles)*(numwadfiles+1));
+//			wadfiles[numwadfiles].name = gwa_filename;
+//			wadfiles[numwadfiles].src = source; // Ty 08/29/98
+//			numwadfiles++;
+//		}
 }
 
 //
@@ -559,9 +569,16 @@ void D_StartTitle (void)
 static void CheckIWAD2(const char* iwadname, GameMode_t *gmode, boolean *hassec)
 {
 	wadinfo_t header;
+#if !defined(__P2K__)
 	FILE* fp = fopen(iwadname, "rb");
 	fread(&header, sizeof(header), 1, fp);
-
+#else
+	UINT32 readen;
+	WCHAR wpath[64];
+	u_atou(iwadname, wpath);
+	FILE_HANDLE_T fp = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
+	DL_FsReadFile(&header, sizeof(header), 1, fp, &readen);
+#endif
     int ud=0,rg=0,sw=0,cm=0,sc=0;
 
     if(!strncmp(header.identification, "IWAD", 4))
@@ -569,9 +586,16 @@ static void CheckIWAD2(const char* iwadname, GameMode_t *gmode, boolean *hassec)
 		filelump_t *fileinfo;
         size_t length = header.numlumps;
 		fileinfo = malloc(length*sizeof(filelump_t));
+
+#if !defined(__P2K__)
 		fseek (fp, header.infotableofs, SEEK_SET);
 		fread (fileinfo, sizeof(filelump_t), length, fp);
 		fclose(fp);
+#else
+		DL_FsFSeekFile(fp, header.infotableofs, SEEK_WHENCE_SET);
+		DL_FsReadFile(fileinfo, sizeof(filelump_t), length, fp, &readen);
+		DL_FsCloseFile(fp);
+#endif
 
 //        const filelump_t* fileinfo = (const filelump_t*)&iwad_data[header->infotableofs];
 

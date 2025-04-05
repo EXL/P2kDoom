@@ -510,9 +510,10 @@ static think_t P_ThinkerFunctionForType(mobjtype_t type, mobj_t* mobj)
 
 static mobj_t* P_NewMobj()
 {
+    int i;
     mobj_t* mobj = NULL;
 
-    for(int i = _g->thingPoolSize-1; i >= 0; i--)
+    for(i = _g->thingPoolSize-1; i >= 0; i--)
     {
         if(_g->thingPool[i].type == MT_NOTHING)
         {
@@ -639,8 +640,9 @@ void P_RemoveMobj (mobj_t* mobj)
 
 static PUREFUNC int P_FindDoomedNum(unsigned int type)
 {
+    int i;
     // find which type to spawn
-    for (int i=0 ; i< NUMMOBJTYPES ; i++)
+    for (i=0 ; i< NUMMOBJTYPES ; i++)
     {
         if (type == mobjinfo[i].doomednum)
             return i;

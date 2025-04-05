@@ -35,9 +35,11 @@
  *-----------------------------------------------------------------------------
  */
 
+#if !defined(__P2K__)
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#endif
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -842,6 +844,7 @@ void G_ForcedLoadGame(void)
 //
 void G_UpdateSaveGameStrings()
 {
+    int i;
     unsigned int savebuffersize = sizeof(gba_save_data_t) * 8;
 
 
@@ -851,7 +854,7 @@ void G_UpdateSaveGameStrings()
 
     gba_save_data_t* saveslots = (gba_save_data_t*)loadbuffer;
 
-    for(int i = 0; i < 8; i++)
+    for(i = 0; i < 8; i++)
     {
         if(saveslots[i].save_present != 1)
         {
@@ -861,8 +864,10 @@ void G_UpdateSaveGameStrings()
         {
             if(_g->gamemode == commercial)
             {
-                strcpy(_g->savegamestrings[i], "MAP ");
-                snprintf (&_g->savegamestrings[i][4], 8, "%d", saveslots[i].gamemap);
+                // TODO: P2K
+                ///
+//                strcpy(_g->savegamestrings[i], "MAP ");
+//                snprintf (&_g->savegamestrings[i][4], 8, "%d", saveslots[i].gamemap);
                 // itoa(saveslots[i].gamemap, &_g->savegamestrings[i][4], 10);
             }
             else
@@ -1351,15 +1356,16 @@ boolean G_CheckDemoStatus (void)
         int endtime = I_GetTime();
         // killough -- added fps information and made it work for longer demos:
         unsigned realtics = endtime-_g->starttime;
-        I_Error ("Timed %u gametics in %u realtics = %-.1f frames per second",
+        unsigned resultfps = TICRATE * 1000 * _g->gametic / realtics;
+        I_Error ("Timed %u gametics in %u realtics = %u.%.3u frames per second",
                  (unsigned) _g->gametic,realtics,
-                 (unsigned) _g->gametic * (double) TICRATE / realtics);
+                 resultfps / 1000, resultfps % 1000);
     }
 
     if (_g->demoplayback)
     {
-        if (_g->singledemo)
-            exit(0);  // killough
+//        if (_g->singledemo)
+//            exit(0);  // killough
 
         if (demolumpnum != -1)
         {

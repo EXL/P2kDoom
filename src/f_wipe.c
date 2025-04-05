@@ -73,6 +73,9 @@ int wipe_EndScreen(void)
 // 2021-08-08 next-hack: commented and modified to use the dual buffer.
 static int wipe_doMelt(int ticks)
 {
+    int i;
+    int j;
+
     boolean done = true;
 
     unsigned short* backbuffer = I_GetBackBuffer();
@@ -80,7 +83,7 @@ static int wipe_doMelt(int ticks)
 
     while (ticks--)
     {
-        for (int i = 0; i < SCREENWIDTH; i++)
+        for (i = 0; i < SCREENWIDTH; i++)
         {
             if (wipe_y_lookup[i] < 0)
             {
@@ -110,7 +113,7 @@ static int wipe_doMelt(int ticks)
                 // scroll down the column. Of course we need to copy from the bottom... up to
                 // SCREENHEIGHT - yLookup - dy
 
-                for (int j = SCREENHEIGHT - wipe_y_lookup[i] - dy; j; j--)
+                for (j = SCREENHEIGHT - wipe_y_lookup[i] - dy; j; j--)
                 {
                     *d = *s;
                     d += -SCREENPITCH;
@@ -121,7 +124,7 @@ static int wipe_doMelt(int ticks)
                 s = &backbuffer[i] +  wipe_y_lookup[i] * SCREENPITCH;
                 d = &frontbuffer[i] + wipe_y_lookup[i] * SCREENPITCH;
 
-                for (int j = 0 ; j < dy; j++)
+                for (j = 0 ; j < dy; j++)
                 {
                     *d = *s;
                     d += SCREENPITCH;
@@ -138,9 +141,10 @@ static int wipe_doMelt(int ticks)
 
 void wipe_initMelt()
 {
+    int i;
     // setup initial column positions (y<0 => not ready to scroll yet)
     wipe_y_lookup[0] = -(M_Random() % 16);
-    for (int i = 1; i < SCREENWIDTH; i++)
+    for (i = 1; i < SCREENWIDTH; i++)
     {
         int r = (M_Random() % 3) - 1;
 

@@ -39,7 +39,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#if !defined(__P2K__)
 #include <sys/types.h>
+#endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif

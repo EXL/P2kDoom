@@ -39,6 +39,14 @@
 #include "config.h"
 #endif
 
+#if defined(__P2K__)
+
+#include <typedefs.h>
+#include <mem.h>
+#include <utilities.h>
+
+#endif
+
 #ifndef __BYTEBOOL__
 #define __BYTEBOOL__
 /* Fixed to use builtin bool type with C++. */
@@ -88,10 +96,12 @@ typedef unsigned char byte;
 #endif
 
 /* CPhipps - use limits.h instead of depreciated values.h */
-#include <limits.h>
+//#include <limits.h>
 
 /* EXL - for size_t */
-#include <stdlib.h>
+//#include <stdlib.h>
+
+typedef unsigned int size_t;
 
 /* cph - from v_video.h, needed by gl_struct.h */
 enum patch_translation_e {
@@ -100,5 +110,16 @@ enum patch_translation_e {
   VPT_TRANS   = 2, // Translate image via a translation table
   VPT_STRETCH = 4, // Stretch to compensate for high-res
 };
+
+#if defined(__P2K__)
+#define INT_MAX (2147483647)
+#define INT_MIN (-2147483648)
+#define UINT_MAX (4294967295U)
+#define USHRT_MAX (65535)
+#define SHRT_MIN (-32768)
+#define SHRT_MAX (32767)
+#else
+#include <limits.h>
+#endif
 
 #endif

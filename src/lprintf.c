@@ -38,8 +38,11 @@
 #endif
 
 
+#if !defined(__P2K__)
 #include <stdio.h>
 #include <stdlib.h>
+#endif
+
 #include <stdarg.h>
 
 #include "doomtype.h"
@@ -55,16 +58,20 @@ int lprintf(OutputLevels pri, const char *s, ...)
 {
 	char msg[MAX_MESSAGE_SIZE];
 
-	va_list v;
-	va_start(v,s);
+//	va_list v;
+//	va_start(v,s);
 	
-	vsprintf(msg,s,v);
+	sprintf(msg, "%s\n", s);
 	
-	va_end(v);
+//	va_end(v);
 
     int len = strlen(msg);
 
+#if defined(__P2K__)
+    LOG("%s\n", msg);
+#else
     fprintf(stderr, "%s\n", msg);
+#endif
 
     return 0;
 }

@@ -35,7 +35,7 @@
 
 //This is to keep the codesize under control.
 //This whole file needs to fit within IWRAM.
-#pragma GCC optimize ("Os")
+//#pragma GCC optimize ("Os")
 
 
 #ifdef HAVE_CONFIG_H
@@ -46,8 +46,10 @@
     #include <time.h>
 #endif
 
-// TODO: P2K
+// TODO: P2K?
+#if !defined(__P2K__)
 #include <time.h>
+#endif
 
 #include "doomstat.h"
 #include "d_net.h"
@@ -546,8 +548,8 @@ static const lighttable_t* R_LoadColorMap(int lightlevel)
 //  be used. It has also been used with Wolfenstein 3D.
 //
 
-#pragma GCC push_options
-#pragma GCC optimize ("Ofast")
+//#pragma GCC push_options
+//#pragma GCC optimize ("Ofast")
 
 #define COLEXTRABITS 9
 #define COLBITS (FRACBITS + COLEXTRABITS)
@@ -747,7 +749,7 @@ static void R_DrawFuzzColumn (const draw_column_vars_t *dcvars)
     _g->fuzzpos = fuzzpos;
 }
 
-#pragma GCC pop_options
+//#pragma GCC pop_options
 
 
 
@@ -1042,13 +1044,14 @@ static PUREFUNC int R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t *line)
 
 static void R_DrawSprite (const vissprite_t* spr)
 {
+    int x;
     short* clipbot = floorclip;
     short* cliptop = ceilingclip;
 
     fixed_t scale;
     fixed_t lowscale;
 
-    for (int x = spr->x1 ; x<=spr->x2 ; x++)
+    for (x = spr->x1 ; x<=spr->x2 ; x++)
     {
         clipbot[x] = viewheight;
         cliptop[x] = -1;
@@ -1062,10 +1065,12 @@ static void R_DrawSprite (const vissprite_t* spr)
     // (pointer check was originally nonportable
     // and buggy, by going past LEFT end of array):
 
+    const drawseg_t* ds;
     const drawseg_t* drawsegs  =_g->drawsegs;
 
-    for (const drawseg_t* ds = ds_p; ds-- > drawsegs; )  // new -- killough
+    for (ds = ds_p; ds-- > drawsegs; )  // new -- killough
     {
+        int x;
         // determine if the drawseg obscures the sprite
         if (ds->x1 > spr->x2 || ds->x2 < spr->x1 || (!ds->silhouette && !ds->maskedtexturecol))
             continue;      // does not cover sprite
@@ -1097,7 +1102,7 @@ static void R_DrawSprite (const vissprite_t* spr)
 
         if (ds->silhouette & SIL_BOTTOM && spr->gz < ds->bsilheight) //bottom sil
         {
-            for (int x = r1; x <= r2; x++)
+            for (x = r1; x <= r2; x++)
             {
                 if (clipbot[x] == viewheight)
                     clipbot[x] = ds->sprbottomclip[x];
@@ -1109,7 +1114,7 @@ static void R_DrawSprite (const vissprite_t* spr)
 
         if (ds->silhouette & SIL_TOP && gzt > ds->tsilheight)   // top sil
         {
-            for (int x=r1; x <= r2; x++)
+            for (x=r1; x <= r2; x++)
             {
                 if (cliptop[x] == -1)
                     cliptop[x] = ds->sprtopclip[x];
@@ -1252,7 +1257,7 @@ static void R_SortVisSprites (void)
         while (--i>=0)
             vissprite_ptrs[i] = _g->vissprites+i;
 
-        qsort(vissprite_ptrs, num_vissprite, sizeof (vissprite_t*), compare);
+        //qsort(vissprite_ptrs, num_vissprite, sizeof (vissprite_t*), compare);
     }
 }
 
@@ -1299,8 +1304,8 @@ static void R_DrawMasked(void)
 //  and the inner loop has to step in texture space u and v.
 //
 
-#pragma GCC push_options
-#pragma GCC optimize ("Ofast")
+//#pragma GCC push_options
+//#pragma GCC optimize ("Ofast")
 
 inline static void R_DrawSpanPixel(unsigned short* dest, const byte* source, const byte* colormap, unsigned int position)
 {
@@ -1381,7 +1386,7 @@ static void R_DrawSpan(unsigned int y, unsigned int x1, unsigned int x2, const d
     }
 }
 
-#pragma GCC pop_options
+//#pragma GCC pop_options
 
 static void R_MapPlane(unsigned int y, unsigned int x1, unsigned int x2, draw_span_vars_t *dsvars)
 {    
@@ -2912,7 +2917,8 @@ static void R_ClearSprites(void)
 
 static void R_DrawPlanes (void)
 {
-    for (int i=0; i<MAXVISPLANES; i++)
+    int i;
+    for (i=0; i<MAXVISPLANES; i++)
     {
         visplane_t *pl = _g->visplanes[i];
 
@@ -2979,9 +2985,10 @@ void V_DrawPatchNoScale(int x, int y, const patch_t* patch)
     byte* desttop = (byte*)_g->screens[0].data;
     desttop += (ScreenYToOffset(y) << 1) + x;
 
+    unsigned int col;
     unsigned int width = patch->width;
 
-    for (unsigned int col = 0; col < width; col++, desttop++)
+    for (col = 0; col < width; col++, desttop++)
     {
         const column_t* column = (const column_t*)((const byte*)patch + patch->columnofs[col]);
 
@@ -3356,10 +3363,13 @@ int I_GetTime(void)
     thistimereply = (int)((double)now / ((double)CLOCKS_PER_SEC / (double)TICRATE));
 #else
 	// TODO: P2K
-//    thistimereply = I_GetTime_e32();
+#if defined(__P2K__)
+    thistimereply = I_GetTime_e32();
+#else
 	clock_t now = clock();
 
 	thistimereply = (int)((double)now / ((double)CLOCKS_PER_SEC / (double)TICRATE));
+#endif
 #endif
 
     if (thistimereply < _g->lasttimereply)

@@ -36,13 +36,14 @@
 #include "config.h"
 #endif
 
+#if !defined(__P2K__)
 #include <stdlib.h>
+#include <math.h>
+#endif
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-
-#include <math.h>
 
 #include "doomstat.h"
 #include "doomdef.h"

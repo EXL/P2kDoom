@@ -35,8 +35,10 @@
  *
  *-----------------------------------------------------------------------------*/
 
+#if !defined(__P2K__)
 #include <stdio.h>
 #include <fcntl.h>
+#endif
 
 #include "doomdef.h"
 #include "doomstat.h"

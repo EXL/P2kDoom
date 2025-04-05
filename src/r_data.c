@@ -89,6 +89,8 @@ typedef struct
 
 static const texture_t* R_LoadTexture(int texture_num)
 {
+    int j;
+
     const byte* pnames = W_CacheLumpName("PNAMES");
 
     //Skip to list of names.
@@ -150,7 +152,7 @@ static const texture_t* R_LoadTexture(int texture_num)
 
 
 
-    for (int j=0 ; j < texture->patchcount ; j++, mpatch++, patch++)
+    for (j=0 ; j < texture->patchcount ; j++, mpatch++, patch++)
     {
         patch->originx = mpatch->originx;
         patch->originy = mpatch->originy;
@@ -161,15 +163,16 @@ static const texture_t* R_LoadTexture(int texture_num)
         patch->patch = (const patch_t*)W_CacheLumpName(pname);
     }
 
-    for (int j=0 ; j < texture->patchcount ; j++)
+    for (j=0 ; j < texture->patchcount ; j++)
     {
+        int k;
         const texpatch_t* patch = &texture->patches[j];
 
         //Check for patch overlaps.
         int l1 = patch->originx;
         int r1 = l1 + patch->patch->width;
 
-        for(int k = j+1; k < texture->patchcount; k++)
+        for(k = j+1; k < texture->patchcount; k++)
         {
             if(k == j)
                 continue;
@@ -223,6 +226,7 @@ const texture_t* R_GetTexture(int texture)
 
 static int R_GetTextureNumForName(const char* tex_name)
 {
+    int i;
     const int  *maptex1, *maptex2;
     int  numtextures1;
     const int *directory1, *directory2;
@@ -262,7 +266,7 @@ static int R_GetTextureNumForName(const char* tex_name)
     const int *directory = directory1;
     const int *maptex = maptex1;
 
-    for (int i=0 ; i<_g->numtextures ; i++, directory++)
+    for (i=0 ; i<_g->numtextures ; i++, directory++)
     {
         if (i == numtextures1)
         {
@@ -296,10 +300,13 @@ int R_LoadTextureByName(const char* tex_name)
 
     if(tnum == -1)
     {
-        fprintf(stderr, "texture name: %s not found.\n", tex_name);
+#if defined(__P2K__)
+        LOG("Texture Name: %s not fount.\n", tex_name);
+#else
+        I_Error("texture name: %s not found.\n", tex_name);
+#endif
         return NO_TEXTURE;
     }
-
 
     R_GetTexture(tnum);
 
@@ -405,6 +412,7 @@ void R_PrecacheLevel(void)
 
 static void R_InitTextures()
 {
+    int i;
     const int* mtex1 = W_CacheLumpName("TEXTURE1");
     int numtextures1 = *mtex1;
 
@@ -426,7 +434,7 @@ static void R_InitTextures()
 
     texturetranslation = Z_Malloc((_g->numtextures+1)*sizeof*texturetranslation, PU_STATIC, 0);
 
-    for (int i=0 ; i<_g->numtextures ; i++)
+    for (i=0 ; i<_g->numtextures ; i++)
         texturetranslation[i] = i;
 }
 

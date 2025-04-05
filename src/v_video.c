@@ -55,6 +55,9 @@
  */
 void V_DrawBackground(const char* flatname)
 {
+    unsigned int x;
+    unsigned int y;
+
     /* erase the entire screen to a tiled background */
     const byte *src;
     int         lump;
@@ -64,9 +67,9 @@ void V_DrawBackground(const char* flatname)
     // killough 4/17/98:
     src = W_CacheLumpNum(lump = _g->firstflat + R_FlatNumForName(flatname));
 
-    for(unsigned int y = 0; y < SCREENHEIGHT; y++)
+    for(y = 0; y < SCREENHEIGHT; y++)
     {
-        for(unsigned int x = 0; x < 240; x+=64)
+        for(x = 0; x < 240; x+=64)
         {
             unsigned short* d = &dest[ ScreenYToOffset(y) + (x >> 1)];
             const byte* s = &src[((y&63) * 64) + (x&63)];
@@ -90,6 +93,8 @@ void V_DrawBackground(const char* flatname)
 
 void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
 {
+    int dc_x;
+
     y -= patch->topoffset;
     x -= patch->leftoffset;
 
@@ -107,7 +112,7 @@ void V_DrawPatch(int x, int y, int scrn, const patch_t* patch)
     const int right =  ((x + patch->width) *  DX) >> FRACBITS;
     const int bottom = ((y + patch->height) * DY) >> FRACBITS;
 
-    for (int dc_x=left; dc_x<right; dc_x++, col+=DXI)
+    for (dc_x=left; dc_x<right; dc_x++, col+=DXI)
     {
         int colindex = (col>>FRACBITS);
 

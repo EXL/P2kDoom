@@ -40,8 +40,6 @@
 #include <unistd.h>
 #endif
 
-#include <fcntl.h>
-
 #include "doomstat.h"
 #include "d_net.h"
 #include "doomtype.h"
@@ -53,6 +51,12 @@
 #include "w_wad.h"
 #include "lprintf.h"
 
+#if defined(__P2K__)
+#include <filesystem.h>
+#else
+#include <fcntl.h>
+#endif
+
 //
 // GLOBALS
 //
@@ -60,6 +64,22 @@
 // Location of each lump on disk.
 lumpinfo_t *lumpinfo;
 int        numlumps;         // killough
+
+int strncasecmp(const char *s1, const char *s2, size_t n) {
+    if (n == 0) {
+        return 0;
+    }
+
+    while (n-- != 0 && tolower((unsigned char)*s1) == tolower((unsigned char)*s2)) {
+        if (n == 0 || *s1 == '\0' || *s2 == '\0') {
+            break;
+        }
+        s1++;
+        s2++;
+    }
+
+    return tolower((unsigned char)*s1) - tolower((unsigned char)*s2);
+}
 
 void ExtractFileBase (const char *path, char *dest)
 {
@@ -135,40 +155,54 @@ static void W_AddFile(wadfile_info_t *wadfile)
 
 	// open the file and add to directory
 
-	wadfile->handle = open(wadfile->name,O_RDONLY | O_BINARY);
+#if !defined(__P2K__)
+	wadfile->handle = open(wadfile->name, O_RDONLY | O_BINARY);
+#else
+	WCHAR wpath[64];
+	wadfile->handle = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
+#endif
 
-	if (wadfile->handle == -1)
-	{
-		if (  strlen(wadfile->name)<=4 ||      // add error check -- killough
-			(strcasecmp(wadfile->name+strlen(wadfile->name)-4 , ".lmp" ) &&
-			 strcasecmp(wadfile->name+strlen(wadfile->name)-4 , ".gwa" ) )
-			)
-			I_Error("W_AddFile: couldn't open %s",wadfile->name);
-		return;
-	}
+//	if (wadfile->handle == -1)
+//	{
+//		if (  strlen(wadfile->name)<=4 ||      // add error check -- killough
+//			(strcasecmp(wadfile->name+strlen(wadfile->name)-4 , ".lmp" ) &&
+//			 strcasecmp(wadfile->name+strlen(wadfile->name)-4 , ".gwa" ) )
+//			)
+//			I_Error("W_AddFile: couldn't open %s",wadfile->name);
+//		return;
+//	}
 
 	//jff 8/3/98 use logical output routine
 	lprintf (LO_INFO," adding %s\n",wadfile->name);
 	startlump = numlumps;
 
-	if (  strlen(wadfile->name)<=4 ||
-		(
-			strcasecmp(wadfile->name+strlen(wadfile->name)-4,".wad") &&
-			strcasecmp(wadfile->name+strlen(wadfile->name)-4,".gwa")
-			)
-		)
+	if (  strlen(wadfile->name)<=4)
+//		(
+//			strcasecmp(wadfile->name+strlen(wadfile->name)-4,".wad") &&
+//			strcasecmp(wadfile->name+strlen(wadfile->name)-4,".gwa")
+//			)
+//		)
 	{
 		// single lump file
 		fileinfo = &singleinfo;
 		singleinfo.filepos = 0;
+#if !defined(__P2K__)
 		singleinfo.size = LONG(I_Filelength(wadfile->handle));
+#else
+		singleinfo.size = DL_FsGetFileSize(wadfile->handle);
+#endif
 		ExtractFileBase(wadfile->name, singleinfo.name);
 		numlumps++;
 	}
 	else
 	{
+		int readen;
 		// WAD file
+#if !defined(__P2K__)
 		I_Read(wadfile->handle, &header, sizeof(header));
+#else
+		DL_FsReadFile(&header, sizeof(header), 1, wadfile->handle, &readen);
+#endif
 		if (strncmp(header.identification,"IWAD",4) &&
 			strncmp(header.identification,"PWAD",4))
 			I_Error("W_AddFile: Wad file %s doesn't have IWAD or PWAD id", wadfile->name);
@@ -176,14 +210,22 @@ static void W_AddFile(wadfile_info_t *wadfile)
 		header.infotableofs = LONG(header.infotableofs);
 		length = header.numlumps*sizeof(filelump_t);
 		fileinfo2free = fileinfo = malloc(length);    // killough
+#if !defined(__P2K__)
 		lseek(wadfile->handle, header.infotableofs, SEEK_SET);
 		I_Read(wadfile->handle, fileinfo, length);
+#else
+		DL_FsFSeekFile(wadfile->handle, header.infotableofs, SEEK_WHENCE_SET);
+		DL_FsReadFile(fileinfo, length, 1, wadfile->handle, &readen);
+#endif
 		numlumps += header.numlumps;
 	}
 
 	// Fill in lumpinfo
-	lumpinfo = realloc(lumpinfo, numlumps*sizeof(lumpinfo_t));
-	fprintf(stderr, "lumpinfo=%lu\n",numlumps*sizeof(lumpinfo_t));
+	if (lumpinfo!=NULL)
+		free(lumpinfo);
+	lumpinfo = malloc(numlumps*sizeof(lumpinfo_t));
+//	lumpinfo = realloc(lumpinfo, numlumps*sizeof(lumpinfo_t));
+//	fprintf(stderr, "lumpinfo=%lu\n",numlumps*sizeof(lumpinfo_t));
 
 	lump_p = &lumpinfo[startlump];
 
@@ -403,7 +445,7 @@ void W_Init(void)
 		int i;
 		for (i=0; (size_t)i<numwadfiles; i++)
 			W_AddFile(&wadfiles[i]);
-		fprintf(stderr, "LOL! %d\n", i);
+//		fprintf(stderr, "LOL! %d\n", i);
 	}
 
 	if (!numlumps)
@@ -467,8 +509,14 @@ void W_ReadLump(int lump, void *dest)
 	{
 		if (l->wadfile)
 		{
+			int readen;
+#if !defined(__P2K__)
 			lseek(l->wadfile->handle, l->position, SEEK_SET);
 			I_Read(l->wadfile->handle, dest, l->size);
+#else
+			DL_FsFSeekFile(l->wadfile->handle, l->position, SEEK_WHENCE_SET);
+			DL_FsReadFile(dest, l->size, 1, l->wadfile->handle, &readen);
+#endif
 		}
 	}
 }
