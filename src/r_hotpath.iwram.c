@@ -1257,7 +1257,7 @@ static void R_SortVisSprites (void)
         while (--i>=0)
             vissprite_ptrs[i] = _g->vissprites+i;
 
-        //qsort(vissprite_ptrs, num_vissprite, sizeof (vissprite_t*), compare);
+        qsort(vissprite_ptrs, num_vissprite, sizeof (vissprite_t*), compare);
     }
 }
 
@@ -3354,9 +3354,9 @@ static int I_GetTime_e32(void)
 
 int I_GetTime(void)
 {
-
+#if defined(__P2K__)
 	return (int) suPalReadTime();
-#if 0
+#else
     int thistimereply;
 
 #ifndef GBA

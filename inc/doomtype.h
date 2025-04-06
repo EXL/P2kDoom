@@ -47,8 +47,11 @@
 
 #define I_Error PFprintf
 #define lprintf PFprintf
-
+#else
+#define lprintf(...) fprintf(stderr, __VA_ARGS__)
 #endif
+
+
 
 #ifndef __BYTEBOOL__
 #define __BYTEBOOL__

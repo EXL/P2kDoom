@@ -289,7 +289,6 @@ int I_Filelength(int handle)
 	return fileinfo.st_size;
 }
 
-
 int main(int argc, const char *const argv[]) {
 	init_main(argc, argv);
 	while ("DOOM is Rock")

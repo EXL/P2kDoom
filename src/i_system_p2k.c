@@ -45,7 +45,7 @@ unsigned short* I_GetBackBuffer();
 
 unsigned short* I_GetFrontBuffer();
 
-void I_Error (const char *error, ...);
+//void I_Error (const char *error, ...);
 
 void I_Quit_e32();
 
@@ -53,7 +53,7 @@ void I_InitScreen_e32();
 
 void I_CreateBackBuffer_e32();
 
-#include <stdarg.h>
+//#include <stdarg.h>
 
 #define TIMER_FAST_TRIGGER_MS             (1)
 #if defined(FPS_15)
