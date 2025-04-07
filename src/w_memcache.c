@@ -88,7 +88,8 @@ static void W_ReportLocks(void)
 void W_InitCache(void)
 {
   // set up caching
-  cachelump = calloc(sizeof *cachelump, numlumps);
+  cachelump = malloc(sizeof *cachelump * numlumps);
+  memset(cachelump, 0, sizeof *cachelump * numlumps);
   if (!cachelump)
     I_Error ("W_Init: Couldn't allocate lumpcache");
 #if !defined(__P2K__)

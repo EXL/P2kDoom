@@ -1,3 +1,5 @@
+unsigned int *reciprocalTable;
+#if 0
 const extern unsigned int reciprocalTable[65537] = {
     0,
     4294967295,
@@ -65537,3 +65539,4 @@ const extern unsigned int reciprocalTable[65537] = {
     65537,
     65536
 };
+#endif

@@ -197,7 +197,7 @@ static void W_AddFile(wadfile_info_t *wadfile)
 	}
 	else
 	{
-		int readen;
+		unsigned long readen;
 		// WAD file
 #if !defined(__P2K__)
 		I_Read(wadfile->handle, &header, sizeof(header));
@@ -510,7 +510,7 @@ void W_ReadLump(int lump, void *dest)
 	{
 		if (l->wadfile)
 		{
-			int readen;
+			unsigned long readen;
 #if !defined(__P2K__)
 			lseek(l->wadfile->handle, l->position, SEEK_SET);
 			I_Read(l->wadfile->handle, dest, l->size);

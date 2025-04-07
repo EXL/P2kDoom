@@ -1257,7 +1257,7 @@ static void R_SortVisSprites (void)
         while (--i>=0)
             vissprite_ptrs[i] = _g->vissprites+i;
 
-        qsort(vissprite_ptrs, num_vissprite, sizeof (vissprite_t*), compare);
+//        qsort(vissprite_ptrs, num_vissprite, sizeof (vissprite_t*), compare);
     }
 }
 

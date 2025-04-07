@@ -693,8 +693,8 @@ static void IdentifyVersion()
 #if !defined(__P2K__)
 	const char *iwad_name = "doom1.wad";
 #else
-	const char *iwad_name = "/a/elf/ELFs/doom1.wad";
-//	const char *iwad_name = "/e/doom2.wad";
+//	const char *iwad_name = "/a/elf/ELFs/doom1.wad";
+	const char *iwad_name = "/a/elf/doom2.wad";
 #endif
     CheckIWAD2(iwad_name, &_g->gamemode, &_g->haswolflevels);
 
@@ -734,6 +734,62 @@ static void IdentifyVersion()
 
 void D_DoomMainSetup(void)
 {
+#if defined(__P2K__)
+    WCHAR wpath[64];
+    UINT32 readen;
+
+    lprintf("%s\n", "Loading recp_tab.bin...");
+
+	u_atou("/a/elf/recp_tab.bin", wpath);
+
+	FILE_HANDLE_T fp1 = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
+	reciprocalTable = AmMemAllocPointer(sizeof(unsigned int) * 65537);
+	DL_FsReadFile(reciprocalTable, sizeof(unsigned int) * 65537, 1, fp1, &readen);
+	DL_FsCloseFile(fp1);
+
+    lprintf("%s\n", "Loading math_tab.bin...");
+    u_atou("/a/elf/math_tab.bin", wpath);
+    FILE_HANDLE_T fp2 = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
+
+	finetangent = AmMemAllocPointer(sizeof(fixed_t) * 4096);
+	DL_FsReadFile(finetangent, sizeof(fixed_t) * 4096, 1, fp2, &readen);
+
+	finesine = AmMemAllocPointer(sizeof(fixed_t) * 10240);
+	DL_FsReadFile(finesine, sizeof(fixed_t) * 10240, 1, fp2, &readen);
+    finecosine = &finesine[FINEANGLES/4];
+
+    tantoangle = AmMemAllocPointer(sizeof(angle_t) * 2049);
+    DL_FsReadFile(tantoangle, sizeof(angle_t) * 2049, 1, fp2, &readen);
+
+    viewangletox = AmMemAllocPointer(sizeof(int) * 4096);
+    DL_FsReadFile(viewangletox, sizeof(int) * 4096, 1, fp2, &readen);
+
+	DL_FsCloseFile(fp2);
+#else
+    lprintf("%s\n", "Loading recp_tab.bin...");
+    FILE *f = fopen("recp_tab.bin", "rb");
+    reciprocalTable = malloc(sizeof(unsigned int) * 65537);
+    fread(reciprocalTable, sizeof(unsigned int) * 65537, 1, f);
+    fclose(f);
+
+    lprintf("%s\n", "Loading math_tab.bin...");
+    FILE *f2 = fopen("math_tab.bin", "rb");
+
+    finetangent = malloc(sizeof(fixed_t) * 4096);
+    fread(finetangent, sizeof(fixed_t) * 4096, 1, f2);
+
+    finesine = malloc(sizeof(fixed_t) * 10240);
+    fread(finesine, sizeof(fixed_t) * 10240, 1, f2);
+    finecosine = &finesine[FINEANGLES/4];
+
+    tantoangle = malloc(sizeof(angle_t) * 2049);
+    fread(tantoangle, sizeof(angle_t) * 2049, 1, f2);
+
+    viewangletox = malloc(sizeof(int) * 4096);
+    fread(viewangletox, sizeof(int) * 4096, 1, f2);
+
+    fclose(f2);
+#endif
     IdentifyVersion();
 
     // jff 1/24/98 end of set to both working and command line value

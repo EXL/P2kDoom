@@ -151,10 +151,10 @@ void I_ProcessKeyEvents()
 			case SDL_KEYDOWN:
 				ev.type = (event.type == SDL_KEYUP) ? ev_keyup : ev_keydown;
 				switch (event.key.keysym.scancode) {
-					case SDL_SCANCODE_ESCAPE:
+					case SDL_SCANCODE_Q:
 						ev.data1 = KEYD_START;
 						break;
-					case SDL_SCANCODE_RETURN:
+					case SDL_SCANCODE_Z:
 						ev.data1 = KEYD_A;
 						break;
 					case SDL_SCANCODE_UP:
@@ -169,10 +169,10 @@ void I_ProcessKeyEvents()
 					case SDL_SCANCODE_RIGHT:
 						ev.data1 = KEYD_RIGHT;
 						break;
-					case SDL_SCANCODE_TAB:
+					case SDL_SCANCODE_W:
 						ev.data1 = KEYD_SELECT;
 						break;
-					case SDL_SCANCODE_SPACE:
+					case SDL_SCANCODE_X:
 						ev.data1 = KEYD_B;
 						break;
 					case SDL_SCANCODE_A:

@@ -40,7 +40,7 @@
 
 #define ZONEID	0x1d4a11
 
-const unsigned int maxHeapSize = (1300 * 1024);
+const unsigned int maxHeapSize = (3500 * 1024);
 
 #ifndef GBA
     static int running_count = 0;
@@ -77,7 +77,11 @@ void Z_Init (void)
     //We can now alloc all of the rest fo the memory.
 //    do
 //    {
+#if defined(__P2K__)
+        mainzone = AmMemAllocPointer(heapSize);
+#else
         mainzone = malloc(heapSize);
+#endif
 //        heapSize -= 4;
 
 //    } while(mainzone == NULL);

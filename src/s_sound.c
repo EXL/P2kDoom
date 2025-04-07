@@ -102,8 +102,8 @@ void S_Init(int sfxVolume, int musicVolume)
         // (the maximum numer of sounds rendered
         // simultaneously) within zone memory.
         // CPhipps - calloc
-        _g->channels =
-                (channel_t *) calloc(numChannels,sizeof(channel_t));
+        _g->channels = (channel_t *) malloc(numChannels * sizeof(channel_t));
+        memset(_g->channels, 0, numChannels * sizeof(channel_t));
     }
 
     // CPhipps - music init reformatted

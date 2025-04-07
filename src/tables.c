@@ -54,6 +54,13 @@
 #include "w_wad.h"
 #include "tables.h"
 
+fixed_t *finetangent;
+fixed_t *finesine;
+angle_t *tantoangle;
+int *viewangletox;
+fixed_t *finecosine;
+
+#if 0
 const fixed_t finetangent[4096] =
 {
     -170910304,-56965752,-34178904,-24413316,-18988036,-15535599,-13145455,-11392683,
@@ -2377,7 +2384,7 @@ const int viewangletox[4096] =
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 };
-
+#endif
 const angle_t xtoviewangle[121] =
 {
     537395200,531628032,525336576,519569408,513802240,507510784,501219328,494927872,488636416,
