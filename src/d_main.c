@@ -693,8 +693,12 @@ static void IdentifyVersion()
 #if !defined(__P2K__)
 	const char *iwad_name = "doom1.wad";
 #else
+#if defined(EM1) || defined(EM2)
 //	const char *iwad_name = "/a/elf/ELFs/doom1.wad";
 	const char *iwad_name = "/a/elf/doom2.wad";
+#else
+	const char *iwad_name = "file://c/Elf/doom1.wad";
+#endif
 #endif
     CheckIWAD2(iwad_name, &_g->gamemode, &_g->haswolflevels);
 
@@ -740,15 +744,22 @@ void D_DoomMainSetup(void)
 
     lprintf("%s\n", "Loading recp_tab.bin...");
 
+#if defined(EM1) || defined(EM2)
 	u_atou("/a/elf/recp_tab.bin", wpath);
-
+#else
+	u_atou("file://c/Elf/recp_tab.bin", wpath);
+#endif
 	FILE_HANDLE_T fp1 = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
 	reciprocalTable = AmMemAllocPointer(sizeof(unsigned int) * 65537);
 	DL_FsReadFile(reciprocalTable, sizeof(unsigned int) * 65537, 1, fp1, &readen);
 	DL_FsCloseFile(fp1);
 
     lprintf("%s\n", "Loading math_tab.bin...");
+#if defined(EM1) || defined(EM2)
     u_atou("/a/elf/math_tab.bin", wpath);
+#else
+    u_atou("file://c/Elf/math_tab.bin", wpath);
+#endif
     FILE_HANDLE_T fp2 = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
 
 	finetangent = AmMemAllocPointer(sizeof(fixed_t) * 4096);

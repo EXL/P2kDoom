@@ -1,0 +1,106 @@
+# Script: Motorola P2K Makefile
+# Flavor: EG1, EA1 (ElfPack v1.x, ARM GCC, Linux)
+# Author: EXL, 06-Jan-2025
+
+P2K_ELF_SDK       = /home/exl/Storage/Projects/Git/MotoFanRu/P2K-ELF-SDK
+ARM_GCC_LIN_BIN   = $(P2K_ELF_SDK)/tool/compiler/ARM-GCC-LIN/bin
+
+CC                = $(shell command -v arm-none-eabi-gcc || echo $(ARM_GCC_LIN_BIN)/arm-none-eabi-gcc)
+
+INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
+DEFINES           = -std=c99 -D__P2K__ -DEP1 -DROT_0 -DFPS_30 -DRANGECHECK -DGBA -DP2K -DUSE_BIG_ENDIAN
+WARNINGS          = -Wall
+OPTIMIZATIONS     = -O2
+FEATURES          = -ffreestanding -fshort-wchar -fshort-enums -fpack-struct=4 -fno-builtin -funsigned-char
+ifeq ($(ARGON), 1)
+	FLAVOR        = -DEA1
+	CPU_FLAGS     = -mbig-endian -mthumb -mthumb-interwork -mbe32 -march=armv6j -mtune=arm1136jf-s
+else
+	FLAVOR        = -DEG1
+	CPU_FLAGS     = -mbig-endian -mthumb -mthumb-interwork -march=armv4t -mtune=arm7tdmi-s
+endif
+AFLAGS            = -marm
+CFLAGS            = $(INCLUDES) $(DEFINES) $(FLAVOR) $(WARNINGS) $(OPTIMIZATIONS) $(CPU_FLAGS) $(FEATURES)
+CXXFLAGS          = $(CFLAGS)
+LDFLAGS           = $(CFLAGS) -s -pie -Wl,--gc-sections -Wl,-zmax-page-size=1 -Wl,-eRegister
+LIBS              = -nostdlib -nodefaultlibs -L$(P2K_ELF_SDK)/ep1/lib/gcc -leg1_gcc_stub -L. -lgcc_arm
+
+TARGET_ELF        = P2kDoom.elf
+
+all:
+	$(CC) $(CFLAGS) -c src/am_map.c -o src/am_map.o
+	$(CC) $(CFLAGS) -c src/d_client.c -o src/d_client.o
+	$(CC) $(CFLAGS) -c src/d_items.c -o src/d_items.o
+	$(CC) $(CFLAGS) -c src/d_main.c -o src/d_main.o
+	$(CC) $(CFLAGS) -c src/f_finale.c -o src/f_finale.o
+	$(CC) $(CFLAGS) -c src/f_wipe.c -o src/f_wipe.o
+	$(CC) $(CFLAGS) -c src/g_game.c -o src/g_game.o
+	$(CC) $(CFLAGS) -c src/global_data.c -o src/global_data.o
+	$(CC) $(CFLAGS) -c src/hu_lib.c -o src/hu_lib.o
+	$(CC) $(CFLAGS) -c src/hu_stuff.c -o src/hu_stuff.o
+	$(CC) $(CFLAGS) -c src/i_audio.c -o src/i_audio.o
+	$(CC) $(CFLAGS) -c src/i_main.c -o src/i_main.o
+	$(CC) $(CFLAGS) -c src/i_system.c -o src/i_system.o
+	$(CC) $(CFLAGS) -c src/i_system_p2k.c -o src/i_system_p2k.o
+	$(CC) $(CFLAGS) -c src/i_video.c -o src/i_video.o
+	$(CC) $(CFLAGS) -c src/info.c -o src/info.o
+	$(CC) $(CFLAGS) -c src/lprintf.c -o src/lprintf.o
+	$(CC) $(CFLAGS) -c src/m_bbox.c -o src/m_bbox.o
+	$(CC) $(CFLAGS) -c src/m_cheat.c -o src/m_cheat.o
+	$(CC) $(CFLAGS) -c src/m_menu.c -o src/m_menu.o
+	$(CC) $(CFLAGS) -c src/m_random.c -o src/m_random.o
+	$(CC) $(CFLAGS) -c src/m_recip.c -o src/m_recip.o
+	$(CC) $(CFLAGS) -c src/p_ceilng.c -o src/p_ceilng.o
+	$(CC) $(CFLAGS) -c src/p_doors.c -o src/p_doors.o
+	$(CC) $(CFLAGS) -c src/p_enemy.c -o src/p_enemy.o
+	$(CC) $(CFLAGS) -c src/p_floor.c -o src/p_floor.o
+	$(CC) $(CFLAGS) -c src/p_genlin.c -o src/p_genlin.o
+	$(CC) $(CFLAGS) -c src/p_inter.c -o src/p_inter.o
+	$(CC) $(CFLAGS) -c src/p_lights.c -o src/p_lights.o
+	$(CC) $(CFLAGS) -c src/p_map.c -o src/p_map.o
+	$(CC) $(CFLAGS) -c src/p_maputl.c -o src/p_maputl.o
+	$(CC) $(CFLAGS) -c src/p_mobj.c -o src/p_mobj.o
+	$(CC) $(CFLAGS) -c src/p_plats.c -o src/p_plats.o
+	$(CC) $(CFLAGS) -c src/p_pspr.c -o src/p_pspr.o
+	$(CC) $(CFLAGS) -c src/p_setup.c -o src/p_setup.o
+	$(CC) $(CFLAGS) -c src/p_sight.c -o src/p_sight.o
+	$(CC) $(CFLAGS) -c src/p_spec.c -o src/p_spec.o
+	$(CC) $(CFLAGS) -c src/p_switch.c -o src/p_switch.o
+	$(CC) $(CFLAGS) -c src/p_telept.c -o src/p_telept.o
+	$(CC) $(CFLAGS) -c src/p_tick.c -o src/p_tick.o
+	$(CC) $(CFLAGS) -c src/p_user.c -o src/p_user.o
+	$(CC) $(CFLAGS) -c src/r_data.c -o src/r_data.o
+	$(CC) $(CFLAGS) -c src/r_draw.c -o src/r_draw.o
+	$(CC) $(CFLAGS) -c src/r_hotpath.iwram.c -o src/r_hotpath.iwram.o
+	$(CC) $(CFLAGS) -c src/r_main.c -o src/r_main.o
+	$(CC) $(CFLAGS) -c src/r_patch.c -o src/r_patch.o
+	$(CC) $(CFLAGS) -c src/r_plane.c -o src/r_plane.o
+	$(CC) $(CFLAGS) -c src/r_things.c -o src/r_things.o
+	$(CC) $(CFLAGS) -c src/s_sound.c -o src/s_sound.o
+	$(CC) $(CFLAGS) -c src/sounds.c -o src/sounds.o
+	$(CC) $(CFLAGS) -c src/st_gfx.c -o src/st_gfx.o
+	$(CC) $(CFLAGS) -c src/st_lib.c -o src/st_lib.o
+	$(CC) $(CFLAGS) -c src/st_stuff.c -o src/st_stuff.o
+	$(CC) $(CFLAGS) -c src/tables.c -o src/tables.o
+	$(CC) $(CFLAGS) -c src/v_video.c -o src/v_video.o
+	$(CC) $(CFLAGS) -c src/version.c -o src/version.o
+	$(CC) $(CFLAGS) -c src/w_memcache.c -o src/w_memcache.o
+	$(CC) $(CFLAGS) -c src/w_wad.c -o src/w_wad.o
+	$(CC) $(CFLAGS) -c src/wi_stuff.c -o src/wi_stuff.o
+	$(CC) $(CFLAGS) -c src/z_bmalloc.c -o src/z_bmalloc.o
+	$(CC) $(CFLAGS) -c src/z_zone.c -o src/z_zone.o
+	$(CC) $(LDFLAGS) src/am_map.o src/d_client.o src/d_items.o src/d_main.o src/f_finale.o src/f_wipe.o src/g_game.o \
+	src/global_data.o src/hu_lib.o src/hu_stuff.o src/i_audio.o src/i_main.o src/i_system.o \
+	src/i_video.o src/info.o src/lprintf.o src/m_bbox.o src/m_cheat.o src/m_menu.o src/m_random.o src/m_recip.o \
+	src/p_ceilng.o src/p_doors.o src/p_enemy.o src/p_floor.o src/p_genlin.o src/p_inter.o src/p_lights.o \
+	src/p_map.o src/p_maputl.o src/p_mobj.o src/p_plats.o src/p_pspr.o src/p_setup.o src/p_sight.o src/p_spec.o \
+	src/p_switch.o src/p_telept.o src/p_tick.o src/p_user.o src/r_data.o src/r_draw.o src/r_hotpath.iwram.o \
+	src/r_main.o src/r_patch.o src/r_plane.o src/r_things.o src/s_sound.o src/sounds.o src/st_gfx.o src/st_lib.o \
+	src/st_stuff.o src/tables.o src/v_video.o src/version.o src/w_memcache.o src/wi_stuff.o \
+	src/z_bmalloc.o src/z_zone.o src/w_wad.o src/i_system_p2k.o $(LIBS) -o $(TARGET_ELF)
+
+clean:
+	-rm -f src/*.o
+	-rm -f src/*.obj
+	-rm -f *.elfp
+	-rm -f *.elf

@@ -47,6 +47,7 @@
 
 #define I_Error PFprintf
 #define lprintf PFprintf
+
 #else
 #define lprintf(...) fprintf(stderr, __VA_ARGS__)
 #endif
@@ -107,7 +108,12 @@ typedef unsigned char byte;
 /* EXL - for size_t */
 //#include <stdlib.h>
 
+#if !defined(EP1) && !defined(EP2)
 typedef unsigned int size_t;
+#else
+//#define malloc(p) suAllocMem(p, NULL)
+#define free suFreeMem
+#endif
 
 /* cph - from v_video.h, needed by gl_struct.h */
 enum patch_translation_e {

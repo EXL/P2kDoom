@@ -295,6 +295,7 @@ static void W_CoalesceMarkedResource(const char *start_marker,
 					lumpinfo[num_unmarked++] = *lump;       // else move down THIS list
 
 	// Append marked list to end of unmarked list
+	lprintf("%d %d %d\n", num_unmarked, marked, num_marked * sizeof(*marked));
 	memcpy(lumpinfo + num_unmarked, marked, num_marked * sizeof(*marked));
 
 	free(marked);                                   // free marked list
@@ -457,10 +458,42 @@ void W_Init(void)
 	// killough 1/24/98: change interface to use M_START/M_END explicitly
 	// killough 4/17/98: Add namespace tags to each entry
 	// killough 4/4/98: add colormap markers
-	W_CoalesceMarkedResource("S_START", "S_END", ns_sprites);
-	W_CoalesceMarkedResource("F_START", "F_END", ns_flats);
-	W_CoalesceMarkedResource("C_START", "C_END", ns_colormaps);
-	W_CoalesceMarkedResource("B_START", "B_END", ns_prboom);
+
+//	W_CoalesceMarkedResource("S_START", "S_END", ns_sprites);
+//	W_CoalesceMarkedResource("F_START", "F_END", ns_flats);
+//	W_CoalesceMarkedResource("C_START", "C_END", ns_colormaps);
+//	W_CoalesceMarkedResource("B_START", "B_END", ns_prboom);
+
+	lprintf("%lu\n", sizeof(lumpinfo_t));
+#if 0
+	lprintf("%s\n", "Loading lumpi_dX.bin...");
+#if defined(__P2K__)
+    WCHAR wpath[64];
+#if defined(EM1) || defined(EM2)
+    u_atou("/a/elf/lumpi_d1.bin", wpath);
+#else
+    u_atou("file://c/Elf/lumpi_d1.bin", wpath);
+#endif
+    UINT32 readen;
+    FILE_HANDLE_T f = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
+    DL_FsReadFile(lumpinfo, sizeof(lumpinfo_t) * numlumps, 1, f, &readen);
+    DL_FsCloseFile(f);
+#else
+	FILE *file = fopen("lumpi_d1.bin", "rb");
+	fread(lumpinfo, sizeof(lumpinfo_t) * numlumps, 1, file);
+	fclose(file);
+#endif
+	for (int i = 0; i < numlumps; ++i) {
+		lprintf("%d %s\n", lumpinfo[i].position, lumpinfo[i].name);
+		lumpinfo[i].wadfile = &wadfiles[0];
+	}
+#endif
+
+	for (int i = 1083; i < 1137; ++i) {
+//		if (!strcmp(lumpinfo[i].name, "F_START"))
+		lumpinfo[i].li_namespace = ns_flats;
+//		lprintf("%d %s\n", i, lumpinfo[i].name);
+	}
 
 	// killough 1/31/98: initialize lump hash table
 	W_HashLumps();

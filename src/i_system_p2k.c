@@ -1393,8 +1393,8 @@ void I_InitScreen_e32()
 
 void I_CreateBackBuffer_e32()
 {
-	backbuffer = malloc(240 * 160 * 2);
-	frontbuffer = malloc(240 * 160 * 2);
+	backbuffer = AmMemAllocPointer(240 * 160 * 2);
+	frontbuffer = AmMemAllocPointer(240 * 160 * 2);
 
 	unsigned short* bb = I_GetBackBuffer();
 
@@ -1449,5 +1449,156 @@ void I_Error (const char *error, ...)
 	//fgets(msg, sizeof(msg), stdin);
 
 	I_Quit_e32();
+}
+#endif
+
+#if defined(EP1) || defined(EP2)
+void abort(void) {
+       LOG("%s\n", "Abort!");
+}
+
+
+void *memchr(const void *s, unsigned char c, size_t n) {
+    if (n != 0) {
+        const unsigned char *p = s;
+
+        do {
+            if (*p++ == c)
+                return ((void *)(p - 1));
+        } while (--n != 0);
+    }
+    return (NULL);
+}
+#endif
+
+#if 0
+INT64 __aeabi_lmul(INT64 a, INT64 b) {
+    return a * b;
+}
+
+INT64 __aeabi_lmul(INT64 a, INT64 b) {
+    return a * b;
+}
+
+INT32 __aeabi_idiv(INT32 numerator, INT32 denominator) {
+    // Handle division by zero
+    if (denominator == 0) {
+        // Division by zero is undefined; handle as appropriate for your use case
+        // For example, return 0, raise an error, or halt
+        return 0; // Placeholder behavior
+    }
+
+    // Determine the sign of the result
+    BOOL negative_result = (numerator < 0) ^ (denominator < 0);
+
+    // Perform division using absolute values
+    INT32 abs_numerator = numerator < 0 ? -numerator : numerator;
+    INT32 abs_denominator = denominator < 0 ? -denominator : denominator;
+
+    INT32 result = abs_numerator / abs_denominator;
+
+    // Apply the sign to the result
+    return negative_result ? -result : result;
+}
+
+INT64 __aeabi_ldivmod(INT64 numerator, INT64 denominator) {
+    // Handle division by zero
+    if (denominator == 0) {
+        // Division by zero is undefined; handle appropriately
+        // For this example, we return 0 as placeholder behavior
+        return 0;
+    }
+
+    // Compute quotient and remainder
+    INT64 quotient = numerator / denominator;
+    INT64 remainder = numerator % denominator;
+
+    // Pack the remainder into the return value
+    // According to the ARM EABI, the quotient is returned in the primary return register
+    // and the remainder is stored in a secondary register.
+    // If you're writing this for a bare-metal system, you may need to handle register passing explicitly.
+
+    // For simulation purposes, we store the remainder in a global or return structure.
+    // NOTE: In actual ARM EABI, this would involve register usage, which is handled by the compiler.
+    return quotient; // Quotient is returned
+}
+
+INT32 __aeabi_idivmod(INT32 numerator, INT32 denominator) {
+    // Handle division by zero
+    if (denominator == 0) {
+        // Division by zero is undefined; handle appropriately
+        // For this example, return 0 as placeholder
+        return 0;
+    }
+
+    // Compute quotient and remainder
+    INT32 quotient = numerator / denominator;
+    INT32 remainder = numerator % denominator;
+
+    // In ARM EABI, the quotient is returned in the primary return register,
+    // and the remainder is returned in a secondary register.
+    // If you're writing for a bare-metal system, you may need to handle register
+    // passing explicitly, but in a C implementation, you can return a structure.
+
+    // For simplicity, we will encode the remainder in a custom structure or global variable.
+    // NOTE: In real ARM EABI, the compiler would handle this correctly.
+
+    return quotient; // Quotient is returned
+}
+
+UINT32 __aeabi_uidiv(UINT32 numerator, UINT32 denominator) {
+    // Handle division by zero
+    if (denominator == 0) {
+        // Division by zero is undefined; handle appropriately
+        // For this example, return 0 as placeholder
+        return 0;
+    }
+
+    // Perform the division
+    return numerator / denominator;
+}
+
+// Function to perform unsigned integer division and modulo
+UINT32 __aeabi_uidivmod(UINT32 numerator, UINT32 denominator) {
+    // Handle division by zero
+    if (denominator == 0) {
+        // Division by zero is undefined; handle appropriately
+        // For this example, return 0 as placeholder
+        return 0;
+    }
+
+    // Compute quotient and remainder
+    UINT32 quotient = numerator / denominator;
+    UINT32 remainder = numerator % denominator;
+
+    // In ARM EABI, the quotient is returned in the primary return register,
+    // and the remainder is returned in a secondary register.
+    // If you're writing this in a low-level environment, you may need
+    // to handle register passing explicitly.
+    // In C, you can use a structure or global variable to simulate this.
+
+    // For simplicity, this returns only the quotient.
+    // Use additional logic to return the remainder where required.
+    return quotient; // Quotient is returned
+}
+
+UINT64 __aeabi_uldivmod(UINT64  numerator, UINT64  denominator) {
+    // Handle division by zero
+    if (denominator == 0) {
+        // Division by zero is undefined; handle appropriately
+        // For this example, return 0 as a placeholder
+        return 0;
+    }
+
+    // Compute quotient and remainder
+    UINT64 quotient = numerator / denominator;
+    UINT64 remainder = numerator % denominator;
+
+    // In ARM EABI, the quotient is returned in the primary return register,
+    // and the remainder is returned in a secondary register.
+    // If you're writing this for a bare-metal system, you may need to handle register passing explicitly.
+    // For simplicity, we return only the quotient here.
+
+    return quotient; // Quotient is returned
 }
 #endif
