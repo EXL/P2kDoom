@@ -111,6 +111,7 @@ typedef unsigned char byte;
 #if !defined(EP1) && !defined(EP2)
 typedef unsigned int size_t;
 #else
+typedef unsigned int size_t;
 //#define malloc(p) suAllocMem(p, NULL)
 #define free suFreeMem
 #endif

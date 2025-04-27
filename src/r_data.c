@@ -300,11 +300,11 @@ int R_LoadTextureByName(const char* tex_name)
 
     if(tnum == -1)
     {
-#if defined(__P2K__)
-        LOG("Texture Name: %s not fount.\n", tex_name);
-#else
+//#if defined(__P2K__)
+//        LOG("Texture Name: %s not fount.\n", tex_name);
+//#else
         I_Error("texture name: %s not found.\n", tex_name);
-#endif
+//#endif
         return NO_TEXTURE;
     }
 

@@ -19,6 +19,8 @@
 
 #include "doomdef.h"
 #include "d_event.h"
+#include "d_main.h"
+#include "i_main.h"
 
 #include <loader.h>
 #include <apps.h>
@@ -59,7 +61,7 @@ void I_CreateBackBuffer_e32();
 #if defined(FPS_15)
 #define TIMER_FAST_UPDATE_MS              (1000 / 15) /* ~15 FPS. */
 #elif defined(FPS_30)
-#define TIMER_FAST_UPDATE_MS              (1000 / 15) /* ~30 FPS. */
+#define TIMER_FAST_UPDATE_MS              (1000 / 10) /* ~30 FPS. */
 #endif
 #define KEYPAD_BUTTONS                    (8)
 
@@ -1301,7 +1303,7 @@ static UINT32 GFX_Draw_Start(APPLICATION_T *app) {
 
 	pp_bitmap = (UINT16 *) appi->p_bitmap;
 
-	init_main(NULL, NULL);
+	init_main(0, NULL);
 
 	return RESULT_OK;
 }
@@ -1393,8 +1395,8 @@ void I_InitScreen_e32()
 
 void I_CreateBackBuffer_e32()
 {
-	backbuffer = AmMemAllocPointer(240 * 160 * 2);
-	frontbuffer = AmMemAllocPointer(240 * 160 * 2);
+	backbuffer = suAllocMem(240 * 160, NULL);
+	frontbuffer = suAllocMem(240 * 160, NULL);
 
 	unsigned short* bb = I_GetBackBuffer();
 
@@ -1453,12 +1455,11 @@ void I_Error (const char *error, ...)
 #endif
 
 #if defined(EP1) || defined(EP2)
-void abort(void) {
+void _abort(void) {
        LOG("%s\n", "Abort!");
 }
 
-
-void *memchr(const void *s, unsigned char c, size_t n) {
+void *_memchr(const void *s, unsigned char c, size_t n) {
     if (n != 0) {
         const unsigned char *p = s;
 
@@ -1469,13 +1470,13 @@ void *memchr(const void *s, unsigned char c, size_t n) {
     }
     return (NULL);
 }
+
+void __aeabi_memcpy4(void *dest, const void *src, size_t n) {
+    memcpy(dest, src, n);
+}
 #endif
 
 #if 0
-INT64 __aeabi_lmul(INT64 a, INT64 b) {
-    return a * b;
-}
-
 INT64 __aeabi_lmul(INT64 a, INT64 b) {
     return a * b;
 }

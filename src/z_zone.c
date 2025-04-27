@@ -78,7 +78,11 @@ void Z_Init (void)
 //    do
 //    {
 #if defined(__P2K__)
+        mainzone = NULL;
         mainzone = AmMemAllocPointer(heapSize);
+        if (!mainzone) {
+            I_Error("=====================> Cannot allocate main zone HEAP: %d\n!", heapSize);
+        }
 #else
         mainzone = malloc(heapSize);
 #endif
@@ -87,6 +91,8 @@ void Z_Init (void)
 //    } while(mainzone == NULL);
 
 //    heapSize += 4;
+
+//    memset(mainzone, 0, heapSize);
 
     lprintf("Z_Init: Heapsize is %d bytes.\n", heapSize);
 

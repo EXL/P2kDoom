@@ -95,7 +95,7 @@ void W_InitCache(void)
 #if !defined(__P2K__)
   fprintf(stderr, "cachelump size: %lu\n", (sizeof *cachelump) * numlumps);
 #else
-  LOG("cachelump size: %lu\n", (sizeof *cachelump) * numlumps);
+  I_Error("cachelump size: %lu\n", (sizeof *cachelump) * numlumps);
 #endif
 
 #ifdef TIMEDIAG
@@ -130,7 +130,7 @@ const void *W_CacheLumpNum(int lump)
     fprintf(stderr, "===> Cached: %.8s:%d:%d -- %d bytes (~ %d KiB)\n",
         lumpinfo[lump].name, lump, W_LumpLength(lump), cache_lump_size, cache_lump_size / 1024);
 #else
-    LOG("===> Cached: %.8s:%d:%d -- %d bytes (~ %d KiB)\n",
+    I_Error("===> Cached: %.8s:%d:%d -- %d bytes (~ %d KiB)\n",
         lumpinfo[lump].name, lump, W_LumpLength(lump), cache_lump_size, cache_lump_size / 1024);
 #endif
   }

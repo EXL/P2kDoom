@@ -224,7 +224,7 @@ void I_Error (const char *error, ...)
 
 	va_end(v);
 
-	fprintf(stderr, "%s\n", msg);
+	fprintf(stderr, "%s", msg);
 
 
 	fflush( stderr );
@@ -232,7 +232,7 @@ void I_Error (const char *error, ...)
 
 	//fgets(msg, sizeof(msg), stdin);
 
-	I_Quit_e32();
+//	I_Quit_e32();
 }
 
 //**************************************************************************************
@@ -294,4 +294,16 @@ int main(int argc, const char *const argv[]) {
 	while ("DOOM is Rock")
 		D_DoomStep();
 	return 0;
+}
+
+void *_memchr(const void *s, unsigned char c, size_t n) {
+    if (n != 0) {
+        const unsigned char *p = s;
+
+        do {
+            if (*p++ == c)
+                return ((void *)(p - 1));
+        } while (--n != 0);
+    }
+    return (NULL);
 }

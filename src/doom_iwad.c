@@ -1,4 +1,4 @@
-#pragma GCC optimize ("-O0")
+//#pragma GCC optimize ("-O0")
 #include "doom_iwad.h"
 
 //Uncomment which edition you want to compile

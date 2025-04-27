@@ -40,6 +40,12 @@
 #include "z_bmalloc.h"
 #include "lprintf.h"
 
+#if defined(EM1) || defined(EM2)
+#define _memchr memchr
+#else
+void *_memchr(const void *s, unsigned char c, size_t n);
+#endif
+
 typedef struct bmalpool_s {
   struct bmalpool_s *nextpool;
   size_t             blocks;
@@ -69,7 +75,7 @@ void* Z_BMalloc(struct block_memory_alloc_s *pzone)
 {
   register bmalpool_t **pool = (bmalpool_t **)&(pzone->firstpool);
   while (*pool != NULL) {
-    byte *p = memchr((*pool)->used, unused_block, (*pool)->blocks); // Scan for unused marker
+    byte *p = _memchr((*pool)->used, unused_block, (*pool)->blocks); // Scan for unused marker
     if (p) {
       int n = p - (*pool)->used;
       (*pool)->used[n] = used_block;
@@ -102,7 +108,7 @@ void Z_BFree(struct block_memory_alloc_s *pzone, void* p)
     int n = iselem(*pool, pzone->size, p);
     if (n >= 0) {
       (*pool)->used[n] = unused_block;
-      if (memchr(((*pool)->used), used_block, (*pool)->blocks) == NULL) {
+      if (_memchr(((*pool)->used), used_block, (*pool)->blocks) == NULL) {
   // Block is all unused, can be freed
   bmalpool_t *oldpool = *pool;
   *pool = (*pool)->nextpool;

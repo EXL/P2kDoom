@@ -695,7 +695,7 @@ static void IdentifyVersion()
 #else
 #if defined(EM1) || defined(EM2)
 //	const char *iwad_name = "/a/elf/ELFs/doom1.wad";
-	const char *iwad_name = "/a/elf/doom2.wad";
+	const char *iwad_name = "/a/elf/doom1.wad";
 #else
 	const char *iwad_name = "file://c/Elf/doom1.wad";
 #endif
@@ -750,10 +750,13 @@ void D_DoomMainSetup(void)
 	u_atou("file://c/Elf/recp_tab.bin", wpath);
 #endif
 	FILE_HANDLE_T fp1 = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
+	reciprocalTable = NULL;
 	reciprocalTable = AmMemAllocPointer(sizeof(unsigned int) * 65537);
+	if (!reciprocalTable) {
+		I_Error("=====================> Cannot allocate reciprocalTable HEAP: %d\n!", sizeof(unsigned int) * 65537);
+	}
 	DL_FsReadFile(reciprocalTable, sizeof(unsigned int) * 65537, 1, fp1, &readen);
 	DL_FsCloseFile(fp1);
-
     lprintf("%s\n", "Loading math_tab.bin...");
 #if defined(EM1) || defined(EM2)
     u_atou("/a/elf/math_tab.bin", wpath);
@@ -762,17 +765,17 @@ void D_DoomMainSetup(void)
 #endif
     FILE_HANDLE_T fp2 = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
 
-	finetangent = AmMemAllocPointer(sizeof(fixed_t) * 4096);
+	finetangent = suAllocMem(sizeof(fixed_t) * 4096, NULL);
 	DL_FsReadFile(finetangent, sizeof(fixed_t) * 4096, 1, fp2, &readen);
 
-	finesine = AmMemAllocPointer(sizeof(fixed_t) * 10240);
+	finesine = suAllocMem(sizeof(fixed_t) * 10240, NULL);
 	DL_FsReadFile(finesine, sizeof(fixed_t) * 10240, 1, fp2, &readen);
     finecosine = &finesine[FINEANGLES/4];
 
-    tantoangle = AmMemAllocPointer(sizeof(angle_t) * 2049);
+    tantoangle = suAllocMem(sizeof(angle_t) * 2049, NULL);
     DL_FsReadFile(tantoangle, sizeof(angle_t) * 2049, 1, fp2, &readen);
 
-    viewangletox = AmMemAllocPointer(sizeof(int) * 4096);
+    viewangletox = suAllocMem(sizeof(int) * 4096, NULL);
     DL_FsReadFile(viewangletox, sizeof(int) * 4096, 1, fp2, &readen);
 
 	DL_FsCloseFile(fp2);
