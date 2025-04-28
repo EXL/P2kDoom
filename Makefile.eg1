@@ -8,9 +8,9 @@ ARM_GCC_LIN_BIN   = $(P2K_ELF_SDK)/tool/compiler/ARM-GCC-LIN/bin
 CC                = $(shell command -v arm-none-eabi-gcc || echo $(ARM_GCC_LIN_BIN)/arm-none-eabi-gcc)
 
 INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
-DEFINES           = -std=c99 -D__P2K__ -DEP1 -DROT_0 -DFPS_30 -DRANGECHECK -DGBA -DP2K -DUSE_BIG_ENDIAN
+DEFINES           = -std=c99 -D__P2K__ -DEP1 -DROT_0 -DFPS_15 -DNO_STRETCH -DGBA -DP2K -DUSE_BIG_ENDIAN
 WARNINGS          = -Wall
-OPTIMIZATIONS     = -O2
+OPTIMIZATIONS     = -Ofast
 FEATURES          = -ffreestanding -fshort-wchar -fshort-enums -fpack-struct=4 -fno-builtin -funsigned-char
 ifeq ($(ARGON), 1)
 	FLAVOR        = -DEA1
@@ -22,12 +22,13 @@ endif
 AFLAGS            = -marm
 CFLAGS            = $(INCLUDES) $(DEFINES) $(FLAVOR) $(WARNINGS) $(OPTIMIZATIONS) $(CPU_FLAGS) $(FEATURES)
 CXXFLAGS          = $(CFLAGS)
-LDFLAGS           = $(CFLAGS) -s -pie -Wl,--gc-sections -Wl,-zmax-page-size=1 -Wl,-eRegister
+LDFLAGS           = $(CFLAGS) -s -pie -Wl,--gc-sections -Wl,-zmax-page-size=4 -Wl,-eRegister
 LIBS              = -nostdlib -nodefaultlibs -L$(P2K_ELF_SDK)/ep1/lib/gcc -leg1_gcc_stub -L. -lgcc_arm
 
 TARGET_ELF        = P2kDoom.elf
 
 all:
+	$(CC) $(CFLAGS) $(AFLAGS) -c src/fixeddiv.s -o src/fixeddiv.o
 	$(CC) $(CFLAGS) -c src/am_map.c -o src/am_map.o
 	$(CC) $(CFLAGS) -c src/d_client.c -o src/d_client.o
 	$(CC) $(CFLAGS) -c src/d_items.c -o src/d_items.o
@@ -71,7 +72,7 @@ all:
 	$(CC) $(CFLAGS) -c src/p_user.c -o src/p_user.o
 	$(CC) $(CFLAGS) -c src/r_data.c -o src/r_data.o
 	$(CC) $(CFLAGS) -c src/r_draw.c -o src/r_draw.o
-	$(CC) $(CFLAGS) -c src/r_hotpath.iwram.c -o src/r_hotpath.iwram.o
+	$(CC) $(CFLAGS) -marm -c src/r_hotpath.iwram.c -o src/r_hotpath.iwram.o
 	$(CC) $(CFLAGS) -c src/r_main.c -o src/r_main.o
 	$(CC) $(CFLAGS) -c src/r_patch.c -o src/r_patch.o
 	$(CC) $(CFLAGS) -c src/r_plane.c -o src/r_plane.o
@@ -97,7 +98,7 @@ all:
 	src/p_switch.o src/p_telept.o src/p_tick.o src/p_user.o src/r_data.o src/r_draw.o src/r_hotpath.iwram.o \
 	src/r_main.o src/r_patch.o src/r_plane.o src/r_things.o src/s_sound.o src/sounds.o src/st_gfx.o src/st_lib.o \
 	src/st_stuff.o src/tables.o src/v_video.o src/version.o src/w_memcache.o src/wi_stuff.o \
-	src/z_bmalloc.o src/z_zone.o src/w_wad.o src/i_system_p2k.o $(LIBS) -o $(TARGET_ELF)
+	src/z_bmalloc.o src/z_zone.o src/w_wad.o src/i_system_p2k.o src/fixeddiv.o $(LIBS) -o $(TARGET_ELF)
 
 clean:
 	-rm -f src/*.o

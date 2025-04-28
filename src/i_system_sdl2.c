@@ -44,18 +44,8 @@ static SDL_Color *palette_sdl;
 
 void I_FinishUpdate_e32(const byte* srcBuffer, const byte* pallete, const unsigned int width, const unsigned int height)
 {
-	pb = (unsigned char*)srcBuffer;
-	pl = (unsigned char*)pallete;
 
-	for(int p = 0; p < 256; p++)
-	{
-		palette_sdl[p].r = pl[3*p];
-		palette_sdl[p].g = pl[(3*p)+1];
-		palette_sdl[p].b = pl[(3*p)+2];
-		palette_sdl[p].a = 0xFF;
-		// fprintf(stderr, "%d %d %d\n", palette_sdl[p].r, palette_sdl[p].g, palette_sdl[p].b);
-	}
-	SDL_SetPaletteColors(surface->format->palette, palette_sdl, 0, 256);
+	pb = (unsigned char*)srcBuffer;
 
 	//SDL_FillRect(surface, NULL, 0);
 	//memcpy(surface->pixels, pb, screen_width * screen_height);
@@ -68,7 +58,17 @@ void I_FinishUpdate_e32(const byte* srcBuffer, const byte* pallete, const unsign
 
 void I_SetPallete_e32(const byte* pallete)
 {
+	pl = (unsigned char*)pallete;
 
+	for(int p = 0; p < 256; p++)
+	{
+		palette_sdl[p].r = pl[3*p];
+		palette_sdl[p].g = pl[(3*p)+1];
+		palette_sdl[p].b = pl[(3*p)+2];
+		palette_sdl[p].a = 0xFF;
+		// fprintf(stderr, "%d %d %d\n", palette_sdl[p].r, palette_sdl[p].g, palette_sdl[p].b);
+	}
+	SDL_SetPaletteColors(surface->format->palette, palette_sdl, 0, 256);
 }
 
 void I_InitScreen_e32()

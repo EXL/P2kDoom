@@ -279,7 +279,7 @@ static void ST_updateWidgets(void)
     int         i;
 
     if(_g->fps_show)
-        _g->w_ready.num = &_g->fps_framerate;
+        _g->w_ammo[0].num = &_g->fps_framerate;
     else if (weaponinfo[_g->player.readyweapon].ammo == am_noammo)
         _g->w_ready.num = &largeammo;
     else

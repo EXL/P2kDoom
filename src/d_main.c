@@ -328,7 +328,7 @@ void D_DoomStep(void)
 	// Update display, next frame, with current state.
 	D_Display();
 
-
+	_g->fps_show = 1;
 	if(_g->fps_show)
 	{
 		D_UpdateFPS();

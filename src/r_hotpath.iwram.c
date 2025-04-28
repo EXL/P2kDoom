@@ -3342,21 +3342,17 @@ void P_RunThinkers (void)
     }
 }
 
-
+#define TICKS_PER_SEC                  (8192)
 
 static int I_GetTime_e32(void)
 {
-	int thistimereply = (int) suPalReadTime();
+	int thistimereply = (((int) suPalReadTime() * TICRATE) / (TICKS_PER_SEC));
 
     return thistimereply;
 }
 
-
 int I_GetTime(void)
 {
-#if defined(__P2K__)
-	return (int) suPalReadTime();
-#else
     int thistimereply;
 
 #ifndef GBA
@@ -3371,8 +3367,8 @@ int I_GetTime(void)
 #else
 	clock_t now = clock();
 
-	thistimereply = (int)((double)now / ((double)CLOCKS_PER_SEC / (double)TICRATE));
-#endif
+//	thistimereply = (int)((double)now / ((double)CLOCKS_PER_SEC / (double)TICRATE));
+	thistimereply = (((now * TICRATE) / (CLOCKS_PER_SEC)));
 #endif
 
     if (thistimereply < _g->lasttimereply)

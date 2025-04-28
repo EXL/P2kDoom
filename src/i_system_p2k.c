@@ -61,7 +61,7 @@ void I_CreateBackBuffer_e32();
 #if defined(FPS_15)
 #define TIMER_FAST_UPDATE_MS              (1000 / 15) /* ~15 FPS. */
 #elif defined(FPS_30)
-#define TIMER_FAST_UPDATE_MS              (1000 / 10) /* ~30 FPS. */
+#define TIMER_FAST_UPDATE_MS              (1000 / 30) /* ~30 FPS. */
 #endif
 #define KEYPAD_BUTTONS                    (8)
 
@@ -185,6 +185,8 @@ static ldrElf *g_app_elf = NULL;
 #endif
 
 static WCHAR g_res_file_path[FS_MAX_URI_NAME_LENGTH];
+
+static UINT32 doom_current_palette[256];
 
 static EVENT_HANDLER_ENTRY_T g_state_any_hdls[] = {
 	{ EV_REVOKE_TOKEN, APP_HandleUITokenRevoked },
@@ -666,6 +668,9 @@ static void FPS_Meter(void) {
 #endif
 }
 
+unsigned short *backbuffer;
+unsigned short *frontbuffer;
+
 #if defined(EP1) || defined(EP2)
 #if !defined(FTR_C650)
 static UINT32 ATI_Driver_Log(APPLICATION_T *app) {
@@ -806,7 +811,7 @@ static UINT32 ATI_Driver_Set_Display_Mode(APPLICATION_T *app, AHIROTATE_T mode) 
 //	start_addr = 0x12000000;
 //	search_region = 0x03FFFFFF; /* 4 MB RAM */
 //	search_region = 0x07FFFFFF; /* 8 MB RAM */
-	start_addr = (UINT32) Class_dal;
+	start_addr = (UINT32) &Class_dal;
 #if !defined(SEARCH_LONG_RANGE)
 	search_region = 0x00000100;
 #else
@@ -990,18 +995,24 @@ static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
 
 	appi->ahi.bitmap.width = appi->bmp_width;
 	appi->ahi.bitmap.height = appi->bmp_height;
-	appi->ahi.bitmap.stride = appi->bmp_width * 2; /* (width * bpp) */
-	appi->ahi.bitmap.format = AHIFMT_16BPP_565;
-#if defined(JAVA_HEAP)
-	appi->ahi.bitmap.image = AmMemAllocPointer(appi->bmp_width * appi->bmp_height * 2);
-	if (!appi->ahi.bitmap.image) {
-#else
-	appi->ahi.bitmap.image = suAllocMem(appi->bmp_width * appi->bmp_height * 2, &result);
-	if (result != RESULT_OK) {
-#endif
-		LOG("%s\n", "Error: Cannot allocate screen buffer memory.");
-		return RESULT_FAIL;
-	}
+	appi->ahi.bitmap.stride = appi->bmp_width; /* (width * bpp) */
+	appi->ahi.bitmap.format = AHIFMT_8BPP;
+
+	backbuffer = suAllocMem(240 * 160, NULL);
+	frontbuffer = suAllocMem(240 * 160, NULL);
+
+	appi->ahi.bitmap.image = (UINT8 *) backbuffer;
+
+//#if defined(JAVA_HEAP)
+//	appi->ahi.bitmap.image = AmMemAllocPointer(appi->bmp_width * appi->bmp_height * 2);
+//	if (!appi->ahi.bitmap.image) {
+//#else
+//	appi->ahi.bitmap.image = suAllocMem(appi->bmp_width * appi->bmp_height * 2, &result);
+//	if (result != RESULT_OK) {
+//#endif
+//		LOG("%s\n", "Error: Cannot allocate screen buffer memory.");
+//		return RESULT_FAIL;
+//	}
 	appi->ahi.rect_bitmap.x1 = 0;
 	appi->ahi.rect_bitmap.y1 = 0;
 	appi->ahi.rect_bitmap.x2 = 0 + appi->bmp_width;
@@ -1076,12 +1087,12 @@ static UINT32 ATI_Driver_Flush(APPLICATION_T *app) {
 #if defined(ROT_0)
 	AhiDrawSurfDstSet(appi->ahi.context, appi->ahi.screen, 0);
 	AhiDrawBitmapBlt(appi->ahi.context,
-		&appi->ahi.rect_draw, &appi->ahi.point_bitmap, &appi->ahi.bitmap, NULL, 0);
+		&appi->ahi.rect_draw, &appi->ahi.point_bitmap, &appi->ahi.bitmap, (void *) doom_current_palette, 0);
 	AhiDispWaitVBlank(appi->ahi.context, 0);
 #elif defined(ROT_90)
 	AhiDrawSurfDstSet(appi->ahi.context, appi->ahi.draw, 0);
 	AhiDrawBitmapBlt(appi->ahi.context,
-		&appi->ahi.rect_bitmap, &appi->ahi.point_bitmap, &appi->ahi.bitmap, NULL, 0);
+		&appi->ahi.rect_bitmap, &appi->ahi.point_bitmap, &appi->ahi.bitmap, (void *) doom_current_palette, 0);
 
 	AhiDrawRotateBlt(appi->ahi.context,
 		&appi->ahi.rect_draw, &appi->ahi.point_bitmap, AHIROT_90, AHIMIRR_NO, 0);
@@ -1107,7 +1118,7 @@ static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
 	INT32 status;
 
 	appi = (APP_INSTANCE_T *) app;
-	display_bitmap = (UINT8 *) display_source_buffer;
+	display_bitmap = (UINT8 *) &display_source_buffer;
 
 	appi->dal_draw_region.ulc.x = 0;
 	appi->dal_draw_region.ulc.y = 0;
@@ -1161,6 +1172,9 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 	result = RESULT_OK;
 	status = RESULT_OK;
 	app_instance = (APP_INSTANCE_T *) app;
+
+	backbuffer = suAllocMem(240 * 160, NULL);
+	frontbuffer = suAllocMem(240 * 160, NULL);
 
 	app_instance->gfsdk.fb0_rect.x = 0;
 	app_instance->gfsdk.fb0_rect.y = 0;
@@ -1288,7 +1302,7 @@ static void Free_Memory_Blocks(void) {
 }
 #endif
 
-UINT16 *pp_bitmap;
+static UINT16 *pp_bitmap;
 
 static UINT32 GFX_Draw_Start(APPLICATION_T *app) {
 	APP_INSTANCE_T *appi;
@@ -1328,10 +1342,6 @@ static UINT32 GFX_Draw_Step(APPLICATION_T *app) {
 	return RESULT_OK;
 }
 
-
-unsigned short *backbuffer;
-unsigned short *frontbuffer;
-
 //static unsigned int vid_width = 0;
 //static unsigned int vid_height = 0;
 
@@ -1343,46 +1353,29 @@ unsigned short *frontbuffer;
 
 void I_FinishUpdate_e32(const byte* srcBuffer, const byte* palette, const unsigned int width, const unsigned int height)
 {
-//	LOG("%d %d\n", width, height);
 
+#if defined(EM1) || defined(EM2)
 	for (int i = 0; i < 240*160; i++) {
 		UINT8 r = palette[srcBuffer[i] * 3];
 		UINT8 g = palette[srcBuffer[i] * 3 + 1];
 		UINT8 b = palette[srcBuffer[i] * 3 + 2];
 		pp_bitmap[i] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 	}
+#endif
 
-
-//	LOG("%s %d %d\n", "Finish!", width, height);
-//	pb = (unsigned char*)srcBuffer;
-//	pl = (unsigned char*)pallete;
-
-//	for(int p = 0; p < 256; p++)
-//	{
-//		palette_sdl[p].r = pl[3*p];
-//		palette_sdl[p].g = pl[(3*p)+1];
-//		palette_sdl[p].b = pl[(3*p)+2];
-//		palette_sdl[p].a = 0xFF;
-//		// fprintf(stderr, "%d %d %d\n", palette_sdl[p].r, palette_sdl[p].g, palette_sdl[p].b);
-//	}
-//	SDL_SetPaletteColors(surface->format->palette, palette_sdl, 0, 256);
-
-	//SDL_FillRect(surface, NULL, 0);
-//	memcpy(surface->pixels, pb, screen_width * screen_height);
-//	SDL_BlitSurface(surface, NULL, video, NULL);
-//	SDL_UpdateTexture(texture, NULL, video->pixels, video->pitch);
-//	SDL_RenderCopy(render, texture, NULL, NULL);
-
-//	SDL_RenderPresent(render);
 }
 
 void I_Quit_e32() {
 
 }
 
-void I_SetPallete_e32(const byte* pallete)
+void I_SetPallete_e32(const byte* palette)
 {
-
+#if defined(EP1) || defined(EP2)
+	for(int p = 0; p < 256; p++) {
+		doom_current_palette[p] = ATI_565RGB(palette[3*p], palette[(3*p)+1], palette[(3*p)+2]);
+	}
+#endif
 }
 
 void I_InitScreen_e32()
@@ -1395,8 +1388,8 @@ void I_InitScreen_e32()
 
 void I_CreateBackBuffer_e32()
 {
-	backbuffer = suAllocMem(240 * 160, NULL);
-	frontbuffer = suAllocMem(240 * 160, NULL);
+//	backbuffer = suAllocMem(240 * 160, NULL);
+//	frontbuffer = suAllocMem(240 * 160, NULL);
 
 	unsigned short* bb = I_GetBackBuffer();
 
