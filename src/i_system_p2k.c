@@ -1093,6 +1093,7 @@ static UINT32 ATI_Driver_Flush(APPLICATION_T *app) {
 	appi = (APP_INSTANCE_T *) app;
 
 #if defined(NO_STRETCH)
+
 	AhiDrawSurfDstSet(appi->ahi.context, appi->ahi.draw, 0);
 	AhiDrawBitmapBlt(appi->ahi.context,
 		&appi->ahi.rect_bitmap, &appi->ahi.point_bitmap, &appi->ahi.bitmap, (void *) doom_current_palette, 0);
@@ -1101,6 +1102,7 @@ static UINT32 ATI_Driver_Flush(APPLICATION_T *app) {
 	AhiDrawSurfDstSet(appi->ahi.context, appi->ahi.screen, 0);
 
 	AhiDrawStretchBlt(appi->ahi.context, &appi->ahi.update_params.rect, &appi->ahi.rect_bitmap, AHIFLAG_STRETCHFAST);
+
 #else
 
 #if defined(ROT_0)
@@ -1215,13 +1217,21 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 	uisFreeMemory(app_instance->gfsdk.fb0);
 
 	app_instance->gfsdk.fb0_rect.w = 240;
+#if defined(NVIDIA_FULLSCREEN)
+	app_instance->gfsdk.fb0_rect.h = 320;
+#else
 	app_instance->gfsdk.fb0_rect.h = 160;
+#endif
 
-	app_instance->gfsdk.fb0 = uisAllocateMemory(240 * 160 * 2, &result);
+	app_instance->gfsdk.fb0 = uisAllocateMemory(app_instance->gfsdk.fb0_rect.w * app_instance->gfsdk.fb0_rect.h * 2, &result);
 	if (result != RESULT_OK) {
-		LOG("Cannot allocate '%d' bytes of memory for screen!\n", 240 * 160 * 2);
+		LOG("Cannot allocate '%d' bytes of memory for screen!\n", app_instance->gfsdk.fb0_rect.w * app_instance->gfsdk.fb0_rect.h * 2);
 		status = RESULT_FAIL;
 	}
+
+#if !defined(NVIDIA_FULLSCREEN)
+	app_instance->gfsdk.fb0_rect.y = 320 / 2 - 160 / 2;
+#endif
 
 	return status;
 }
@@ -1249,7 +1259,11 @@ static UINT32 Nvidia_Driver_Flush(APPLICATION_T *app) {
 		app_instance->gfsdk.gxHandle,
 		app_instance->gfsdk.fb0_rect.x, app_instance->gfsdk.fb0_rect.y,
 		app_instance->gfsdk.fb0_rect.w, app_instance->gfsdk.fb0_rect.h,
+#if defined(NVIDIA_FULLSCREEN)
 		app_instance->gfsdk.fb0_rect.x, app_instance->gfsdk.fb0_rect.y,
+#else
+		app_instance->gfsdk.fb0_rect.x, 0,
+#endif
 		app_instance->gfsdk.fb0_rect.w * 2,
 		app_instance->gfsdk.fb0
 	);
@@ -1323,6 +1337,8 @@ static void Free_Memory_Blocks(void) {
 #endif
 
 static UINT16 *pp_bitmap;
+static APP_INSTANCE_T *appi_g;
+static UINT8 *palette_g;
 
 static UINT32 GFX_Draw_Start(APPLICATION_T *app) {
 	APP_INSTANCE_T *appi;
@@ -1336,6 +1352,7 @@ static UINT32 GFX_Draw_Start(APPLICATION_T *app) {
 #endif
 
 	pp_bitmap = (UINT16 *) appi->p_bitmap;
+	appi_g = appi;
 
 	init_main(0, NULL);
 
@@ -1371,18 +1388,66 @@ static UINT32 GFX_Draw_Step(APPLICATION_T *app) {
 //static unsigned char* pb = NULL;
 //static unsigned char* pl = NULL;
 
-void I_FinishUpdate_e32(const byte* srcBuffer, const byte* palette, const unsigned int width, const unsigned int height)
+void I_CopyBackBufferToFrontBuffer(void)
+{
+	UINT16 i;
+	UINT32 *src, *dst;
+	src = (UINT32 *) I_GetBackBuffer();
+	dst = (UINT32 *) I_GetFrontBuffer();
+	for (i = 0; i < SCREENWIDTH * SCREENHEIGHT / 2; i++)
+		*dst++ = *src++;
+}
+
+void I_DrawBuffer(const byte* srcBuffer)
 {
 
-#if defined(EM1) || defined(EM2)
+#if defined(EP1) || defined(EP2)
+	appi_g->ahi.bitmap.image = (void *) srcBuffer;
+#elif defined(EM1) || defined(EM2)
+
+#if !defined(NVIDIA_FULLSCREEN)
 	for (int i = 0; i < 240*160; i++) {
-		UINT8 r = palette[srcBuffer[i] * 3];
-		UINT8 g = palette[srcBuffer[i] * 3 + 1];
-		UINT8 b = palette[srcBuffer[i] * 3 + 2];
+		UINT8 r = palette_g[srcBuffer[i] * 3];
+		UINT8 g = palette_g[srcBuffer[i] * 3 + 1];
+		UINT8 b = palette_g[srcBuffer[i] * 3 + 2];
 		pp_bitmap[i] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+	}
+#else
+	for (int i = 0; i < 240 * 160; i++) {
+		UINT8 r = palette_g[srcBuffer[i] * 3];
+		UINT8 g = palette_g[srcBuffer[i] * 3 + 1];
+		UINT8 b = palette_g[srcBuffer[i] * 3 + 2];
+		unsigned short color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+
+		// Calculate the corresponding destination indices
+		INT32 x = i % 240;
+		INT32 y = i / 240;
+		INT32 destIndex1 = (y * 2) * 240 + x;      // First row of the 2px height
+		INT32 destIndex2 = (y * 2 + 1) * 240 + x;  // Second row of the 2px height
+
+		// Set the color for both rows
+		pp_bitmap[destIndex1] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+		pp_bitmap[destIndex2] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 	}
 #endif
 
+#endif
+
+}
+
+void I_DrawFrontBuffer(void)
+{
+	I_DrawBuffer((byte *) I_GetFrontBuffer());
+#if defined(EP1) || defined(EP2)
+	ATI_Driver_Flush((APPLICATION_T *) appi_g);
+#elif defined(EM1) || defined(EM2)
+	Nvidia_Driver_Flush((APPLICATION_T *) appi_g);
+#endif
+}
+
+void I_FinishUpdate_e32(const byte* srcBuffer, const byte* palette, const unsigned int width, const unsigned int height)
+{
+	I_DrawBuffer((byte *) I_GetBackBuffer());
 }
 
 void I_Quit_e32() {
@@ -1391,6 +1456,7 @@ void I_Quit_e32() {
 
 void I_SetPallete_e32(const byte* palette)
 {
+	palette_g = palette;
 #if defined(EP1) || defined(EP2)
 	for(int p = 0; p < 256; p++) {
 		doom_current_palette[p] = ATI_565RGB(palette[3*p], palette[(3*p)+1], palette[(3*p)+2]);

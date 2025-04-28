@@ -5,6 +5,7 @@
 #include "i_system_sdl2.h"
 #include "i_main.h"
 #include "d_main.h"
+#include "doomdef.h"
 
 #include <errno.h>
 #include <sys/types.h>
@@ -42,13 +43,26 @@ static SDL_Renderer *render;
 static SDL_Texture *texture;
 static SDL_Color *palette_sdl;
 
-void I_FinishUpdate_e32(const byte* srcBuffer, const byte* pallete, const unsigned int width, const unsigned int height)
+void I_DrawBuffer(const byte* buffer)
 {
+//	surface->pixels = (void *) buffer;
 
-	pb = (unsigned char*)srcBuffer;
+for (int i = 0; i < 240 * 160; i++) {
+    unsigned char r = pl[buffer[i] * 3];
+    unsigned char g = pl[buffer[i] * 3 + 1];
+    unsigned char b = pl[buffer[i] * 3 + 2];
+    unsigned short color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 
-	//SDL_FillRect(surface, NULL, 0);
-	//memcpy(surface->pixels, pb, screen_width * screen_height);
+    // Calculate the corresponding destination indices
+    int x = i % 240;
+    int y = i / 240;
+    int destIndex1 = (y * 2) * 240 + x;      // First row of the 2px height
+    int destIndex2 = (y * 2 + 1) * 240 + x;  // Second row of the 2px height
+
+    // Set the color for both rows
+    ((unsigned short *) surface->pixels)[destIndex1] = color;
+    ((unsigned short *) surface->pixels)[destIndex2] = color;
+}
 	SDL_BlitSurface(surface, NULL, video, NULL);
 	SDL_UpdateTexture(texture, NULL, video->pixels, video->pitch);
 	SDL_RenderCopy(render, texture, NULL, NULL);
@@ -56,19 +70,29 @@ void I_FinishUpdate_e32(const byte* srcBuffer, const byte* pallete, const unsign
 	SDL_RenderPresent(render);
 }
 
+void I_FinishUpdate_e32(const byte* srcBuffer, const byte* pallete, const unsigned int width, const unsigned int height)
+{
+	I_DrawBuffer((byte *) I_GetBackBuffer());
+}
+
+void I_DrawFrontBuffer(void)
+{
+	I_DrawBuffer((byte *) I_GetFrontBuffer());
+}
+
 void I_SetPallete_e32(const byte* pallete)
 {
 	pl = (unsigned char*)pallete;
 
-	for(int p = 0; p < 256; p++)
-	{
-		palette_sdl[p].r = pl[3*p];
-		palette_sdl[p].g = pl[(3*p)+1];
-		palette_sdl[p].b = pl[(3*p)+2];
-		palette_sdl[p].a = 0xFF;
-		// fprintf(stderr, "%d %d %d\n", palette_sdl[p].r, palette_sdl[p].g, palette_sdl[p].b);
-	}
-	SDL_SetPaletteColors(surface->format->palette, palette_sdl, 0, 256);
+//	for(int p = 0; p < 256; p++)
+//	{
+//		palette_sdl[p].r = pl[3*p];
+//		palette_sdl[p].g = pl[(3*p)+1];
+//		palette_sdl[p].b = pl[(3*p)+2];
+//		palette_sdl[p].a = 0xFF;
+//		// fprintf(stderr, "%d %d %d\n", palette_sdl[p].r, palette_sdl[p].g, palette_sdl[p].b);
+//	}
+//	SDL_SetPaletteColors(surface->format->palette, palette_sdl, 0, 256);
 }
 
 void I_InitScreen_e32()
@@ -76,12 +100,12 @@ void I_InitScreen_e32()
 	//Gives 480px on a 5(mx) and 320px on a Revo.
 	vid_width = screen_width = 240;
 
-	vid_height = screen_height = 160;
+	vid_height = screen_height = 320;
 }
 
 void I_CreateBackBuffer_e32()
 {
-//	backbuffer = malloc(screen_width * screen_height);
+	backbuffer = malloc(screen_width * screen_height);
 	frontbuffer = malloc(screen_width * screen_height);
 
 	window = SDL_CreateWindow(
@@ -108,12 +132,12 @@ void I_CreateBackBuffer_e32()
 		return;
 	}
 
-	surface = SDL_CreateRGBSurface(0, screen_width, screen_height, 8, 0x00, 0x00, 0x00, 0x00);
+	surface = SDL_CreateRGBSurface(0, screen_width, screen_height, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
 	if (surface == NULL) {
 		SDL_Log("SDL_CreateRGBSurface (surface) failed: %s", SDL_GetError());
 		return;
 	}
-	backbuffer = surface->pixels;
+//	backbuffer = surface->pixels;
 
 	texture = SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888,
 								SDL_TEXTUREACCESS_STREAMING, screen_width, screen_height);
@@ -306,4 +330,14 @@ void *_memchr(const void *s, unsigned char c, size_t n) {
         } while (--n != 0);
     }
     return (NULL);
+}
+
+void I_CopyBackBufferToFrontBuffer(void)
+{
+	uint16_t i;
+	uint32_t *src, *dst;
+	src = I_GetBackBuffer();
+	dst = I_GetFrontBuffer();
+	for (i = 0; i < SCREENWIDTH * SCREENHEIGHT / 2; i++)
+		*dst++ = *src++;
 }

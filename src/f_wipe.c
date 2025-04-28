@@ -61,6 +61,7 @@ extern short* wipe_y_lookup;
 
 int wipe_StartScreen(void)
 {
+    I_CopyBackBufferToFrontBuffer();
     return 0;
 }
 
@@ -83,6 +84,7 @@ static int wipe_doMelt(int ticks)
 
     while (ticks--)
     {
+        I_DrawFrontBuffer();
         for (i = 0; i < SCREENWIDTH; i++)
         {
             if (wipe_y_lookup[i] < 0)
