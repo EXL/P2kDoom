@@ -694,8 +694,7 @@ static void IdentifyVersion()
 	const char *iwad_name = "doom1.wad";
 #else
 #if defined(EM1) || defined(EM2)
-//	const char *iwad_name = "/a/elf/ELFs/doom1.wad";
-	const char *iwad_name = "/a/elf/doom1.wad";
+	const char *iwad_name = "/e/mobile/doom1.wad";
 #else
 	const char *iwad_name = "file://c/Elf/doom1.wad";
 #endif
