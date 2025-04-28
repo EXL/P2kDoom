@@ -793,6 +793,7 @@ static UINT32 ATI_Driver_Set_Display_Mode(APPLICATION_T *app, AHIROTATE_T mode) 
 	UINT32 status;
 	APP_INSTANCE_T *appi;
 	AHIPOINT_T size_landscape;
+	AHIPOINT_T size_landscape_240x160;
 	AHIPOINT_T size_portrait;
 	AHIDEVCONTEXT_T device_context;
 	UINT32 *surface_disp_addr;
@@ -823,6 +824,8 @@ static UINT32 ATI_Driver_Set_Display_Mode(APPLICATION_T *app, AHIROTATE_T mode) 
 
 	size_landscape.x = display_mode.size.y;
 	size_landscape.y = display_mode.size.x;
+	size_landscape_240x160.x = 240;
+	size_landscape_240x160.y = 160;
 	size_portrait.x = display_mode.size.x;
 	size_portrait.y = display_mode.size.y;
 
@@ -862,7 +865,7 @@ static UINT32 ATI_Driver_Set_Display_Mode(APPLICATION_T *app, AHIROTATE_T mode) 
 			return RESULT_FAIL;
 		}
 		status = AhiSurfAlloc(appi->ahi.context,
-			&appi->ahi.draw, &size_landscape, AHIFMT_16BPP_565, 0);
+			&appi->ahi.draw, &size_landscape_240x160, AHIFMT_16BPP_565, AHIFLAG_INTMEMORY);
 		if (status != RESULT_OK) {
 			LOG("ATI_Driver_Set_Display_Mode: Cannot allocate drawing (landscape) surface, status = %d\n", status);
 			status |= AhiSurfFree(device_context, appi->ahi.screen);
@@ -988,8 +991,13 @@ static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
 	appi->ahi.update_params.sync = FALSE;
 	appi->ahi.update_params.rect.x1 = 0;
 	appi->ahi.update_params.rect.y1 = 0;
+#if defined(NO_STRETCH)
+	appi->ahi.update_params.rect.x2 = 0 + display_mode.size.y;
+	appi->ahi.update_params.rect.y2 = 0 + display_mode.size.x;
+#else
 	appi->ahi.update_params.rect.x2 = 0 + display_mode.size.x;
 	appi->ahi.update_params.rect.y2 = 0 + display_mode.size.y;
+#endif
 	appi->ahi.point_bitmap.x = 0;
 	appi->ahi.point_bitmap.y = 0;
 
@@ -1084,6 +1092,17 @@ static UINT32 ATI_Driver_Flush(APPLICATION_T *app) {
 
 	appi = (APP_INSTANCE_T *) app;
 
+#if defined(NO_STRETCH)
+	AhiDrawSurfDstSet(appi->ahi.context, appi->ahi.draw, 0);
+	AhiDrawBitmapBlt(appi->ahi.context,
+		&appi->ahi.rect_bitmap, &appi->ahi.point_bitmap, &appi->ahi.bitmap, (void *) doom_current_palette, 0);
+
+	AhiDrawSurfSrcSet(appi->ahi.context, appi->ahi.draw, 0);
+	AhiDrawSurfDstSet(appi->ahi.context, appi->ahi.screen, 0);
+
+	AhiDrawStretchBlt(appi->ahi.context, &appi->ahi.update_params.rect, &appi->ahi.rect_bitmap, AHIFLAG_STRETCHFAST);
+#else
+
 #if defined(ROT_0)
 	AhiDrawSurfDstSet(appi->ahi.context, appi->ahi.screen, 0);
 	AhiDrawBitmapBlt(appi->ahi.context,
@@ -1104,6 +1123,7 @@ static UINT32 ATI_Driver_Flush(APPLICATION_T *app) {
 	AhiDrawStretchBlt(appi->ahi.context, &appi->ahi.update_params.rect, &appi->ahi.rect_draw, AHIFLAG_STRETCHFAST);
 #endif
 
+#endif
 	if (appi->is_CSTN_display) {
 		AhiDispUpdate(appi->ahi.context, &appi->ahi.update_params);
 	}
