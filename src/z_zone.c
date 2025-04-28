@@ -40,7 +40,7 @@
 
 #define ZONEID	0x1d4a11
 
-const unsigned int maxHeapSize = (800 * 1024);
+const unsigned int maxHeapSize = (950 * 1024);
 
 #ifndef GBA
     static int running_count = 0;

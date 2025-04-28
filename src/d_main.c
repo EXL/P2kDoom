@@ -901,6 +901,9 @@ void D_DoomMainSetup(void)
     lprintf("%s\n","G_LoadSettings: Loading settings.");
     G_LoadSettings();
 
+//    _g->gamma = 2;
+//    V_SetPalLump(_g->gamma);
+
     _g->idmusnum = -1; //jff 3/17/98 insure idmus number is blank
 
     _g->fps_show = false;
