@@ -9,8 +9,8 @@ CC                = $(shell command -v arm-none-eabi-gcc || echo $(ARM_GCC_LIN_B
 
 INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
 DEFINES           = -std=c99 -D__P2K__ -DEP1 -DROT_0 -DFPS_15 -DNO_STRETCH -DGBA -DP2K -DUSE_BIG_ENDIAN
-WARNINGS          = -Wall
-OPTIMIZATIONS     = -Ofast
+WARNINGS          = -Wall -Wno-implicit-function-declaration -Wno-incompatible-pointer-types
+OPTIMIZATIONS     = -Ofast -fomit-frame-pointer -fstrict-aliasing -ffast-math -funroll-all-loops -flto=8
 FEATURES          = -ffreestanding -fshort-wchar -fshort-enums -fpack-struct=4 -fno-builtin -funsigned-char
 ifeq ($(ARGON), 1)
 	FLAVOR        = -DEA1
@@ -23,7 +23,7 @@ AFLAGS            = -marm
 CFLAGS            = $(INCLUDES) $(DEFINES) $(FLAVOR) $(WARNINGS) $(OPTIMIZATIONS) $(CPU_FLAGS) $(FEATURES)
 CXXFLAGS          = $(CFLAGS)
 LDFLAGS           = $(CFLAGS) -s -pie -Wl,--gc-sections -Wl,-zmax-page-size=4 -Wl,-eRegister
-LIBS              = -nostdlib -nodefaultlibs -L$(P2K_ELF_SDK)/ep1/lib/gcc -leg1_gcc_stub -L. -lgcc_arm
+LIBS              = -nostdlib -nodefaultlibs -L$(P2K_ELF_SDK)/ep1/lib/gcc -leg1_gcc_stub -L. -lgcc_gba_m
 
 TARGET_ELF        = P2kDoom.elf
 
@@ -72,7 +72,7 @@ all:
 	$(CC) $(CFLAGS) -c src/p_user.c -o src/p_user.o
 	$(CC) $(CFLAGS) -c src/r_data.c -o src/r_data.o
 	$(CC) $(CFLAGS) -c src/r_draw.c -o src/r_draw.o
-	$(CC) $(CFLAGS) -marm -c src/r_hotpath.iwram.c -o src/r_hotpath.iwram.o
+	$(CC) $(CFLAGS) -c src/r_hotpath.iwram.c -o src/r_hotpath.iwram.o
 	$(CC) $(CFLAGS) -c src/r_main.c -o src/r_main.o
 	$(CC) $(CFLAGS) -c src/r_patch.c -o src/r_patch.o
 	$(CC) $(CFLAGS) -c src/r_plane.c -o src/r_plane.o

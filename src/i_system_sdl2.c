@@ -47,22 +47,22 @@ void I_DrawBuffer(const byte* buffer)
 {
 //	surface->pixels = (void *) buffer;
 
-for (int i = 0; i < 240 * 160; i++) {
-    unsigned char r = pl[buffer[i] * 3];
-    unsigned char g = pl[buffer[i] * 3 + 1];
-    unsigned char b = pl[buffer[i] * 3 + 2];
-    unsigned short color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+    for (int i = 0; i < 240 * 160; i++) {
+        unsigned char r = pl[buffer[i] * 3];
+        unsigned char g = pl[buffer[i] * 3 + 1];
+        unsigned char b = pl[buffer[i] * 3 + 2];
+        unsigned short color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 
-    // Calculate the corresponding destination indices
-    int x = i % 240;
-    int y = i / 240;
-    int destIndex1 = (y * 2) * 240 + x;      // First row of the 2px height
-    int destIndex2 = (y * 2 + 1) * 240 + x;  // Second row of the 2px height
+        // Calculate the corresponding destination indices
+        int x = i % 240;
+        int y = i / 240;
+        int destIndex1 = (y * 2) * 240 + x;      // First row of the 2px height
+        int destIndex2 = (y * 2 + 1) * 240 + x;  // Second row of the 2px height
 
-    // Set the color for both rows
-    ((unsigned short *) surface->pixels)[destIndex1] = color;
-    ((unsigned short *) surface->pixels)[destIndex2] = color;
-}
+        // Set the color for both rows
+        ((unsigned short *) surface->pixels)[destIndex1] = color;
+        ((unsigned short *) surface->pixels)[destIndex2] = color;
+    }
 	SDL_BlitSurface(surface, NULL, video, NULL);
 	SDL_UpdateTexture(texture, NULL, video->pixels, video->pitch);
 	SDL_RenderCopy(render, texture, NULL, NULL);
