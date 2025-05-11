@@ -525,7 +525,7 @@ static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 k
 	#define KEYD_RIGHT      8
 	#define KEYD_START      9
 	#define KEYD_SELECT     10
-#if defined(EM1) || defined(EM2) || defined(FTR_C650)
+#if defined(KEYS_PORTRAIT) || defined(FTR_C650)
 	#define KK_2 MULTIKEY_2
 	#define KK_UP MULTIKEY_UP
 	#define KK_4 MULTIKEY_4
@@ -1216,12 +1216,17 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 	Nvidia_Driver_Flush(app);
 	uisFreeMemory(app_instance->gfsdk.fb0);
 
-	app_instance->gfsdk.fb0_rect.w = 240;
+	app_instance->gfsdk.fb0_rect.w = point.x + 1;
 #if defined(NVIDIA_FULLSCREEN)
-	app_instance->gfsdk.fb0_rect.h = 320;
+	app_instance->gfsdk.fb0_rect.h = point.y + 1;
 #else
 	app_instance->gfsdk.fb0_rect.h = 160;
 #endif
+
+//	app_instance->gfsdk.fb0_rect.x = 0;
+//	app_instance->gfsdk.fb0_rect.y = 0;
+//	app_instance->gfsdk.fb0_rect.w = 176;
+//	app_instance->gfsdk.fb0_rect.h = 220;
 
 	app_instance->gfsdk.fb0 = uisAllocateMemory(app_instance->gfsdk.fb0_rect.w * app_instance->gfsdk.fb0_rect.h * 2, &result);
 	if (result != RESULT_OK) {
@@ -1379,15 +1384,6 @@ static UINT32 GFX_Draw_Step(APPLICATION_T *app) {
 	return RESULT_OK;
 }
 
-//static unsigned int vid_width = 0;
-//static unsigned int vid_height = 0;
-
-//static unsigned int screen_width = 0;
-//static unsigned int screen_height = 0;
-
-//static unsigned char* pb = NULL;
-//static unsigned char* pl = NULL;
-
 void I_CopyBackBufferToFrontBuffer(void)
 {
 	UINT16 i;
@@ -1413,22 +1409,85 @@ void I_DrawBuffer(const byte* srcBuffer)
 		pp_bitmap[i] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 	}
 #else
-	for (int i = 0; i < 240 * 160; i++) {
-		UINT8 r = palette_g[srcBuffer[i] * 3];
-		UINT8 g = palette_g[srcBuffer[i] * 3 + 1];
-		UINT8 b = palette_g[srcBuffer[i] * 3 + 2];
-		unsigned short color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+	#if defined(NVIDIA_FULLSCREEN_PORTRAIT_240X320)
+		for (int i = 0; i < (SCREENWIDTH * 2) * SCREENHEIGHT; i++) {
+			UINT8 r = palette_g[srcBuffer[i] * 3];
+			UINT8 g = palette_g[srcBuffer[i] * 3 + 1];
+			UINT8 b = palette_g[srcBuffer[i] * 3 + 2];
+			unsigned short color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 
-		// Calculate the corresponding destination indices
-		INT32 x = i % 240;
-		INT32 y = i / 240;
-		INT32 destIndex1 = (y * 2) * 240 + x;      // First row of the 2px height
-		INT32 destIndex2 = (y * 2 + 1) * 240 + x;  // Second row of the 2px height
+			// Calculate the corresponding destination indices
+			INT32 x = i % (SCREENWIDTH * 2);
+			INT32 y = i / (SCREENWIDTH * 2);
+			INT32 destIndex1 = (y * 2) * (SCREENWIDTH * 2) + x;      // First row of the 2px height
+			INT32 destIndex2 = (y * 2 + 1) * (SCREENWIDTH * 2) + x;  // Second row of the 2px height
 
-		// Set the color for both rows
-		pp_bitmap[destIndex1] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-		pp_bitmap[destIndex2] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-	}
+			// Set the color for both rows
+			pp_bitmap[destIndex1] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+			pp_bitmap[destIndex2] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+		}
+	#elif defined(NVIDIA_FULLSCREEN_PORTRAIT_176X220)
+		#define WWW (176)
+		#define HHH (220)
+		// Fixed-point scaling factors (scaled by a factor of 256)
+		const int scaleX = ((SCREENWIDTH * 2) << 8) / WWW;   // 240 * 256 / 176
+		const int scaleY = ((SCREENHEIGHT) << 8) / HHH; // 160 * 256 / 220
+
+		// Single loop for all destination pixels
+		for (int destIndex = 0; destIndex < WWW * HHH; destIndex++) {
+			// Compute destination coordinates (x, y)
+			int destX = destIndex % WWW;
+			int destY = destIndex / WWW;
+
+			// Calculate the corresponding source pixel using fixed-point math
+			int srcX = (destX * scaleX) >> 8; // Divide by 256
+			int srcY = (destY * scaleY) >> 8; // Divide by 256
+			int srcIndex = srcY * (SCREENWIDTH * 2) + srcX;
+
+			// Get the RGB values from the palette
+			unsigned char r = palette_g[srcBuffer[srcIndex] * 3];
+			unsigned char g = palette_g[srcBuffer[srcIndex] * 3 + 1];
+			unsigned char b = palette_g[srcBuffer[srcIndex] * 3 + 2];
+
+			// Write the color to the destination buffer
+			// Convert to 16-bit color format
+			pp_bitmap[destIndex] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+		}
+	#elif defined(NVIDIA_FULLSCREEN_LANDSCAPE)
+#if defined(FTR_E770V)
+		#define WWW (176)
+		#define HHH (220)
+#else
+		#define WWW (240)
+		#define HHH (320)
+#endif
+		// Calculate scaling factors (integer math, avoiding float)
+		// Using fixed-point 16.16 format for precision
+		int scaleX = ((SCREENWIDTH * 2) << 16) / HHH; // Scale factor for X (source width to destination height)
+		int scaleY = ((SCREENHEIGHT) << 16) / WWW; // Scale factor for Y (source height to destination width)
+
+		// Iterate over all destination pixels
+		for (int i = 0; i < WWW * HHH; i++) {
+			int x = i % WWW; // x-coordinate in destination
+			int y = i / WWW; // y-coordinate in destination
+
+			// Map destination (x, y) to source (srcX, srcY) with scaling and rotation
+			int srcX = (y * scaleX) >> 16; // Scale and rotate
+			int srcY = ((WWW - 1 - x) * scaleY) >> 16; // Scale and rotate
+
+			// Ensure source coordinates are within bounds
+			int srcIndex = srcY * (SCREENWIDTH * 2) + srcX; // Calculate source index
+
+			// Fetch color from palette
+			UINT8 r = palette_g[srcBuffer[srcIndex] * 3];
+			UINT8 g = palette_g[srcBuffer[srcIndex] * 3 + 1];
+			UINT8 b = palette_g[srcBuffer[srcIndex] * 3 + 2];
+
+			pp_bitmap[i] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+		}
+	#else
+		#error "Unknown blitting method!"
+	#endif
 #endif
 
 #endif

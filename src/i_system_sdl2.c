@@ -47,22 +47,105 @@ void I_DrawBuffer(const byte* buffer)
 {
 //	surface->pixels = (void *) buffer;
 
-    for (int i = 0; i < 240 * 160; i++) {
-        unsigned char r = pl[buffer[i] * 3];
-        unsigned char g = pl[buffer[i] * 3 + 1];
-        unsigned char b = pl[buffer[i] * 3 + 2];
-        unsigned short color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+	int srcWidth = SCREENWIDTH * 2;  // Source width
+	int srcHeight = SCREENHEIGHT; // Source height
+	int destWidth = vid_width; // Destination width
+	int destHeight = vid_height; // Destination height
 
-        // Calculate the corresponding destination indices
-        int x = i % 240;
-        int y = i / 240;
-        int destIndex1 = (y * 2) * 240 + x;      // First row of the 2px height
-        int destIndex2 = (y * 2 + 1) * 240 + x;  // Second row of the 2px height
+	unsigned short *destPixels = (unsigned short *) surface->pixels;
 
-        // Set the color for both rows
-        ((unsigned short *) surface->pixels)[destIndex1] = color;
-        ((unsigned short *) surface->pixels)[destIndex2] = color;
-    }
+	// Calculate scaling factors (integer math, avoiding float)
+	// Using fixed-point 16.16 format for precision
+	int scaleX = (srcWidth << 16) / destHeight; // Scale factor for X (source width to destination height)
+	int scaleY = (srcHeight << 16) / destWidth; // Scale factor for Y (source height to destination width)
+
+	// Iterate over all destination pixels
+	for (int i = 0; i < destWidth * destHeight; i++) {
+		int x = i % destWidth; // x-coordinate in destination
+		int y = i / destWidth; // y-coordinate in destination
+
+		// Map destination (x, y) to source (srcX, srcY) with scaling and rotation
+		int srcX = (y * scaleX) >> 16; // Scale and rotate
+		int srcY = ((destWidth - 1 - x) * scaleY) >> 16; // Scale and rotate
+
+		// Ensure source coordinates are within bounds
+		int srcIndex = srcY * srcWidth + srcX; // Calculate source index
+
+		// Fetch color from palette
+		unsigned char r = pl[buffer[srcIndex] * 3];
+		unsigned char g = pl[buffer[srcIndex] * 3 + 1];
+		unsigned char b = pl[buffer[srcIndex] * 3 + 2];
+
+		// Convert to RGB565 format
+		unsigned short rgb565 = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+
+		// Write to destination
+		destPixels[i] = rgb565;
+	}
+
+#if 0
+
+	for (int i = 0; i < (SCREENWIDTH * 2) * SCREENHEIGHT; i++) {
+		unsigned char r = pl[buffer[i] * 3];
+		unsigned char g = pl[buffer[i] * 3 + 1];
+		unsigned char b = pl[buffer[i] * 3 + 2];
+		((unsigned short *) surface->pixels)[i] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+	}
+
+	for (int i = 0; i < (SCREENWIDTH * 2) * SCREENHEIGHT; i++) {
+		unsigned char r = pl[buffer[i] * 3];
+		unsigned char g = pl[buffer[i] * 3 + 1];
+		unsigned char b = pl[buffer[i] * 3 + 2];
+
+		// Calculate the corresponding destination indices
+		int x = i % (SCREENWIDTH * 2);
+		int y = i / (SCREENWIDTH * 2);
+		int destIndex1 = (y * 2) * (SCREENWIDTH * 2) + x;      // First row of the 2px height
+		int destIndex2 = (y * 2 + 1) * (SCREENWIDTH * 2) + x;  // Second row of the 2px height
+
+		// Set the color for both rows
+		((unsigned short *) surface->pixels)[destIndex1] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+		((unsigned short *) surface->pixels)[destIndex2] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+	}
+
+	// Constants for source and destination dimensions
+	const int srcWidth = SCREENWIDTH * 2;
+	const int srcHeight = SCREENHEIGHT;
+	const int destWidth = vid_width;
+	const int destHeight = vid_height;
+
+	// Fixed-point scaling factors (scaled by a factor of 256)
+	const int scaleX = (srcWidth << 8) / destWidth;   // 240 * 256 / 176
+	const int scaleY = (srcHeight << 8) / destHeight; // 160 * 256 / 220
+
+	// Total number of pixels in the destination
+	const int destTotalPixels = destWidth * destHeight;
+
+	// Single loop for all destination pixels
+	for (int destIndex = 0; destIndex < destTotalPixels; destIndex++) {
+		// Compute destination coordinates (x, y)
+		int destX = destIndex % destWidth;
+		int destY = destIndex / destWidth;
+
+		// Calculate the corresponding source pixel using fixed-point math
+		int srcX = (destX * scaleX) >> 8; // Divide by 256
+		int srcY = (destY * scaleY) >> 8; // Divide by 256
+		int srcIndex = srcY * srcWidth + srcX;
+
+		// Get the RGB values from the palette
+		unsigned char r = pl[buffer[srcIndex] * 3];
+		unsigned char g = pl[buffer[srcIndex] * 3 + 1];
+		unsigned char b = pl[buffer[srcIndex] * 3 + 2];
+
+		// Convert to 16-bit color format
+		unsigned short color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+
+		// Write the color to the destination buffer
+		((unsigned short *) surface->pixels)[destIndex] = color;
+	}
+
+#endif
+
 	SDL_BlitSurface(surface, NULL, video, NULL);
 	SDL_UpdateTexture(texture, NULL, video->pixels, video->pitch);
 	SDL_RenderCopy(render, texture, NULL, NULL);
@@ -83,24 +166,13 @@ void I_DrawFrontBuffer(void)
 void I_SetPallete_e32(const byte* pallete)
 {
 	pl = (unsigned char*)pallete;
-
-//	for(int p = 0; p < 256; p++)
-//	{
-//		palette_sdl[p].r = pl[3*p];
-//		palette_sdl[p].g = pl[(3*p)+1];
-//		palette_sdl[p].b = pl[(3*p)+2];
-//		palette_sdl[p].a = 0xFF;
-//		// fprintf(stderr, "%d %d %d\n", palette_sdl[p].r, palette_sdl[p].g, palette_sdl[p].b);
-//	}
-//	SDL_SetPaletteColors(surface->format->palette, palette_sdl, 0, 256);
 }
 
 void I_InitScreen_e32()
 {
 	//Gives 480px on a 5(mx) and 320px on a Revo.
-	vid_width = screen_width = 240;
-
-	vid_height = screen_height = 320;
+	vid_width = screen_width = 176;
+	vid_height = screen_height = 220;
 }
 
 void I_CreateBackBuffer_e32()
@@ -137,7 +209,6 @@ void I_CreateBackBuffer_e32()
 		SDL_Log("SDL_CreateRGBSurface (surface) failed: %s", SDL_GetError());
 		return;
 	}
-//	backbuffer = surface->pixels;
 
 	texture = SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888,
 								SDL_TEXTUREACCESS_STREAMING, screen_width, screen_height);
@@ -152,13 +223,9 @@ void I_CreateBackBuffer_e32()
 
 	memset(bb, 0, screen_width*screen_height);
 
-//	I_FinishUpdate_e32(NULL, NULL, 0, 0);
-
 	bb = I_GetFrontBuffer();
 
 	memset(bb, 0, screen_width*screen_height);
-
-//	I_FinishUpdate_e32(NULL, NULL, 0, 0);
 }
 
 //**************************************************************************************
@@ -336,8 +403,8 @@ void I_CopyBackBufferToFrontBuffer(void)
 {
 	uint16_t i;
 	uint32_t *src, *dst;
-	src = I_GetBackBuffer();
-	dst = I_GetFrontBuffer();
+	src = (uint32_t *) I_GetBackBuffer();
+	dst = (uint32_t *) I_GetFrontBuffer();
 	for (i = 0; i < SCREENWIDTH * SCREENHEIGHT / 2; i++)
 		*dst++ = *src++;
 }
