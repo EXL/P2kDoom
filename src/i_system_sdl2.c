@@ -47,6 +47,7 @@ void I_DrawBuffer(const byte* buffer)
 {
 //	surface->pixels = (void *) buffer;
 
+#if 0
 	int srcWidth = SCREENWIDTH * 2;  // Source width
 	int srcHeight = SCREENHEIGHT; // Source height
 	int destWidth = vid_width; // Destination width
@@ -81,15 +82,6 @@ void I_DrawBuffer(const byte* buffer)
 
 		// Write to destination
 		destPixels[i] = rgb565;
-	}
-
-#if 0
-
-	for (int i = 0; i < (SCREENWIDTH * 2) * SCREENHEIGHT; i++) {
-		unsigned char r = pl[buffer[i] * 3];
-		unsigned char g = pl[buffer[i] * 3 + 1];
-		unsigned char b = pl[buffer[i] * 3 + 2];
-		((unsigned short *) surface->pixels)[i] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 	}
 
 	for (int i = 0; i < (SCREENWIDTH * 2) * SCREENHEIGHT; i++) {
@@ -143,8 +135,14 @@ void I_DrawBuffer(const byte* buffer)
 		// Write the color to the destination buffer
 		((unsigned short *) surface->pixels)[destIndex] = color;
 	}
-
 #endif
+
+	for (int i = 0; i < (SCREENWIDTH * 2) * SCREENHEIGHT; i++) {
+		unsigned char r = pl[buffer[i] * 3];
+		unsigned char g = pl[buffer[i] * 3 + 1];
+		unsigned char b = pl[buffer[i] * 3 + 2];
+		((unsigned short *) surface->pixels)[i] = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+	}
 
 	SDL_BlitSurface(surface, NULL, video, NULL);
 	SDL_UpdateTexture(texture, NULL, video->pixels, video->pitch);
@@ -171,8 +169,8 @@ void I_SetPallete_e32(const byte* pallete)
 void I_InitScreen_e32()
 {
 	//Gives 480px on a 5(mx) and 320px on a Revo.
-	vid_width = screen_width = 176;
-	vid_height = screen_height = 220;
+	vid_width = screen_width = 240;
+	vid_height = screen_height = 160;
 }
 
 void I_CreateBackBuffer_e32()
@@ -269,7 +267,7 @@ void I_ProcessKeyEvents()
 					case SDL_SCANCODE_A:
 						ev.data1 = KEYD_L;
 						break;
-					case SDL_SCANCODE_D:
+					case SDL_SCANCODE_S:
 						ev.data1 = KEYD_R;
 						break;
 					default:

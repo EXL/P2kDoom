@@ -41,7 +41,7 @@
 #define ZONEID	0x1d4a11
 
 #if defined(EP1) || defined(EP2)
-const unsigned int maxHeapSize = (950 * 1024);
+const unsigned int maxHeapSize = (1600 * 1024);
 #else
 const unsigned int maxHeapSize = (2000 * 1024);
 #endif
