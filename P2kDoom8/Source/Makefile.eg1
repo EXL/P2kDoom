@@ -8,7 +8,7 @@ ARM_GCC_LIN_BIN   = $(P2K_ELF_SDK)/tool/compiler/ARM-GCC-LIN/bin
 CC                = $(shell command -v arm-none-eabi-gcc || echo $(ARM_GCC_LIN_BIN)/arm-none-eabi-gcc)
 
 INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
-DEFINES           = -std=c99 -D__P2K__ -DEP1 -DROT_0 -DFPS_30 -DNO_STRETCH -DGBA -DP2K -DUSE_BIG_ENDIAN -DFLAT_SPAN -DC_ONLY
+DEFINES           = -std=c99 -D__P2K__ -DEP1 -DROT_0 -DFPS_30 -DNO_STRETCH -DGBA -DP2K -DUSE_BIG_ENDIAN -DFLAT_SPAN -DC_ONLY -DDROP_64BIT_IDS
 WARNINGS          = -Wall -Wno-implicit-function-declaration -Wno-incompatible-pointer-types
 OPTIMIZATIONS     = -Ofast -funroll-all-loops
 FEATURES          = -ffreestanding -fshort-wchar -fshort-enums -fpack-struct=4 -fno-builtin -funsigned-char

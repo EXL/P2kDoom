@@ -531,10 +531,10 @@ void V_ShutdownDrawLine(void)
 
 void V_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color)
 {
-	int16_t dx = abs(x1 - x0);
+	int16_t dx = D_abs(x1 - x0);
 	int16_t sx = x0 < x1 ? 1 : -1;
 
-	int16_t dy = -abs(y1 - y0);
+	int16_t dy = -D_abs(y1 - y0);
 	int16_t sy = y0 < y1 ? 1 : -1;
 
 	int16_t err = dx + dy;

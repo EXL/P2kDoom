@@ -26,7 +26,11 @@
 #if defined(SDL2)
 #include <SDL2/SDL.h>
 #elif defined(P2K)
+#if defined(EP1) || defined(EP2)
 #include <stdargs.h>
+#else
+#include <stdarg.h>
+#endif
 #else
 #include <conio.h>
 #include <dos.h>
@@ -371,11 +375,13 @@ int32_t I_GetTime(void)
 #endif
 
 #if defined(P2K)
-    #define TICKS_PER_SEC                  (8192)
+//    #define TICKS_PER_SEC                  (8192)
 
-    int thistimereply = (((int) suPalReadTime() * TICRATE) / (TICKS_PER_SEC));
+//    int thistimereply = (((int) suPalReadTime() * TICRATE) / (TICKS_PER_SEC));
 
-    return thistimereply;
+//    return thistimereply;
+
+    return ticcount++;
 #endif
 
 #endif

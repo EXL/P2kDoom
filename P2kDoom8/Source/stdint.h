@@ -33,8 +33,6 @@ typedef unsigned int       size_t;
 #define printf PFprintf
 #define exit(x)
 
-#define labs(i) ((i) < 0 ? -(i) : (i))
-
 #define I_Error PFprintf
 
 #endif // STDINT_H

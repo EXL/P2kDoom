@@ -154,8 +154,7 @@ static uint32_t *indextable = NULL;
 
 static void genindextable(int video_w, int video_h)
 {
-    if (indextable) free(indextable);
-    indextable = (uint32_t*)malloc(sizeof(uint32_t) * video_w * video_h);
+    indextable = (uint32_t *) malloc(sizeof(uint32_t) * video_w * video_h);
     for (int y = 0; y < video_h; ++y) {
         int src_y = (y * SCREENHEIGHT) / video_h;
         for (int x = 0; x < video_w; ++x) {
@@ -196,8 +195,8 @@ static void genscalexytable(int video_w, int video_h)
         xtable[i] = (((video_w - 1 - i) * SCREENHEIGHT) / video_w) * SCREENWIDTH;  // src_y
     }
 }
-#define VIDEO_W 320
-#define VIDEO_H 240
+#define VIDEO_W 176
+#define VIDEO_H 220
 
 void I_InitGraphicsHardwareSpecificCode(void)
 {
@@ -266,18 +265,18 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 	uint8_t __far* dst = surface->pixels;
 
     // For each pixel in dest (x=0..175, y=0..219)
-//    for (int y = 0; y < VIDEO_H; ++y)
-//    {
-//        for (int x = 0; x < VIDEO_W; ++x)
-//        {
-//            // CCW 90deg: dest(x, y) <- src(y', x')
-//            // src index = xtable[x] + ytable[y]
-//            dst[y * VIDEO_W + x] = src[xtable[x] + ytable[y]];
-//        }
-//    }
+    for (int y = 0; y < VIDEO_H; ++y)
+    {
+        for (int x = 0; x < VIDEO_W; ++x)
+        {
+            // CCW 90deg: dest(x, y) <- src(y', x')
+            // src index = xtable[x] + ytable[y]
+            dst[y * VIDEO_W + x] = src[xtable[x] + ytable[y]];
+        }
+    }
 
-    for (int i = 0; i < VIDEO_W * VIDEO_H; ++i)
-        dst[i] = src[indextable[i]];
+//    for (int i = 0; i < VIDEO_W * VIDEO_H; ++i)
+//        dst[i] = src[indextable[i]];
 
 #if 0
 	uint8_t __far* src = buffer;
@@ -704,10 +703,10 @@ void V_ShutdownDrawLine(void)
 //
 void V_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color)
 {
-	int16_t dx = abs(x1 - x0);
+	int16_t dx = D_abs(x1 - x0);
 	int16_t sx = x0 < x1 ? 1 : -1;
 
-	int16_t dy = -abs(y1 - y0);
+	int16_t dy = -D_abs(y1 - y0);
 	int16_t sy = y0 < y1 ? 1 : -1;
 
 	int16_t err = dx + dy;

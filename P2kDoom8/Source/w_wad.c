@@ -88,8 +88,15 @@ static FILE* fileWAD;
 static FILE_HANDLE_T fileWAD;
 
 #if !defined WAD_FILE
+
+#if defined(EP1) || defined(EP2)
 #define WAD_FILE "file://c/Elf/DOOM1.WAD"
+#elif defined(EM1) || defined(EM2)
+#define WAD_FILE "/e/mobile/DOOM12.WAD"
 #endif
+
+#endif
+
 #endif
 
 static int16_t numlumps;
@@ -107,7 +114,7 @@ static void __far*__far* lumpcache;
 #if !defined(P2K)
 static void _ffread(void __far* ptr, uint16_t size, FILE* fp)
 #else
-static void _ffread(void __far* ptr, uint16_t size, FS_HANDLE_T fp)
+static void _ffread(void __far* ptr, uint16_t size, FILE_HANDLE_T fp)
 #endif
 {
 #if defined(P2K)
@@ -238,7 +245,13 @@ void W_Init(void)
 		fileWAD = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
 	}
 #endif
+
+#if !defined(P2K)
 	boolean xms = W_LoadWADIntoXMS();
+#else
+	boolean xms = 0;
+#endif
+
 	readfunc = xms ? Z_MoveExtendedMemoryToConventionalMemory : W_ReadDataFromFile;
 
 	wadinfo_t header;

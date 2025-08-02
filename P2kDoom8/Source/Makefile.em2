@@ -1,0 +1,89 @@
+# Script: Motorola P2K Makefile
+
+P2K_ELF_SDK       = /home/exl/Storage/Projects/Git/MotoFanRu/P2K-ELF-SDK-OLD/ELFKIT_EM2_Windows
+ARM_GCC_LIN_BIN   = $(P2K_ELF_SDK)/tool/compiler/ARM-GCC-LIN/bin
+
+CC                = /opt/mcore-elf-gcc/bin/mcore-elf-gcc
+LD                = /opt/mcore-elf-gcc/bin/mcore-elf-ld
+
+INCLUDES          = -nostdinc -nostdlib -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
+DEFINES           = -std=c99 -D__P2K__ -DEM2 -DROT_0 -DFPS_30 -DGBA -DP2K -DUSE_BIG_ENDIAN -DNVIDIA_FULLSCREEN -DNVIDIA_FULLSCREEN_PORTRAIT_240X320 -DKEYS_PORTRAIT -DFLAT_SPAN -DC_ONLY -DDROP_64BIT_IDS
+WARNINGS          = -Wall -Wno-implicit-function-declaration
+OPTIMIZATIONS     = -O3
+FEATURES          = -fomit-frame-pointer -fshort-wchar -fshort-enums -fno-builtin -funsigned-char
+FLAVOR            = -DEM2
+CPU_FLAGS         = -m340 -m4align -mbig-endian
+CFLAGS            = $(INCLUDES) $(DEFINES) $(FLAVOR) $(WARNINGS) $(OPTIMIZATIONS) $(CPU_FLAGS) $(FEATURES)
+CXXFLAGS          = $(CFLAGS)
+LDFLAGS           = -d -EB -N -r -s -Bstatic -Bsymbolic -Bsymbolic-functions -nostdinc -nostdlib --unresolved-symbols=report-all -z muldefs -z combreloc -z nodefaultlib
+LIBS              = libgcc.a -T$(P2K_ELF_SDK)/mcore-elf/lib/linker_elf.ld
+
+TARGET_ELF        = P2kDoom8088.elf
+
+OBJS = \
+	i_p2k.o \
+	p_enemy2.o \
+	p_map.o \
+	p_maputl.o \
+	p_mobj.o \
+	p_sight.o \
+	r_data.o \
+	r_draw.o \
+	r_plane.o \
+	tables.o \
+	w_wad.o \
+	z_zone.o \
+	am_map.o \
+	d_items.o \
+	d_main.o \
+	f_finale.o \
+	f_lib.o \
+	g_game.o \
+	hu_stuff.o \
+	i_audio.o \
+	i_main.o \
+	i_system.o \
+	info.o \
+	m_cheat.o \
+	m_menu.o \
+	m_random.o \
+	p_doors.o \
+	p_enemy.o \
+	p_floor.o \
+	p_inter.o \
+	p_lights.o \
+	p_map.o \
+	p_maputl.o \
+	p_mobj.o \
+	p_plats.o \
+	p_pspr.o \
+	p_setup.o \
+	p_sight.o \
+	p_spec.o \
+	p_switch.o \
+	p_telept.o \
+	p_tick.o \
+	p_user.o \
+	r_sky.o \
+	r_things.o \
+	s_sound.o \
+	sounds.o \
+	st_pal.o \
+	st_stuff.o \
+	v_video.o \
+	wi_lib.o \
+	wi_stuff.o \
+	z_bmallo.o
+
+all: $(TARGET_ELF)
+
+$(TARGET_ELF): $(OBJS)
+	$(LD) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f *.o $(TARGET_ELF)
+
+.PHONY: all clean

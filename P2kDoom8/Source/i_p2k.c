@@ -680,6 +680,9 @@ static void FPS_Meter(void) {
 #endif
 }
 
+#define VIDEO_W 240
+#define VIDEO_H 320
+
 #if defined(EP1) || defined(EP2)
 #if !defined(FTR_C650)
 static UINT32 ATI_Driver_Log(APPLICATION_T *app) {
@@ -1223,7 +1226,7 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 #if defined(NVIDIA_FULLSCREEN)
 	app_instance->gfsdk.fb0_rect.h = point.y + 1;
 #else
-	app_instance->gfsdk.fb0_rect.h = 160;
+	app_instance->gfsdk.fb0_rect.h = SCREENHEIGHT;
 #endif
 
 //	app_instance->gfsdk.fb0_rect.x = 0;
@@ -1238,7 +1241,7 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 	}
 
 #if !defined(NVIDIA_FULLSCREEN)
-	app_instance->gfsdk.fb0_rect.y = 320 / 2 - 160 / 2;
+	app_instance->gfsdk.fb0_rect.y = 320 / 2 - SCREENHEIGHT / 2;
 #endif
 
 	return status;
@@ -1345,6 +1348,7 @@ static void Free_Memory_Blocks(void) {
 #endif
 
 static UINT16 *pp_bitmap;
+static UINT8 *ppp_bitmap_screen;
 static APP_INSTANCE_T *appi_g;
 static UINT8 *palette_g;
 
@@ -1362,6 +1366,10 @@ static UINT32 GFX_Draw_Start(APPLICATION_T *app) {
 	pp_bitmap = (UINT16 *) appi->p_bitmap;
 	appi_g = appi;
 
+#if defined(EM1) || defined(EM2)
+	ppp_bitmap_screen = uisAllocateMemory(SCREENWIDTH * SCREENHEIGHT, NULL);
+#endif
+
 	init_main(0, NULL);
 
 	return RESULT_OK;
@@ -1372,7 +1380,9 @@ static UINT32 GFX_Draw_Stop(APPLICATION_T *app) {
 
 	appi = (APP_INSTANCE_T *) app;
 
-	LOG("%s\n", "STOP");
+#if defined(EM1) || defined(EM2)
+	uisFreeMemory(ppp_bitmap_screen);
+#endif
 
 	return RESULT_OK;
 }
@@ -1386,11 +1396,6 @@ static UINT32 GFX_Draw_Step(APPLICATION_T *app) {
 
 	return RESULT_OK;
 }
-
-
-static uint16_t __far* frontbuffer;
-static  int16_t __far* wipe_y_lookup;
-
 
 void I_ReloadPalette(void)
 {
@@ -1434,6 +1439,7 @@ static const uint8_t colors[14][3] =
 	{0, 0x08, 0}
 };
 
+#define ATI_565RGB(r, g, b) (UINT32)((r & 0xf8) << 8 | (g & 0xFC) << 3 | (b & 0xf8) >> 3)
 
 static void I_UploadNewPalette(int8_t pal)
 {
@@ -1480,8 +1486,7 @@ static uint32_t *indextable = NULL;
 
 static void genindextable(int video_w, int video_h)
 {
-    if (indextable) suFreeMem(indextable);
-    indextable = (uint32_t*)suAllocMem(sizeof(uint32_t) * video_w * video_h, NULL);
+    indextable = (uint32_t*) uisAllocateMemory(sizeof(uint32_t) * video_w * video_h, NULL);
     for (int y = 0; y < video_h; ++y) {
         int src_y = (y * SCREENHEIGHT) / video_h;
         for (int x = 0; x < video_w; ++x) {
@@ -1522,24 +1527,27 @@ static void genscalexytable(int video_w, int video_h)
         xtable[i] = (((video_w - 1 - i) * SCREENHEIGHT) / video_w) * SCREENWIDTH;  // src_y
     }
 }
-//#define VIDEO_W 220
-//#define VIDEO_H 176
 
 void I_InitGraphicsHardwareSpecificCode(void)
 {
-//	genscalexytable(screen_width, screen_height);
-//	genindextable(screen_width, screen_height);
-
 	I_SetScreenMode(0x13);
 	I_ReloadPalette();
 	I_UploadNewPalette(0);
 
 	__djgpp_nearptr_enable();
 
-//	_s_screen = Z_MallocStatic(SCREENWIDTH * SCREENHEIGHT);
+//	_s_screen = suAllocMem(SCREENWIDTH * SCREENHEIGHT, NULL);
+#if defined(EP1) || defined(EP2)
 	_s_screen = pp_bitmap;
-
+#elif defined(EM1) || defined(EM2)
+	_s_screen = ppp_bitmap_screen;
+#endif
 	_fmemset(_s_screen, 0, SCREENWIDTH * SCREENHEIGHT);
+
+#if defined(EM1) || defined(EM2)
+	genscalexytable(VIDEO_W, VIDEO_H);
+	genindextable(VIDEO_W, VIDEO_H);
+#endif
 }
 
 static boolean drawStatusBar = true;
@@ -1547,32 +1555,14 @@ static boolean drawStatusBar = true;
 static void I_DrawBuffer(uint8_t __far* buffer)
 {
 
-	pp_bitmap = buffer;
+#if defined(EP1) || defined(EP2)
 
-#if 0
-//	surface->pixels = buffer;
+//	_s_screen = (void *) buffer;
+
+#elif defined(EM1) || defined(EM2)
 
 	uint8_t __far* src = buffer;
-	uint8_t __far* dst = surface->pixels;
-
-    // For each pixel in dest (x=0..175, y=0..219)
-//    for (int y = 0; y < VIDEO_H; ++y)
-//    {
-//        for (int x = 0; x < VIDEO_W; ++x)
-//        {
-//            // CCW 90deg: dest(x, y) <- src(y', x')
-//            // src index = xtable[x] + ytable[y]
-//            dst[y * VIDEO_W + x] = src[xtable[x] + ytable[y]];
-//        }
-//    }
-
-    for (int i = 0; i < VIDEO_W * VIDEO_H; ++i)
-        dst[i] = src[indextable[i]];
-#endif
-
-#if 0
-	uint8_t __far* src = buffer;
-	uint8_t __far* dst = surface->pixels;
+	uint8_t __far* dst = ppp_bitmap_screen;
 
 	for (uint_fast8_t y = 0; y < SCREENHEIGHT - ST_HEIGHT; y++)
 	{
@@ -1591,16 +1581,29 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 		}
 	}
 	drawStatusBar = true;
+
+//	for (int i = 0; i < SCREENWIDTH * SCREENHEIGHT; ++i) {
+//		pp_bitmap[i] = doom_current_palette[ppp_bitmap_screen[i]];
+//	}
+
+	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
+		pp_bitmap[i] = doom_current_palette[ppp_bitmap_screen[indextable[i]]];
+	}
+
 #endif
+
 }
 
 
 void I_ShutdownGraphics(void)
 {
 	I_SetScreenMode(3);
+
+#if defined(EM1) || defined(EM2)
 	suFreeMem(xtable);
 	suFreeMem(ytable);
-	suFreeMem(indextable);
+	uisFreeMemory(indextable);
+#endif
 
 //	free(palette_sdl);
 
@@ -1648,7 +1651,6 @@ void I_FinishUpdate(void)
 
 //	SDL_RenderPresent(render);
 }
-
 
 //
 // A column is a vertical slice/span from a wall texture that,
@@ -1996,10 +1998,10 @@ void V_ShutdownDrawLine(void)
 //
 void V_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color)
 {
-	int16_t dx = abs(x1 - x0);
+	int16_t dx = D_abs(x1 - x0);
 	int16_t sx = x0 < x1 ? 1 : -1;
 
-	int16_t dy = -abs(y1 - y0);
+	int16_t dy = -D_abs(y1 - y0);
 	int16_t sy = y0 < y1 ? 1 : -1;
 
 	int16_t err = dx + dy;
@@ -2210,6 +2212,11 @@ void V_DrawPatchScaled(int16_t x, int16_t y, const patch_t __far* patch)
 	}
 }
 
+
+static uint16_t __far* frontbuffer;
+static  int16_t __far* wipe_y_lookup;
+
+
 void wipe_StartScreen(void)
 {
 	frontbuffer = Z_TryMallocStatic(SCREENWIDTH * SCREENHEIGHT);
@@ -2283,15 +2290,17 @@ static boolean wipe_ScreenWipe(int16_t ticks)
 		}
 	}
 
-	//
+#if defined(EP1) || defined(EP2)
+	ATI_Driver_Flush((APPLICATION_T *) appi_g);
+#elif defined(EM1) || defined(EM2)
+	Nvidia_Driver_Flush((APPLICATION_T *) appi_g);
+#endif
 
 //	SDL_BlitSurface(surface, NULL, video, NULL);
 //	SDL_UpdateTexture(texture, NULL, video->pixels, video->pitch);
 //	SDL_RenderCopy(render, texture, NULL, NULL);
 
 //	SDL_RenderPresent(render);
-
-	//
 
 	return done;
 }
@@ -2353,16 +2362,4 @@ void D_Wipe(void)
 
 	Z_Free(frontbuffer);
 	Z_Free(wipe_y_lookup);
-}
-
-void memchr(const void *s, unsigned char c, size_t n) {
-    if (n != 0) {
-        const unsigned char *p = s;
-
-        do {
-            if (*p++ == c)
-                return ((void *)(p - 1));
-        } while (--n != 0);
-    }
-    return (NULL);
 }

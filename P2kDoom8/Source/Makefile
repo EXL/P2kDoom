@@ -1,5 +1,5 @@
 CC       = gcc -m32
-CFLAGS   = -DFLAT_SPAN -DC_ONLY -DSDL2
+CFLAGS   = -DFLAT_SPAN -DC_ONLY -DDROP_64BIT_IDS -DSDL2
 CFLAGS  += -O2 -Wall -pedantic
 LDFLAGS  = -s -Wl,--gc-sections -Wl,--allow-multiple-definition
 LIBS     = -lSDL2

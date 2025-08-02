@@ -127,12 +127,20 @@ static uint8_t viewangletox(int16_t va)
 
 static const angle_t tantoangleTable[2049];
 
+#if defined(USE_BIG_ENDIAN)
+static const angle16_t* tantoangle16Table = ((angle16_t*)&tantoangleTable[0]);
+#else
+static const angle16_t* tantoangle16Table = ((angle16_t*)&tantoangleTable[0]) + 1;
+#endif
+
+#if 0
 #if BYTE_ORDER == LITTLE_ENDIAN
 static const angle16_t* tantoangle16Table = ((angle16_t*)&tantoangleTable[0]) + 1;
 #elif BYTE_ORDER == BIG_ENDIAN
 static const angle16_t* tantoangle16Table = ((angle16_t*)&tantoangleTable[0]);
 #else
 #error unknown byte order
+#endif
 #endif
 
 #define tantoangle(t) tantoangleTable[t]

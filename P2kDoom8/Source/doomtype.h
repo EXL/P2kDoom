@@ -78,4 +78,10 @@ typedef uint8_t byte;
 #include <limits.h>
 #endif
 
+#define D_abs(x) labs(x)
+
+#if defined(P2K)
+static inline int labs(int i) { return i < 0 ? -i : i; }
+#endif
+
 #endif
