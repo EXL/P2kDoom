@@ -144,7 +144,9 @@ static const char skullName[2][9] = {"M_SKULL1","M_SKULL2"};
 static void M_NewGame(int16_t choice);
 static void M_ChooseSkill(int16_t choice);
 static void M_LoadGame(int16_t choice);
+#if !defined(DISABLE_SAVE_GAME)
 static void M_SaveGame(int16_t choice);
+#endif
 static void M_Options(int16_t choice);
 static void M_EndGame(int16_t choice);
 static void M_QuitDOOM(int16_t choice);
@@ -155,18 +157,25 @@ static void M_ChangeAlwaysRun(int16_t choice);
 static void M_ChangeGamma(int16_t choice);
 static void M_SfxVol(int16_t choice);
 static void M_MusicVol(int16_t choice);
+
+#if !defined(SDL2) && !defined(P2K)
 static void M_Sound(int16_t choice);
+#endif
 
 static void M_LoadSelect(int16_t choice);
+#if !defined(DISABLE_SAVE_GAME)
 static void M_SaveSelect(int16_t choice);
 static void M_ReadSaveStrings(void);
+#endif
 
 static void M_DrawMainMenu(void);
 static void M_DrawNewGame(void);
 static void M_DrawOptions(void);
 static void M_DrawSound(void);
 static void M_DrawLoad(void);
+#if !defined(DISABLE_SAVE_GAME)
 static void M_DrawSave(void);
+#endif
 
 static void M_SetupNextMenu(const menu_t *menudef);
 static void M_DrawThermo(int16_t x, int16_t y, int16_t thermWidth, int16_t thermDot);
@@ -297,7 +306,7 @@ static void M_NewGame(int16_t choice)
 static void M_VerifyNightmare(boolean affirmative)
 {
     if (affirmative)
-        G_DeferedInitNew(nightmare);
+        G_DeferedInitNew((skill_t) nightmare);
 }
 
 static void M_ChooseSkill(int16_t choice)
@@ -428,9 +437,12 @@ static void M_LoadGame (int16_t choice)
 	 * cph - unless a new demo */
 
 	M_SetupNextMenu(&LoadDef);
+#if !defined(DISABLE_SAVE_GAME)
 	M_ReadSaveStrings();
+#endif
 }
 
+#if !defined(DISABLE_SAVE_GAME)
 /////////////////////////////
 //
 // SAVE GAME MENU
@@ -513,7 +525,7 @@ static void M_SaveGame (int16_t choice)
 	M_SetupNextMenu(&SaveDef);
 	M_ReadSaveStrings();
 }
-
+#endif
 
 /////////////////////////////
 //
@@ -652,12 +664,14 @@ static void M_DrawSound(void)
   M_DrawThermo(SoundDef.x, SoundDef.y + LINEHEIGHT * (music_vol + 1), 16, snd_MusicVolume);
 }
 
+#if !defined(SDL2) && !defined(P2K)
 static void M_Sound(int16_t choice)
 {
 	UNUSED(choice);
 
 	M_SetupNextMenu(&SoundDef);
 }
+#endif
 
 static void M_SfxVol(int16_t choice)
 {
@@ -672,8 +686,9 @@ static void M_SfxVol(int16_t choice)
         snd_SfxVolume++;
       break;
     }
-
+#if !defined(SDL2) && !defined(P2K)
   G_SaveSettings();
+#endif
 
   S_SetSfxVolume(snd_SfxVolume /* *8 */);
 }
@@ -692,7 +707,9 @@ static void M_MusicVol(int16_t choice)
       break;
     }
 
+#if !defined(SDL2) && !defined(P2K)
   G_SaveSettings();
+#endif
 
   S_SetMusicVolume(snd_MusicVolume /* *8 */);
 }
@@ -737,7 +754,9 @@ static void M_ChangeMessages(int16_t choice)
 
   _g_message_dontfuckwithme = true;
 
+#if !defined(SDL2) && !defined(P2K)
   G_SaveSettings();
+#endif
 }
 
 
@@ -752,7 +771,9 @@ static void M_ChangeAlwaysRun(int16_t choice)
     else
       _g_player.message = RUNON ; // Ty 03/27/98 - externalized
 
+#if !defined(SDL2) && !defined(P2K)
     G_SaveSettings();
+#endif
 }
 
 static void M_ChangeGamma(int16_t choice)
@@ -771,7 +792,9 @@ static void M_ChangeGamma(int16_t choice)
 	I_ReloadPalette();
 	I_SetPalette(0);
 
+#if !defined(SDL2) && !defined(P2K)
     G_SaveSettings();
+#endif
 }
 
 //

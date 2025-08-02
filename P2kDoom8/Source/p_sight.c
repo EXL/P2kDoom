@@ -298,16 +298,17 @@ boolean P_CheckSight(mobj_t __far* t1, mobj_t __far* t2)
   los.strace.dx = (los.t2x = t2->x) - (los.strace.x = t1->x);
   los.strace.dy = (los.t2y = t2->y) - (los.strace.y = t1->y);
 
-  if (t1->x > t2->x)
+  if (t1->x > t2->x) {
     los.bbox[BOXRIGHT] = t1->x, los.bbox[BOXLEFT] = t2->x;
-  else
+  } else {
     los.bbox[BOXRIGHT] = t2->x, los.bbox[BOXLEFT] = t1->x;
+  }
 
-  if (t1->y > t2->y)
+  if (t1->y > t2->y) {
     los.bbox[BOXTOP] = t1->y, los.bbox[BOXBOTTOM] = t2->y;
-  else
+  } else {
     los.bbox[BOXTOP] = t2->y, los.bbox[BOXBOTTOM] = t1->y;
-
+  }
 
     los.maxz = INT32_MAX; los.minz = INT32_MIN;
 

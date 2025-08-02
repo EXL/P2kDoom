@@ -1762,7 +1762,7 @@ static void R_DrawColumnInCache(const column_t __far* patch, byte* cache, int16_
             count = cacheheight - position;
 
         if (count > 0)
-            _fmemcpy(cache + position, source, count);
+            _fmemcpy((void *) ((byte *) cache + position), source, count);
 
         patch = (const column_t __far*)((const byte __far*)patch + patch->length + 4);
     }
@@ -1865,8 +1865,8 @@ static void R_DrawSegTextureColumn(const texture_t __far* tex, int16_t texture, 
 {
     if (!tex->overlapped)
     {
-        int16_t patch_num;
-        int16_t x_c;
+        int16_t patch_num = 0;
+        int16_t x_c = 0;
         R_GetColumn(tex, texcolumn, &patch_num, &x_c);
 
         const patch_t __far* patch = W_TryGetLumpByNum(patch_num);
@@ -2539,7 +2539,7 @@ static void R_ClipWallSegment(int16_t first, int16_t last, const boolean solid)
     {
         if (solidcol[first])
         {
-            if (!(p = memchr(solidcol+first, 0, last-first)))
+            if (!(p = (byte *) memchr(solidcol+first, 0, last-first)))
                 return; // All solid
 
             first = p - solidcol;
@@ -2547,7 +2547,7 @@ static void R_ClipWallSegment(int16_t first, int16_t last, const boolean solid)
         else
         {
             int16_t to;
-            if (!(p = memchr(solidcol+first, 1, last-first)))
+            if (!(p = (byte *) memchr(solidcol+first, 1, last-first)))
                 to = last;
             else
                 to = p - solidcol;
@@ -2556,7 +2556,7 @@ static void R_ClipWallSegment(int16_t first, int16_t last, const boolean solid)
 
             if (solid)
             {
-                memset(solidcol + first, 1, to - first);
+                memset((void *) ((byte *) solidcol + first), 1, to - first);
             }
 
             first = to;

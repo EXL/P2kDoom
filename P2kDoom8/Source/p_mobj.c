@@ -943,6 +943,8 @@ static PUREFUNC int16_t P_FindDoomedNum(int16_t type)
     }
 
     I_Error("P_FindDoomedNum: unknown thing %i", type);
+
+    return -1;
 }
 
 

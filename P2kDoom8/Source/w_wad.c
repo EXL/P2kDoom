@@ -112,7 +112,7 @@ static void _ffread(void __far* ptr, uint16_t size, FILE_HANDLE_T fp)
 #endif
 {
 #if defined(P2K)
-	int32_t readen;
+	UINT32 readen;
 #endif
 	uint8_t __far* dest = ptr;
 	uint8_t buffer[BUFFERSIZE];
@@ -140,7 +140,7 @@ static void _ffread(void __far* ptr, uint16_t size, FILE_HANDLE_T fp)
 	}
 }
 
-
+#if !defined(SDL2) && !defined(P2K)
 static boolean W_LoadWADIntoXMS(void)
 {
 #if !defined(P2K)
@@ -197,7 +197,7 @@ static boolean W_LoadWADIntoXMS(void)
 
 	return true;
 }
-
+#endif
 
 static void W_ReadDataFromFile(void __far* dest, uint32_t src, uint16_t length)
 {

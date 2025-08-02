@@ -258,6 +258,8 @@ static UINT32 AE_Start(EVENT_STACK_T *ev_st, REG_ID_T reg_id, void *reg_hdl) {
 	UINT32 status;
 	APP_ERROR_INSTANCE_T *appi;
 
+	UNUSED(reg_hdl);
+
 	status = RESULT_FAIL;
 
 	if (AFW_InquireRoutingStackByRegId(reg_id) != RESULT_OK) {
@@ -298,6 +300,8 @@ static UINT32 AE_HandleStateEnter(EVENT_STACK_T *ev_st, APPLICATION_T *app, ENTE
 	CONTENT_T content;
 	UIS_DIALOG_T dialog;
 
+	UNUSED(ev_st);
+
 	if (state != ENTER_STATE_ENTER) {
 		return RESULT_OK;
 	}
@@ -331,6 +335,7 @@ static UINT32 AE_HandleStateEnter(EVENT_STACK_T *ev_st, APPLICATION_T *app, ENTE
 }
 
 static UINT32 AE_HandleStateExit(EVENT_STACK_T *ev_st, APPLICATION_T *app, EXIT_STATE_TYPE_T state) {
+	UNUSED(ev_st);
 	if (state == EXIT_STATE_EXIT) {
 		AE_DeleteDialog(app);
 		return RESULT_OK;
@@ -409,6 +414,8 @@ UINT32 Register(const char *elf_path_uri, const char *args, UINT32 ev_code) {
 	UINT32 status;
 	UINT32 ev_code_base;
 
+	UNUSED(args);
+
 	ev_code_base = ev_code;
 
 	u_atou(elf_path_uri, g_res_file_path);
@@ -485,6 +492,8 @@ UINT32 ELF_Entry(ldrElf *elf, WCHAR *arguments) {
 	UINT32 reserve;
 	WCHAR *ptr;
 
+	UNUSED(arguments);
+
 	status = RESULT_OK;
 	g_app_elf = elf;
 	g_app_elf->name = (char *) g_app_name;
@@ -528,6 +537,8 @@ UINT32 ELF_Entry(ldrElf *elf, WCHAR *arguments) {
 static UINT32 ApplicationStart(EVENT_STACK_T *ev_st, REG_ID_T reg_id, void *reg_hdl) {
 	UINT32 status;
 	APP_INSTANCE_T *app_instance;
+
+	UNUSED(reg_hdl);
 
 	status = RESULT_OK;
 
@@ -616,6 +627,8 @@ static UINT32 HandleStateEnter(EVENT_STACK_T *ev_st, APPLICATION_T *app, ENTER_S
 	UIS_DIALOG_T dialog;
 	APP_STATE_T app_state;
 
+	UNUSED(ev_st);
+
 	if (state != ENTER_STATE_ENTER) {
 		if (app->state != APP_STATE_MAIN) {
 			SetLoopTimer(app, TIMER_FAST_UPDATE_MS);
@@ -667,6 +680,8 @@ static UINT32 HandleStateEnter(EVENT_STACK_T *ev_st, APPLICATION_T *app, ENTER_S
 }
 
 static UINT32 HandleStateExit(EVENT_STACK_T *ev_st, APPLICATION_T *app, EXIT_STATE_TYPE_T state) {
+	UNUSED(ev_st);
+
 	if (state == EXIT_STATE_EXIT) {
 		if (app->state != APP_STATE_MAIN) {
 			DeleteDialog(app);
@@ -739,8 +754,6 @@ static UINT32 CheckKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app) {
 static evtype_t modkey_state = ev_keyup;
 
 static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 key, BOOL pressed) {
-	event_t ev;
-	ev.data1 = 0;
 #if defined(KEYS_PORTRAIT)
 	#define KK_2 MULTIKEY_2
 	#define KK_UP MULTIKEY_UP
@@ -761,6 +774,10 @@ static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 k
 	#define KK_DOWN MULTIKEY_LEFT
 #endif
 
+	UNUSED(ev_st);
+
+	event_t ev;
+	ev.data1 = 0;
 	ev.type = (pressed) ? ev_keydown : ev_keyup;
 
 	switch (key) {
@@ -1563,10 +1580,7 @@ static UINT32 GFX_Draw_Start(APPLICATION_T *app) {
 }
 
 static UINT32 GFX_Draw_Stop(APPLICATION_T *app) {
-	APP_INSTANCE_T *appi;
-
-	appi = (APP_INSTANCE_T *) app;
-
+	UNUSED(app);
 #if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
 	uisFreeMemory(_s_screen);
 #endif
@@ -1593,9 +1607,7 @@ static UINT32 GFX_Draw_Stop(APPLICATION_T *app) {
 }
 
 static UINT32 GFX_Draw_Step(APPLICATION_T *app) {
-	APP_INSTANCE_T *appi;
-
-	appi = (APP_INSTANCE_T *) app;
+	UNUSED(app);
 
 	D_DoomStep();
 
@@ -1686,6 +1698,7 @@ static void I_UploadNewPalette(int8_t pal)
 	}
 }
 
+#if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
 static uint16_t *xtable = NULL;
 static uint16_t *ytable = NULL;
 static uint16_t *indextable = NULL;
@@ -1722,6 +1735,7 @@ static void genscalexytable(int video_w, int video_h) {
 		xtable[i] = (((video_w - 1 - i) * SCREENHEIGHT) / video_w) * SCREENWIDTH;  // src_y
 	}
 }
+#endif
 
 void I_InitGraphicsHardwareSpecificCode(void)
 {
@@ -1732,7 +1746,7 @@ void I_InitGraphicsHardwareSpecificCode(void)
 	__djgpp_nearptr_enable();
 
 #if defined(FTR_GFX_ATI)
-	_s_screen = pp_bitmap;
+	_s_screen = (uint8_t *) pp_bitmap;
 #elif defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
 	INT32 result;
 	_s_screen = uisAllocateMemory(SCREENWIDTH * SCREENHEIGHT, &result);

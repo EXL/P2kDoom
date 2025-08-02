@@ -74,6 +74,9 @@ int16_t I_StartSound(sfxenum_t id, int16_t channel, int16_t vol, int16_t sep)
 {
 	UNUSED(vol);
 	UNUSED(sep);
+#if defined(SDL2) || defined(P2K)
+	UNUSED(id);
+#endif
 
 	if (!(0 <= channel && channel < MAX_CHANNELS))
 		return -1;
@@ -87,9 +90,8 @@ int16_t I_StartSound(sfxenum_t id, int16_t channel, int16_t vol, int16_t sep)
 //	 || id == sfx_sawidl)
 //		return -1;
 
-	int16_t lumpnum = firstsfx + id;
-
 #if !defined(SDL2) && !defined(P2K)
+	int16_t lumpnum = firstsfx + id;
 	PCFX_Play(lumpnum);
 #endif
 

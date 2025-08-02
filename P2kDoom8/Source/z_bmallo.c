@@ -126,7 +126,7 @@ void Z_BFree(struct block_memory_alloc_s *pzone, void __far* p)
 		int16_t n = iselem(*pool, pzone->size, p);
 		if (n >= 0) {
 			(*pool)->used[n] = unused_block;
-			if (_fmemchr(((*pool)->used), used_block, (*pool)->blocks) == NULL) {
+			if (!_fmemchr(((*pool)->used), used_block, (*pool)->blocks)) {
 				// Block is all unused, can be freed
 				bmalpool_t __far* oldpool = *pool;
 				*pool = (*pool)->nextpool;

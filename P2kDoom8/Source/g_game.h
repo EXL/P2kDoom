@@ -58,8 +58,10 @@ void G_BuildTiccmd (void);
 
 void G_UpdateSaveGameStrings();
 
+#if !defined(SDL2) && !defined(P2K)
 void G_LoadSettings();
 void G_SaveSettings();
+#endif
 
 
 extern const int16_t  key_menu_right;

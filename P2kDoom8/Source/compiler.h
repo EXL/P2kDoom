@@ -45,6 +45,14 @@ typedef uint32_t segment_t;
 
 #define __far
 
+#if defined(P2K)
+#include <mem.h>
+#include <utilities.h>
+#if defined(EM1) || defined(EM2)
+#define printf PFprintf
+#endif
+#endif
+
 #define _fmemchr	memchr
 #define _fmemcmp	memcmp
 #define _fmemcpy	memcpy

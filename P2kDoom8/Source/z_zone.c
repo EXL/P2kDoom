@@ -33,6 +33,7 @@
 
 #if defined(P2K)
 #include <mem.h>
+#include <loader.h>
 #include <utilities.h>
 #endif
 
@@ -256,9 +257,9 @@ static void Z_FreeExtendedMemoryBlock(uint16_t handle)
 static void Z_MoveExtendedMemoryBlock(const ExtMemMoveStruct_t __far* s)
 {
 	if (s->SourceHandle == 0)
-		memcpy(fakeXMSHandle + s->DestOffset, (uint8_t*)s->SourceOffset, s->Length);
+		memcpy((void *) ((uint8_t *) fakeXMSHandle + s->DestOffset), (uint8_t*)s->SourceOffset, s->Length);
 	else
-		memcpy((uint8_t*)s->DestOffset, fakeXMSHandle + s->SourceOffset, s->Length);
+		memcpy((uint8_t*)s->DestOffset, (void *) ((uint8_t *)fakeXMSHandle + s->SourceOffset), s->Length);
 }
 #endif
 
@@ -419,7 +420,7 @@ void Z_Init (void)
 
 	uint32_t heapSize = (uint32_t)max * PARAGRAPH_SIZE;
 
-	printf("Standard: %ld bytes\n", heapSize);
+	printf("Standard: %d bytes\n", heapSize);
 
 	// align blocklist
 	uint_fast8_t i = 0;
@@ -484,7 +485,7 @@ void Z_Init (void)
 	else
 		printf("Expanded:      0 bytes\n");
 
-	printf("%ld bytes allocated for zone\n", heapSize);
+	printf("%d bytes allocated for zone\n", heapSize);
 }
 
 

@@ -171,6 +171,8 @@ weapontype_t P_SwitchWeapon(player_t *player)
         if (player->weaponowned[wp_chainsaw])
           newweapon = wp_chainsaw;
         break;
+      default:
+        break;
       }
   while (newweapon==currentweapon && --i);          // killough 5/2/98
   return newweapon;
@@ -227,6 +229,9 @@ static weapontype_t P_CheckCanSwitchWeapon(weapontype_t weapon, player_t* player
             return wp_chainsaw;
         }
         break;
+
+        default:
+          break;
     }
 
     return wp_nochange;
@@ -271,6 +276,8 @@ weapontype_t P_WeaponCycleUp(player_t *player)
 				w = wp_pistol;
 			}
 			break;
+			default:
+				break;
 		}
 
         if(!player->weaponowned[w])
@@ -323,6 +330,8 @@ weapontype_t P_WeaponCycleDown(player_t *player)
 				w = wp_bfg;
 			}
 			break;
+			default:
+				break;
 		}
 
         if(!player->weaponowned[w])

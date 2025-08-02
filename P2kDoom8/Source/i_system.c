@@ -65,6 +65,7 @@ static boolean isGraphicsModeSet = false;
 
 void I_SetScreenMode(uint16_t mode)
 {
+	UNUSED(mode);
 #if !defined(SDL2) && !defined(P2K)
 	union REGS regs;
 	regs.w.ax = mode;
@@ -157,7 +158,9 @@ void I_InitKeyboard(void)
 void I_SwitchPalette(void);
 #endif
 
+#if defined(SDL2)
 static evtype_t modkey_state = ev_keyup;
+#endif
 
 void I_StartTic(void)
 {
@@ -388,6 +391,7 @@ void I_StartTic(void)
 // Returns time in 1/35th second tics.
 //
 
+#if !defined(SDL2) && !defined(P2K)
 #define TIMER_PRIORITY 0
 
 static volatile int32_t ticcount;
@@ -399,7 +403,7 @@ static void I_TimerISR(void)
 {
 	ticcount++;
 }
-
+#endif
 
 int32_t I_GetTime(void)
 {
@@ -431,20 +435,18 @@ void I_InitTimer(void)
 {
 #if !defined(SDL2) && !defined(P2K)
 	TS_ScheduleTask(I_TimerISR, TICRATE, TIMER_PRIORITY);
-#endif
 
 	isTimerSet = true;
-}
-
-
-static void I_ShutdownTimer(void)
-{
-#if !defined(SDL2) && !defined(P2K)
-	TS_Terminate(TIMER_PRIORITY);
-	TS_Shutdown();
 #endif
 }
 
+#if !defined(SDL2) && !defined(P2K)
+static void I_ShutdownTimer(void)
+{
+	TS_Terminate(TIMER_PRIORITY);
+	TS_Shutdown();
+}
+#endif
 
 //**************************************************************************************
 //
@@ -458,10 +460,10 @@ static void I_Shutdown(void)
 
 	I_ShutdownSound();
 
+#if !defined(SDL2) && !defined(P2K)
 	if (isTimerSet)
 		I_ShutdownTimer();
 
-#if !defined(SDL2) && !defined(P2K)
 	if (isKeyboardIsrSet)
 	{
 		restoreInterrupt(KEYBOARDINT, oldkeyboardisr, newkeyboardisr);

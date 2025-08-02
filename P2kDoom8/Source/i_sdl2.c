@@ -58,7 +58,9 @@ extern const int16_t CENTERY;
 
 // The screen is [SCREENWIDTH * SCREENHEIGHT];
 static uint8_t __far* _s_screen;
+#if 0
 static uint8_t __far* vgascreen;
+#endif
 
 static int16_t palettelumpnum;
 
@@ -81,7 +83,7 @@ void I_ReloadPalette(void)
 #define PEL_WRITE_ADR   0x3c8
 #define PEL_DATA        0x3c9
 
-
+#if 0
 static const uint8_t colors[14][3] =
 {
 	// normal
@@ -106,7 +108,7 @@ static const uint8_t colors[14][3] =
 	// green
 	{0, 0x08, 0}
 };
-
+#endif
 
 static void I_UploadNewPalette(int8_t pal)
 {
@@ -201,32 +203,32 @@ void I_InitGraphicsHardwareSpecificCode(void)
 
 	if (window == NULL) {
 		SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
-		return NULL;
+		return;
 	}
 
 	render = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	if (render == NULL) {
 		SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
-		return NULL;
+		return;
 	}
 
 	video = SDL_CreateRGBSurface(0, screen_width, screen_height, 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
 	if (video == NULL) {
 		SDL_Log("SDL_CreateRGBSurface (video) failed: %s", SDL_GetError());
-		return NULL;
+		return;
 	}
 
 	surface = SDL_CreateRGBSurface(0, screen_width, screen_height, 8, 0, 0, 0, 0);
 	if (surface == NULL) {
 		SDL_Log("SDL_CreateRGBSurface (surface) failed: %s", SDL_GetError());
-		return NULL;
+		return;
 	}
 
 	texture = SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888,
 								SDL_TEXTUREACCESS_STREAMING, screen_width, screen_height);
 	if (texture == NULL) {
 		SDL_Log("SDL_CreateTexture failed: %s", SDL_GetError());
-		return NULL;
+		return;
 	}
 
 	palette_sdl = (SDL_Color *) malloc(sizeof(SDL_Color) * 256);

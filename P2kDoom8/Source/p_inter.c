@@ -257,6 +257,8 @@ boolean P_GivePower(player_t *player, powertype_t power)
       case pw_strength:
         P_GiveBody(player,100);
         break;
+      default:
+        break;
     }
 
   // Unless player has infinite duration cheat, set duration (killough)

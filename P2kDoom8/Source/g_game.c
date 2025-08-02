@@ -167,7 +167,6 @@ static void G_DoPlayDemo(void);
 static void G_InitNew(skill_t skill, int16_t map);
 static void G_ReadDemoTiccmd (void);
 
-
 typedef struct gba_save_data_t
 {
     int32_t save_present;
@@ -180,7 +179,7 @@ typedef struct gba_save_data_t
     int32_t maxammo[NUMAMMO];
 } gba_save_data_t;
 
-
+#if !defined(SDL2) && !defined(P2K)
 typedef struct gba_save_settings_t
 {
     uint32_t cookie;
@@ -194,6 +193,7 @@ typedef struct gba_save_settings_t
 static const uint32_t settings_cookie = 0xbaddead1;
 
 static const uint16_t settings_sram_offset = sizeof(gba_save_data_t) * 8;
+#endif
 
 //
 // G_BuildTiccmd
@@ -823,6 +823,7 @@ static void G_DoSaveGame(void)
     G_UpdateSaveGameStrings();
 }
 
+#if !defined(SDL2) && !defined(P2K)
 void G_SaveSettings()
 {
     gba_save_settings_t settings;
@@ -862,6 +863,7 @@ void G_LoadSettings()
         S_SetMusicVolume(snd_MusicVolume);
     }
 }
+#endif
 
 void G_DeferedInitNew(skill_t skill)
 {
@@ -1101,9 +1103,10 @@ void G_CheckDemoStatus (void)
 
     if (_g_demoplayback)
     {
+#if !defined(P2K)
         if (_g_singledemo)
             exit(0);  // killough
-
+#endif
         G_ReloadDefaults();    // killough 3/1/98
         D_AdvanceDemo ();
     }
