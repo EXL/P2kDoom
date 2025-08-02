@@ -26,6 +26,7 @@
 #if defined(SDL2)
 #include <SDL2/SDL.h>
 #elif defined(P2K)
+#include <time_date.h>
 #if defined(EP1) || defined(EP2)
 #include <stdargs.h>
 #else
@@ -365,23 +366,19 @@ int32_t I_GetTime(void)
 #else
 
 #if defined(SDL2)
-    int thistimereply;
+    Uint32 ms = SDL_GetTicks();
 
-    clock_t now = clock();
-
-    thistimereply = (int)((double)now / ((double)CLOCKS_PER_SEC / (double)TICRATE));
+    int thistimereply = ms * TICRATE / 1000;
 
     return thistimereply;
 #endif
 
 #if defined(P2K)
-//    #define TICKS_PER_SEC                  (8192)
+    #define TICKS_PER_SEC                  (8192)
 
-//    int thistimereply = (((int) suPalReadTime() * TICRATE) / (TICKS_PER_SEC));
+    int thistimereply = ((uint32_t) suPalReadTime()) * TICRATE / TICKS_PER_SEC;
 
-//    return thistimereply;
-
-    return ticcount++;
+    return thistimereply;
 #endif
 
 #endif
