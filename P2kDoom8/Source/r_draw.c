@@ -479,7 +479,7 @@ static fixed_t  rw_midtexturemid;
 static fixed_t  rw_toptexturemid;
 static fixed_t  rw_bottomtexturemid;
 
-const uint8_t fullcolormap[256 * 34];
+uint8_t fullcolormap[256 * 34];
 const uint8_t* fixedcolormap;
 
 static int16_t extralight;                           // bumped light from gun blasts

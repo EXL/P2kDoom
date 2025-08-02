@@ -22,7 +22,10 @@
 //
 //-----------------------------------------------------------------------------
 
+#if !defined(SDL2)
 #include <dos.h>
+#endif
+
 #include <stdlib.h>
 #include <stdint.h>
 #include "compiler.h"
@@ -234,7 +237,7 @@ static void Z_MoveExtendedMemoryBlock(const ExtMemMoveStruct_t __far* s)
 	UNUSED(s);
 }
 #endif
-#elif defined __DJGPP__ || defined _M_I386
+#elif defined __DJGPP__ || defined _M_I386 || defined SDL2
 static uint8_t *fakeXMSHandle;
 
 static void Z_FreeExtendedMemoryBlock(uint16_t handle)
@@ -316,10 +319,12 @@ void Z_Shutdown(void)
 {
 	if (emsHandle)
 	{
+#if !defined(SDL2)
 		union REGS regs;
 		regs.h.ah = EMS_FREEPAGES;
 		regs.w.dx = emsHandle;
 		int86(EMS_INT, &regs, &regs);
+#endif
 	}
 
 	if (xmsHandle)
@@ -329,7 +334,7 @@ void Z_Shutdown(void)
 }
 
 
-#if defined __DJGPP__ || defined _M_I386
+#if defined __DJGPP__ || defined _M_I386 || defined SDL2
 static unsigned int _dos_allocmem(unsigned int __size, unsigned int *__seg)
 {
 	static uint8_t* ptr;

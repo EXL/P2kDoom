@@ -88,7 +88,10 @@ int16_t I_StartSound(sfxenum_t id, int16_t channel, int16_t vol, int16_t sep)
 //		return -1;
 
 	int16_t lumpnum = firstsfx + id;
+
+#if !defined(SDL2)
 	PCFX_Play(lumpnum);
+#endif
 
 	return channel;
 }
@@ -102,7 +105,9 @@ void I_InitSound(void)
 	if (nomusicparm && nosfxparm)
 		return;
 
+#if !defined(SDL2)
 	PCFX_Init();
+#endif
 
 	// Finished initialization.
 	printf("I_InitSound: sound ready\n");
@@ -120,7 +125,9 @@ void I_ShutdownSound(void)
 	if (nosfxparm)
 		return;
 
+#if !defined(SDL2)
 	PCFX_Shutdown();
+#endif
 }
 
 

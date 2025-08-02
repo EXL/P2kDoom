@@ -429,7 +429,7 @@ static const char * const * myargv;
 int16_t M_CheckParm(char *check)
 {
 	for (int16_t i = 1; i < myargc; i++)
-		if (!stricmp(check, myargv[i]))
+		if (!strcmp(check, myargv[i]))
 			return i;
 
 	return 0;
@@ -490,7 +490,7 @@ static void D_DoomMainSetup(void)
 
     G_LoadSettings();
 
-    _g_fps_show = false;
+    _g_fps_show = true;
 
     I_InitGraphics();
 

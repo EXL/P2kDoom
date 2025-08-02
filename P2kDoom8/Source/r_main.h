@@ -65,7 +65,7 @@ extern fixed_t  viewcos, viewsin;
 
 extern angle_t viewangle;
 
-extern const uint8_t fullcolormap[256 * 34];
+extern uint8_t fullcolormap[256 * 34];
 extern const uint8_t* fixedcolormap;
 
 extern int16_t   __far* textureheight; //needed for texture pegging (and TFE fix - killough)

@@ -23,8 +23,13 @@
  *
  *-----------------------------------------------------------------------------*/
 
+#if defined(SDL2)
+#include <SDL2/SDL.h>
+#else
 #include <conio.h>
 #include <dos.h>
+#endif
+
 #include <stdarg.h>
 #include <time.h>
 
@@ -35,7 +40,6 @@
 #include "d_main.h"
 #include "i_system.h"
 #include "globdata.h"
-
 
 void I_InitGraphicsHardwareSpecificCode(void);
 void I_ShutdownGraphics(void);
@@ -51,9 +55,11 @@ static boolean isGraphicsModeSet = false;
 
 void I_SetScreenMode(uint16_t mode)
 {
+#if !defined(SDL2)
 	union REGS regs;
 	regs.w.ax = mode;
 	int86(0x10, &regs, &regs);
+#endif
 }
 
 
@@ -69,6 +75,7 @@ void I_InitGraphics(void)
 // Keyboard code
 //
 
+#if !defined(SDL2)
 #define KEYBOARDINT 9
 #define KBDQUESIZE 32
 static byte keyboardqueue[KBDQUESIZE];
@@ -95,12 +102,15 @@ static void __interrupt __far I_KeyboardISR(void)
 	// acknowledge the interrupt
 	outp(0x20, 0x20);
 }
+#endif
 
 
 void I_InitKeyboard(void)
 {
+#if !defined(SDL2)
 	replaceInterrupt(oldkeyboardisr, newkeyboardisr, KEYBOARDINT, I_KeyboardISR);
 	isKeyboardIsrSet = true;
+#endif
 }
 
 
@@ -143,6 +153,61 @@ void I_StartTic(void)
 	//
 	// process keyboard events
 	//
+#if defined(SDL2)
+	event_t ev;
+	SDL_Event event;
+	ev.data1 = 0;
+
+	while (SDL_PollEvent(&event) != 0) {
+		switch (event.type) {
+			case SDL_KEYUP:
+			case SDL_KEYDOWN:
+				ev.type = (event.type == SDL_KEYUP) ? ev_keyup : ev_keydown;
+				switch (event.key.keysym.scancode) {
+					case SDL_SCANCODE_Q:
+						ev.data1 = KEYD_START;
+						break;
+					case SDL_SCANCODE_Z:
+						ev.data1 = KEYD_A;
+						break;
+					case SDL_SCANCODE_UP:
+						ev.data1 = KEYD_UP;
+						break;
+					case SDL_SCANCODE_DOWN:
+						ev.data1 = KEYD_DOWN;
+						break;
+					case SDL_SCANCODE_LEFT:
+						ev.data1 = KEYD_LEFT;
+						break;
+					case SDL_SCANCODE_RIGHT:
+						ev.data1 = KEYD_RIGHT;
+						break;
+					case SDL_SCANCODE_W:
+						ev.data1 = KEYD_SELECT;
+						break;
+					case SDL_SCANCODE_X:
+						ev.data1 = KEYD_B;
+						break;
+					case SDL_SCANCODE_A:
+						ev.data1 = KEYD_L;
+						break;
+					case SDL_SCANCODE_S:
+						ev.data1 = KEYD_R;
+						break;
+					default:
+						break;
+				}
+				if(ev.data1 != 0)
+					D_PostEvent(&ev);
+				break;
+			case SDL_QUIT:
+				I_Quit();
+				return;
+			default:
+				break;
+		}
+	}
+#else
 	byte k;
 	event_t ev;
 
@@ -261,6 +326,7 @@ void I_StartTic(void)
 		}
 		D_PostEvent(&ev);
 	}
+#endif
 }
 
 
@@ -284,13 +350,25 @@ static void I_TimerISR(void)
 
 int32_t I_GetTime(void)
 {
+#if !defined(SDL2)
     return ticcount;
+#else
+    int thistimereply;
+
+    clock_t now = clock();
+
+    thistimereply = (int)((double)now / ((double)CLOCKS_PER_SEC / (double)TICRATE));
+
+    return thistimereply;
+#endif
 }
 
 
 void I_InitTimer(void)
 {
+#if !defined(SDL2)
 	TS_ScheduleTask(I_TimerISR, TICRATE, TIMER_PRIORITY);
+#endif
 
 	isTimerSet = true;
 }
@@ -298,8 +376,10 @@ void I_InitTimer(void)
 
 static void I_ShutdownTimer(void)
 {
+#if !defined(SDL2)
 	TS_Terminate(TIMER_PRIORITY);
 	TS_Shutdown();
+#endif
 }
 
 
@@ -318,22 +398,27 @@ static void I_Shutdown(void)
 	if (isTimerSet)
 		I_ShutdownTimer();
 
+#if !defined(SDL2)
 	if (isKeyboardIsrSet)
 	{
 		restoreInterrupt(KEYBOARDINT, oldkeyboardisr, newkeyboardisr);
 	}
+#endif
 
 	W_Shutdown();
 	Z_Shutdown();
 }
 
 
+#if !defined(SDL2)
 segment_t I_GetTextModeVideoMemorySegment(void);
+#endif
 
 void I_Quit(void)
 {
 	I_Shutdown();
 
+#if !defined(SDL2)
 	int16_t lumpnum = W_GetNumForName("ENDOOM");
 	W_ReadLumpByNum(lumpnum, D_MK_FP(I_GetTextModeVideoMemorySegment(), 0 + __djgpp_conventional_base));
 
@@ -343,6 +428,7 @@ void I_Quit(void)
 	regs.h.dl = 0;
 	regs.h.dh = 23;
 	int86(0x10, &regs, &regs);
+#endif
 
 	printf("\n");
 	exit(0);

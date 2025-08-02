@@ -50,7 +50,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if !defined(P2K)
 #include <ctype.h>
+#endif
 #include <limits.h>
 
 #include "m_swap.h"

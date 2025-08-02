@@ -55,13 +55,17 @@
 #include "i_sound.h"
 #include "globdata.h"
 
+#if !defined(SDL2)
 #include <dos.h>
 #include <signal.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 
+#if !defined(SDL2)
 static void tprintf(void)
 {
 	union REGS regs;
@@ -84,20 +88,25 @@ static void tprintf(void)
 
 	printf("\n");
 }
+#endif
 
 
 int main(int argc, const char * const * argv)
 {
 	I_SetScreenMode(3);
 
+#if !defined(SDL2)
 	tprintf();
+#endif
 
 	D_DoomMain(argc, argv);
 	return 0;
 }
 
 
+#if !defined(SDL2)
 segment_t I_GetTextModeVideoMemorySegment(void)
 {
 	return 0xb800;
 }
+#endif
