@@ -680,8 +680,16 @@ static void FPS_Meter(void) {
 #endif
 }
 
+#if defined(NVIDIA_FULLSCREEN_PORTRAIT_240X320) || defined(NVIDIA_FULLSCREEN_LANDSCAPE_320X240)
 #define VIDEO_W 240
 #define VIDEO_H 320
+#elif defined(NVIDIA_FULLSCREEN_PORTRAIT_176X220) || defined(NVIDIA_FULLSCREEN_LANDSCAPE_220X176)
+#define VIDEO_W 176
+#define VIDEO_H 220
+#else
+#define VIDEO_W 240
+#define VIDEO_H 320
+#endif
 
 #if defined(EP1) || defined(EP2)
 #if !defined(FTR_C650)
@@ -1229,6 +1237,7 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 	app_instance->gfsdk.fb0_rect.h = SCREENHEIGHT;
 #endif
 
+	// EXL, 28-Jul-2025: Uncomment it for emulate Motorola E770v display on Motorola RAZR V3x.
 //	app_instance->gfsdk.fb0_rect.x = 0;
 //	app_instance->gfsdk.fb0_rect.y = 0;
 //	app_instance->gfsdk.fb0_rect.w = 176;
@@ -1241,7 +1250,7 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 	}
 
 #if !defined(NVIDIA_FULLSCREEN)
-	app_instance->gfsdk.fb0_rect.y = 320 / 2 - SCREENHEIGHT / 2;
+	app_instance->gfsdk.fb0_rect.y = (point.y + 1) / 2 - SCREENHEIGHT / 2;
 #endif
 
 	return status;
@@ -1586,9 +1595,33 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 //		pp_bitmap[i] = doom_current_palette[ppp_bitmap_screen[i]];
 //	}
 
+#if !defined(NVIDIA_FULLSCREEN)
+	for (int i = 0; i < SCREENWIDTH * SCREENHEIGHT; i++) {
+		pp_bitmap[i] = doom_current_palette[buffer[i]];
+	}
+#else
+
+#if defined(NVIDIA_FULLSCREEN_PORTRAIT_240X320) || defined(NVIDIA_FULLSCREEN_PORTRAIT_176X220)
+
 	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
 		pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
 	}
+
+#elif defined(NVIDIA_FULLSCREEN_LANDSCAPE_320X240) || defined(NVIDIA_FULLSCREEN_LANDSCAPE_220X176)
+
+	for (int y = 0; y < VIDEO_H; ++y)
+	{
+		for (int x = 0; x < VIDEO_W; ++x)
+		{
+			// CCW 90deg: dest(x, y) <- src(y', x')
+			// src index = xtable[x] + ytable[y]
+			pp_bitmap[y * VIDEO_W + x] = doom_current_palette[buffer[xtable[x] + ytable[y]]];
+		}
+	}
+
+#endif
+
+#endif
 
 #endif
 

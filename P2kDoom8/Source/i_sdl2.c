@@ -195,8 +195,8 @@ static void genscalexytable(int video_w, int video_h)
         xtable[i] = (((video_w - 1 - i) * SCREENHEIGHT) / video_w) * SCREENWIDTH;  // src_y
     }
 }
-#define VIDEO_W 176
-#define VIDEO_H 220
+#define VIDEO_W 320
+#define VIDEO_H 240
 
 void I_InitGraphicsHardwareSpecificCode(void)
 {
@@ -265,18 +265,18 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 	uint8_t __far* dst = surface->pixels;
 
     // For each pixel in dest (x=0..175, y=0..219)
-    for (int y = 0; y < VIDEO_H; ++y)
-    {
-        for (int x = 0; x < VIDEO_W; ++x)
-        {
-            // CCW 90deg: dest(x, y) <- src(y', x')
-            // src index = xtable[x] + ytable[y]
-            dst[y * VIDEO_W + x] = src[xtable[x] + ytable[y]];
-        }
-    }
+//    for (int y = 0; y < VIDEO_H; ++y)
+//    {
+//        for (int x = 0; x < VIDEO_W; ++x)
+//        {
+//            // CCW 90deg: dest(x, y) <- src(y', x')
+//            // src index = xtable[x] + ytable[y]
+//            dst[y * VIDEO_W + x] = src[xtable[x] + ytable[y]];
+//        }
+//    }
 
-//    for (int i = 0; i < VIDEO_W * VIDEO_H; ++i)
-//        dst[i] = src[indextable[i]];
+    for (int i = 0; i < VIDEO_W * VIDEO_H; ++i)
+        dst[i] = src[indextable[i]];
 
 #if 0
 	uint8_t __far* src = buffer;
