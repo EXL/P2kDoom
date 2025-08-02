@@ -1557,37 +1557,37 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 
 #if defined(EP1) || defined(EP2)
 
-//	_s_screen = (void *) buffer;
+	appi_g->ahi.bitmap.image = (void *) buffer;
 
 #elif defined(EM1) || defined(EM2)
 
-	uint8_t __far* src = buffer;
-	uint8_t __far* dst = ppp_bitmap_screen;
+//	uint8_t __far* src = buffer;
+//	uint8_t __far* dst = _s_screen;
 
-	for (uint_fast8_t y = 0; y < SCREENHEIGHT - ST_HEIGHT; y++)
-	{
-		_fmemcpy(dst, src, SCREENWIDTH);
-		dst += SCREENWIDTH;
-		src += SCREENWIDTH;
-	}
+//	for (uint_fast8_t y = 0; y < SCREENHEIGHT - ST_HEIGHT; y++)
+//	{
+//		_fmemcpy(dst, src, SCREENWIDTH);
+//		dst += SCREENWIDTH;
+//		src += SCREENWIDTH;
+//	}
 
-	if (drawStatusBar)
-	{
-		for (uint_fast8_t y = 0; y < ST_HEIGHT; y++)
-		{
-			_fmemcpy(dst, src, SCREENWIDTH);
-			dst += SCREENWIDTH;
-			src += SCREENWIDTH;
-		}
-	}
-	drawStatusBar = true;
+//	if (drawStatusBar)
+//	{
+//		for (uint_fast8_t y = 0; y < ST_HEIGHT; y++)
+//		{
+//			_fmemcpy(dst, src, SCREENWIDTH);
+//			dst += SCREENWIDTH;
+//			src += SCREENWIDTH;
+//		}
+//	}
+//	drawStatusBar = true;
 
 //	for (int i = 0; i < SCREENWIDTH * SCREENHEIGHT; ++i) {
 //		pp_bitmap[i] = doom_current_palette[ppp_bitmap_screen[i]];
 //	}
 
 	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
-		pp_bitmap[i] = doom_current_palette[ppp_bitmap_screen[indextable[i]]];
+		pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
 	}
 
 #endif
@@ -2237,6 +2237,11 @@ static boolean wipe_ScreenWipe(int16_t ticks)
 	while (ticks--)
 	{
 		I_DrawBuffer((uint8_t __far*)frontbuffer);
+#if defined(EP1) || defined(EP2)
+	ATI_Driver_Flush((APPLICATION_T *) appi_g);
+#elif defined(EM1) || defined(EM2)
+	Nvidia_Driver_Flush((APPLICATION_T *) appi_g);
+#endif
 		for (int16_t i = 0; i < SCREENWIDTH / 2; i++)
 		{
 			if (wipe_y_lookup[i] < 0)
@@ -2289,12 +2294,6 @@ static boolean wipe_ScreenWipe(int16_t ticks)
 			}
 		}
 	}
-
-#if defined(EP1) || defined(EP2)
-	ATI_Driver_Flush((APPLICATION_T *) appi_g);
-#elif defined(EM1) || defined(EM2)
-	Nvidia_Driver_Flush((APPLICATION_T *) appi_g);
-#endif
 
 //	SDL_BlitSurface(surface, NULL, video, NULL);
 //	SDL_UpdateTexture(texture, NULL, video->pixels, video->pitch);
