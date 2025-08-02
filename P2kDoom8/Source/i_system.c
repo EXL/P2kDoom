@@ -49,6 +49,7 @@
 #include "d_main.h"
 #include "i_system.h"
 #include "globdata.h"
+#include "m_cheat.h"
 
 void I_InitGraphicsHardwareSpecificCode(void);
 void I_ShutdownGraphics(void);
@@ -156,6 +157,7 @@ void I_InitKeyboard(void)
 void I_SwitchPalette(void);
 #endif
 
+static evtype_t modkey_state = ev_keyup;
 
 void I_StartTic(void)
 {
@@ -176,8 +178,14 @@ void I_StartTic(void)
 					case SDL_SCANCODE_Q:
 						ev.data1 = KEYD_START;
 						break;
-					case SDL_SCANCODE_Z:
-						ev.data1 = KEYD_A;
+					case SDL_SCANCODE_X:
+						if (modkey_state == ev_keyup) {
+							ev.data1 = KEYD_A;
+						} else {
+							if (ev.type == ev_keydown) {
+								Apply_Cheat(CHEAT_IDKFA_GIVE_ALL);
+							}
+						}
 						break;
 					case SDL_SCANCODE_UP:
 						ev.data1 = KEYD_UP;
@@ -192,16 +200,50 @@ void I_StartTic(void)
 						ev.data1 = KEYD_RIGHT;
 						break;
 					case SDL_SCANCODE_W:
-						ev.data1 = KEYD_SELECT;
+						if (modkey_state == ev_keyup) {
+							ev.data1 = KEYD_SELECT;
+						} else {
+							if (ev.type == ev_keydown) {
+								Apply_Cheat(CHEAT_ROCKETS_ENABLE);
+							}
+						}
 						break;
-					case SDL_SCANCODE_X:
-						ev.data1 = KEYD_B;
+					case SDL_SCANCODE_Z:
+						if (modkey_state == ev_keyup) {
+							ev.data1 = KEYD_B;
+						} else {
+							if (ev.type == ev_keydown) {
+								Apply_Cheat(CHEAT_IDDQD_GOD);
+							}
+						}
 						break;
 					case SDL_SCANCODE_A:
-						ev.data1 = KEYD_L;
+						if (modkey_state == ev_keyup) {
+							ev.data1 = KEYD_L;
+						} else {
+							if (ev.type == ev_keydown) {
+								Apply_Cheat(CHEAT_CHOPPERS_CHAINSAW);
+							}
+						}
 						break;
 					case SDL_SCANCODE_S:
-						ev.data1 = KEYD_R;
+						if (modkey_state == ev_keyup) {
+							ev.data1 = KEYD_R;
+						} else {
+							if (ev.type == ev_keydown) {
+								Apply_Cheat(CHEAT_IDRATE_FPS);
+							}
+						}
+						break;
+					case SDL_SCANCODE_1:
+						ev.data1 = KEYD_BRACKET_LEFT;
+						break;
+					case SDL_SCANCODE_2:
+						ev.data1 = KEYD_BRACKET_RIGHT;
+						break;
+					case SDL_SCANCODE_C:
+						modkey_state = ev.type;
+						ev.data1 = KEYD_STRAFE;
 						break;
 					default:
 						break;
@@ -449,11 +491,13 @@ void I_Quit(void)
 	regs.h.dl = 0;
 	regs.h.dh = 23;
 	int86(0x10, &regs, &regs);
-#endif
 
 	printf("\n");
+#endif
 
-#if !defined(P2K)
+#if defined(P2K)
+	I_Quit_P2k();
+#else
 	exit(0);
 #endif
 }

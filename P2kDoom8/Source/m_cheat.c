@@ -91,6 +91,27 @@ boolean C_Responder (event_t *ev)
 	return false;
 }
 
+void Apply_Cheat(FAST_CHEAT_T cheat) {
+	switch (cheat) {
+		case CHEAT_IDDQD_GOD:
+			cheat_god();
+			break;
+		case CHEAT_IDKFA_GIVE_ALL:
+			cheat_idkfa();
+			break;
+		case CHEAT_CHOPPERS_CHAINSAW:
+			cheat_choppers();
+			break;
+		case CHEAT_IDRATE_FPS:
+			cheat_fps();
+			break;
+		case CHEAT_ROCKETS_ENABLE:
+			cheat_rockets();
+			break;
+		default:
+			break;
+	}
+}
 
 static void cheat_god()
 {

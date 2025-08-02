@@ -275,7 +275,7 @@ static void P_DeathThink (player_t* player)
   else if (player->damagecount)
     player->damagecount--;
 
-  if (player->cmd.buttons & BT_USE)
+  if (player->cmd.buttons & BT_ATTACK)
     player->playerstate = PST_REBORN;
 
   }

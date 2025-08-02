@@ -526,7 +526,7 @@ static void D_DoomMainSetup(void)
 
     G_LoadSettings();
 
-    _g_fps_show = true;
+    _g_fps_show = false;
 
     I_InitGraphics();
 

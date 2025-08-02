@@ -58,6 +58,7 @@
 #include "w_wad.h"
 #include "i_main.h"
 #include "d_main.h"
+#include "m_cheat.h"
 
 #include "globdata.h"
 
@@ -357,16 +358,11 @@ static APP_ERROR_T CheckEnvironment(void) {
 	g_res_file_path_ptr = g_res_file_path;
 	if (!DL_FsFFileExist(g_res_file_path_ptr)) {
 		LOG("%s\n", "Error: WAD file is not found!");
-		error = APP_ERROR_WAD;
-#if defined(EM1) || defined(EM2)
 		g_res_file_path_ptr = L"/e/mobile/P2kDoom8.wad";
 		if (!DL_FsFFileExist(g_res_file_path_ptr)) {
 			LOG("%s\n", "Error: WAD file is not found (Second Try)!");
 			error = APP_ERROR_WAD;
-		} else {
-			error = APP_ERROR_NO;
 		}
-#endif
 	}
 
 	g_app_error = error;
@@ -723,20 +719,11 @@ static UINT32 CheckKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app) {
 	return RESULT_OK;
 }
 
+static evtype_t modkey_state = ev_keyup;
+
 static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 key, BOOL pressed) {
 	event_t ev;
 	ev.data1 = 0;
-	// GBA Keys
-	#define KEYD_A          1
-	#define KEYD_B          2
-	#define KEYD_L          3
-	#define KEYD_R          4
-	#define KEYD_UP         5
-	#define KEYD_DOWN       6
-	#define KEYD_LEFT       7
-	#define KEYD_RIGHT      8
-	#define KEYD_START      9
-	#define KEYD_SELECT     10
 #if defined(KEYS_PORTRAIT) || defined(FTR_C650)
 	#define KK_2 MULTIKEY_2
 	#define KK_UP MULTIKEY_UP
@@ -765,14 +752,21 @@ static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 k
 			app->exit_status = TRUE;
 			break;
 		case MULTIKEY_1:
-			ev.data1 = KEYD_START;
+			if (modkey_state == ev_keyup) {
+				ev.data1 = KEYD_START;
+			} else {
+				if (ev.type == ev_keydown) {
+					Apply_Cheat(CHEAT_IDRATE_FPS);
+				}
+			}
 			break;
 		case KK_2:
 		case KK_UP:
 			ev.data1 = KEYD_UP;
 			break;
 		case MULTIKEY_3:
-			ev.data1 = KEYD_SELECT;
+			modkey_state = ev.type;
+			ev.data1 = KEYD_STRAFE;
 			break;
 		case KK_4:
 		case KK_LEFT:
@@ -780,29 +774,54 @@ static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 k
 			break;
 		case MULTIKEY_5:
 		case MULTIKEY_JOY_OK:
-			ev.data1 = KEYD_A;
+			if (modkey_state == ev_keyup) {
+				ev.data1 = KEYD_B;
+			} else {
+				if (ev.type == ev_keydown) {
+					Apply_Cheat(CHEAT_IDDQD_GOD);
+				}
+			}
 			break;
 		case KK_6:
 		case KK_RIGHT:
 			ev.data1 = KEYD_RIGHT;
 			break;
 		case MULTIKEY_7:
-			ev.data1 = KEYD_L;
+			if (modkey_state == ev_keyup) {
+				ev.data1 = KEYD_A;
+			} else {
+				if (ev.type == ev_keydown) {
+					Apply_Cheat(CHEAT_IDKFA_GIVE_ALL);
+				}
+			}
 			break;
 		case MULTIKEY_9:
-			ev.data1 = KEYD_R;
+			if (modkey_state == ev_keyup) {
+				ev.data1 = KEYD_SELECT;
+			} else {
+				if (ev.type == ev_keydown) {
+					Apply_Cheat(CHEAT_CHOPPERS_CHAINSAW);
+				}
+			}
 			break;
 		case KK_8:
 		case KK_DOWN:
 			ev.data1 = KEYD_DOWN;
 			break;
 		case MULTIKEY_STAR:
-			ev.data1 = KEYD_A;
+			ev.data1 = KEYD_BRACKET_LEFT;
 			break;
 		case MULTIKEY_POUND:
-			ev.data1 = KEYD_B;
+			ev.data1 = KEYD_BRACKET_RIGHT;
 			break;
 		case MULTIKEY_SOFT_RIGHT:
+			if (modkey_state == ev_keyup) {
+				ev.data1 = KEYD_A;
+			} else {
+				if (ev.type == ev_keydown) {
+					Apply_Cheat(CHEAT_ROCKETS_ENABLE);
+				}
+			}
 			break;
 		default:
 			break;
@@ -2599,4 +2618,8 @@ void D_Wipe(void)
 
 	Z_Free(frontbuffer);
 	Z_Free(wipe_y_lookup);
+}
+
+void I_Quit_P2k(void) {
+	appi_g->app.exit_status = TRUE;
 }

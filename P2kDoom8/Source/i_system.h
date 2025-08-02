@@ -63,4 +63,8 @@ void I_SetPalette(int8_t pal);
  */
 void I_StartTic(void);
 
+#if defined(P2K)
+void I_Quit_P2k(void);
+#endif
+
 #endif

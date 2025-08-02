@@ -831,13 +831,13 @@ boolean M_Responder (event_t* ev)
     if (messageToPrint)
     {
         if (messageNeedsInput == true &&
-                !(ch == 'n' || ch == 'y' || ch == key_escape))
+                !(ch == key_menu_enter || ch == key_fire || ch == key_escape))
             return false;
 
         _g_menuactive  = messageLastMenuActive;
         messageToPrint = false;
         if (messageRoutine)
-            messageRoutine(ch == 'y');
+            messageRoutine(ch == key_fire);
 
         _g_menuactive = false;
         S_StartSound(NULL,sfx_swtchx);
@@ -910,7 +910,7 @@ boolean M_Responder (event_t* ev)
         return true;
     }
 
-    if (ch == key_menu_enter)
+    if (ch == key_fire)
     {
         if (currentMenu->menuitems[itemOn].routine &&
                 currentMenu->menuitems[itemOn].status)
@@ -938,7 +938,7 @@ boolean M_Responder (event_t* ev)
     }
 
 	//Allow being able to go back in menus
-	if (ch == key_fire)
+	if (ch == key_menu_enter)
     {
 		//If the prevMenu == NULL (Such as main menu screen), then just get out of the menu altogether
 		if(currentMenu->prevMenu == NULL)
