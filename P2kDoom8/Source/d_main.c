@@ -294,7 +294,7 @@ void D_DoomStep(void)
 //  calls all ?_Responder, ?_Ticker, and ?_Drawer,
 //  calls I_GetTime and I_StartTic
 //
-_Noreturn static void D_DoomLoop(void)
+static void D_DoomLoop(void)
 {
     for (;;)
     {

@@ -1480,7 +1480,7 @@ static uint32_t *indextable = NULL;
 
 static void genindextable(int video_w, int video_h)
 {
-    if (indextable) free(indextable);
+    if (indextable) suFreeMem(indextable);
     indextable = (uint32_t*)suAllocMem(sizeof(uint32_t) * video_w * video_h, NULL);
     for (int y = 0; y < video_h; ++y) {
         int src_y = (y * SCREENHEIGHT) / video_h;

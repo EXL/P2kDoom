@@ -148,6 +148,8 @@
 
 #if defined __WATCOMC__
 	#define _Noreturn __declspec(aborts)
+#else
+	#define _Noreturn
 #endif
 
 

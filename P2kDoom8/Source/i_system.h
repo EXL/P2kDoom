@@ -41,8 +41,8 @@
 void I_InitTimer(void);
 int32_t I_GetTime(void);
 
-_Noreturn void I_Quit(void);
-_Noreturn void I_Error(const char *error, ...);
+void I_Quit(void);
+void I_Error(const char *error, ...);
 
 void I_InitKeyboard(void);
 
