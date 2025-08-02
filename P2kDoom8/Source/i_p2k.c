@@ -351,6 +351,7 @@ static UINT32 AE_DeleteDialog(APPLICATION_T *app) {
 static APP_ERROR_T CheckEnvironment(void) {
 	APP_ERROR_T error = APP_ERROR_NO;
 
+#if !defined(USE_UIS_ALLOCA)
 	/* Check if J2ME Heap is present. */
 	UINT8 *m_ptr = NULL;
 	m_ptr = AmMemAllocPointer(1024);
@@ -360,6 +361,7 @@ static APP_ERROR_T CheckEnvironment(void) {
 	} else {
 		AmMemFreePointer(m_ptr);
 	}
+#endif
 
 	/* Check resource files. */
 	*(u_strrchr(g_res_file_path, L'/') + 1) = '\0';
@@ -1571,12 +1573,20 @@ static UINT32 GFX_Draw_Stop(APPLICATION_T *app) {
 
 	if (dosAllocatedMem) {
 		LOG("%s\n", "Freed: dosAllocatedMem!");
+#if defined(USE_UIS_ALLOCA)
+		uisFreeMemory(dosAllocatedMem);
+#else
 		AmMemFreePointer(dosAllocatedMem);
+#endif
 	}
 
 	if (doomXMSHandle) {
 		LOG("%s\n", "Freed: doomXMSHandle!");
+#if defined(USE_UIS_ALLOCA)
+		uisFreeMemory(doomXMSHandle);
+#else
 		AmMemFreePointer(doomXMSHandle);
+#endif
 	}
 
 	return RESULT_OK;

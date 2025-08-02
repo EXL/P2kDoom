@@ -31,6 +31,11 @@
 #endif
 #include <stdint.h>
 
+#if defined(P2K)
+#include <mem.h>
+#include <utilities.h>
+#endif
+
 #include "compiler.h"
 #include "z_zone.h"
 #include "doomdef.h"
@@ -290,10 +295,21 @@ boolean Z_InitXms(uint32_t size)
 #endif
 #else
 	xmsHandle = 1;
-#if !defined(P2K)
-	fakeXMSHandle = malloc(size);
+#if defined(P2K)
+#if defined(USE_UIS_ALLOCA)
+	INT32 result;
+	fakeXMSHandle = uisAllocateMemory(size, &result);
+	if (result != RESULT_OK) {
+		LOG("Cannot allocate fakeXMSHandle: %d bytes\n", size);
+	}
 #else
 	fakeXMSHandle = AmMemAllocPointer(size);
+	if (!fakeXMSHandle) {
+		LOG("Cannot allocate fakeXMSHandle: %d bytes\n", size);
+	}
+#endif
+#else
+	fakeXMSHandle = malloc(size);
 #endif
 	doomXMSHandle = fakeXMSHandle;
 
@@ -352,10 +368,21 @@ static unsigned int _dos_allocmem(unsigned int __size, unsigned int *__seg)
 	{
 		int32_t paragraphs = 640 * 1024L / PARAGRAPH_SIZE;
 
-#if !defined(P2K)
-		ptr = malloc(paragraphs * PARAGRAPH_SIZE);
+#if defined(P2K)
+#if defined(USE_UIS_ALLOCA)
+		INT32 result;
+		ptr = uisAllocateMemory(paragraphs * PARAGRAPH_SIZE, &result);
+		if (result != RESULT_OK) {
+			LOG("Cannot allocate ptr: %d bytes\n", paragraphs * PARAGRAPH_SIZE);
+		}
 #else
 		ptr = AmMemAllocPointer(paragraphs * PARAGRAPH_SIZE);
+		if (!ptr) {
+			LOG("Cannot allocate ptr: %d bytes\n", paragraphs * PARAGRAPH_SIZE);
+		}
+#endif
+#else
+		ptr = malloc(paragraphs * PARAGRAPH_SIZE);
 #endif
 		dosAllocatedMem = ptr;
 
