@@ -186,7 +186,7 @@ static UINT32 GFX_Draw_Step(APPLICATION_T *app);
 static UINT32 InitResourses(void);
 static void FreeResourses(void);
 
-static const char g_app_name[APP_NAME_LEN] = "P2kDoom8088";
+static const char g_app_name[APP_NAME_LEN] = "P2kDoom8";
 
 #if defined(EP2)
 static ldrElf g_app_elf;
@@ -686,6 +686,9 @@ static void FPS_Meter(void) {
 #elif defined(NVIDIA_FULLSCREEN_PORTRAIT_176X220) || defined(NVIDIA_FULLSCREEN_LANDSCAPE_220X176)
 #define VIDEO_W 176
 #define VIDEO_H 220
+#elif defined(FTR_C650)
+#define VIDEO_W 128
+#define VIDEO_H 128
 #else
 #define VIDEO_W 240
 #define VIDEO_H 320
@@ -1357,7 +1360,6 @@ static void Free_Memory_Blocks(void) {
 #endif
 
 static UINT16 *pp_bitmap;
-static UINT8 *ppp_bitmap_screen;
 static APP_INSTANCE_T *appi_g;
 static UINT8 *palette_g;
 
@@ -1375,10 +1377,6 @@ static UINT32 GFX_Draw_Start(APPLICATION_T *app) {
 	pp_bitmap = (UINT16 *) appi->p_bitmap;
 	appi_g = appi;
 
-#if defined(EM1) || defined(EM2)
-	ppp_bitmap_screen = uisAllocateMemory(SCREENWIDTH * SCREENHEIGHT, NULL);
-#endif
-
 	init_main(0, NULL);
 
 	return RESULT_OK;
@@ -1389,8 +1387,8 @@ static UINT32 GFX_Draw_Stop(APPLICATION_T *app) {
 
 	appi = (APP_INSTANCE_T *) app;
 
-#if defined(EM1) || defined(EM2)
-	uisFreeMemory(ppp_bitmap_screen);
+#if defined(EM1) || defined(EM2) || defined(FTR_C650)
+	uisFreeMemory(_s_screen);
 #endif
 
 	return RESULT_OK;
@@ -1545,15 +1543,20 @@ void I_InitGraphicsHardwareSpecificCode(void)
 
 	__djgpp_nearptr_enable();
 
-//	_s_screen = suAllocMem(SCREENWIDTH * SCREENHEIGHT, NULL);
 #if defined(EP1) || defined(EP2)
-	_s_screen = pp_bitmap;
+
+	#if defined(FTR_C650)
+		_s_screen = uisAllocateMemory(SCREENWIDTH * SCREENHEIGHT, NULL);
+	#else
+		_s_screen = pp_bitmap;
+	#endif
+
 #elif defined(EM1) || defined(EM2)
-	_s_screen = ppp_bitmap_screen;
+	_s_screen = uisAllocateMemory(SCREENWIDTH * SCREENHEIGHT, NULL);
 #endif
 	_fmemset(_s_screen, 0, SCREENWIDTH * SCREENHEIGHT);
 
-#if defined(EM1) || defined(EM2)
+#if defined(EM1) || defined(EM2) || defined(FTR_C650)
 	genscalexytable(VIDEO_W, VIDEO_H);
 	genindextable(VIDEO_W, VIDEO_H);
 #endif
@@ -1563,13 +1566,6 @@ static boolean drawStatusBar = true;
 
 static void I_DrawBuffer(uint8_t __far* buffer)
 {
-
-#if defined(EP1) || defined(EP2)
-
-	appi_g->ahi.bitmap.image = (void *) buffer;
-
-#elif defined(EM1) || defined(EM2)
-
 //	uint8_t __far* src = buffer;
 //	uint8_t __far* dst = _s_screen;
 
@@ -1591,9 +1587,17 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 //	}
 //	drawStatusBar = true;
 
-//	for (int i = 0; i < SCREENWIDTH * SCREENHEIGHT; ++i) {
-//		pp_bitmap[i] = doom_current_palette[ppp_bitmap_screen[i]];
-//	}
+#if defined(EP1) || defined(EP2)
+
+#if defined(FTR_C650)
+	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
+		pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
+	}
+#else
+	appi_g->ahi.bitmap.image = (void *) buffer;
+#endif
+
+#elif defined(EM1) || defined(EM2)
 
 #if !defined(NVIDIA_FULLSCREEN)
 	for (int i = 0; i < SCREENWIDTH * SCREENHEIGHT; i++) {
