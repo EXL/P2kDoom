@@ -188,6 +188,7 @@ static ElfLoaderApp g_app_elf = { 0 };
 static ldrElf *g_app_elf = NULL;
 #endif
 
+WCHAR *g_res_file_path_ptr;
 static WCHAR g_res_file_path[FS_MAX_URI_NAME_LENGTH];
 
 static EVENT_HANDLER_ENTRY_T g_state_any_hdls[] = {
@@ -319,6 +320,9 @@ static UINT32 ApplicationStart(EVENT_STACK_T *ev_st, REG_ID_T reg_id, void *reg_
 		app_instance = (APP_INSTANCE_T *) APP_InitAppData((void *) APP_HandleEvent, sizeof(APP_INSTANCE_T),
 			reg_id, 0, 0, 1, 1, 1, 0);
 
+		g_res_file_path_ptr = NULL;
+		InitResourses();
+
 #if defined(EP1) || defined(EP2)
 		app_instance->ahi.info_driver = NULL;
 #elif defined(EM1) || defined(EM2)
@@ -366,6 +370,8 @@ static UINT32 ApplicationStop(EVENT_STACK_T *ev_st, APPLICATION_T *app) {
 	DeleteDialog(app);
 
 	DL_AudSetVolumeSetting(PHONE, app_instance->keyboard_volume_level);
+
+	FreeResourses();
 
 	status |= GFX_Draw_Stop(app);
 	status |= SetLoopTimer(app, 0);
@@ -2389,4 +2395,18 @@ void D_Wipe(void)
 
 	Z_Free(frontbuffer);
 	Z_Free(wipe_y_lookup);
+}
+
+static UINT32 InitResourses(void) {
+	*(u_strrchr(g_res_file_path, L'/') + 1) = '\0';
+	u_strcat(g_res_file_path, L"P2kDoom8.wad");
+#if defined(USE_FAST_E_DRIVE)
+	g_res_file_path_ptr = L"/e/mobile/P2kDoom8.wad";
+#else
+	g_res_file_path_ptr = g_res_file_path;
+#endif
+}
+
+static void FreeResourses(void) {
+
 }

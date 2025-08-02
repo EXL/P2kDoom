@@ -84,21 +84,11 @@ static FILE* fileWAD;
 #define WAD_FILE "DOOM1.WAD"
 #endif
 
-#else
+#else /* defined(P2K) */
 static FILE_HANDLE_T fileWAD;
 
 #if !defined WAD_FILE
-
-#if defined(EP1) || defined(EP2)
-#if defined(FTR_C650)
-#define WAD_FILE "file://a/Elf/Doom/P2kDoom8.wad"
-#else
-#define WAD_FILE "file://c/Elf/P2kDoom8.wad"
-#endif
-#elif defined(EM1) || defined(EM2)
-#define WAD_FILE "/e/mobile/P2kDoom8.wad"
-#endif
-
+#define WAD_FILE "P2kDoom8.wad"
 #endif
 
 #endif
@@ -243,11 +233,7 @@ void W_Init(void)
 	if (fileWAD == NULL)
 		I_Error("Can't open " WAD_FILE ".");
 #else
-	{
-		WCHAR wpath[64];
-		u_atou(WAD_FILE, wpath);
-		fileWAD = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
-	}
+	fileWAD = DL_FsOpenFile(g_res_file_path_ptr, FILE_READ_MODE, 0);
 #endif
 
 #if !defined(SDL2) && !defined(P2K)

@@ -39,6 +39,9 @@
 
 #include "doomtype.h"
 
+#if defined(P2K)
+#include <typedefs.h>
+#endif
 
 void W_Init(void);
 void W_Shutdown(void);
@@ -54,5 +57,9 @@ const void __far* PUREFUNC W_GetLumpByNumAutoFree(int16_t num);
 void                       W_ReadLumpByNum(       int16_t num, void __far* ptr);
 
 #define W_GetLumpByName(x)    W_GetLumpByNum(W_GetNumForName(x))
+
+#if defined(P2K)
+extern WCHAR *g_res_file_path_ptr;
+#endif
 
 #endif
