@@ -168,17 +168,36 @@ static UINT32 ATI_Driver_Flush(APPLICATION_T *app);
 static UINT32 Nvidia_Driver_Start(APPLICATION_T *app);
 static UINT32 Nvidia_Driver_Stop(APPLICATION_T *app);
 static UINT32 Nvidia_Driver_Flush(APPLICATION_T *app);
-static UINT32 Nvidia_Driver_Fill(APPLICATION_T *app);
 #endif
 
 static UINT32 GFX_Draw_Start(APPLICATION_T *app);
 static UINT32 GFX_Draw_Stop(APPLICATION_T *app);
 static UINT32 GFX_Draw_Step(APPLICATION_T *app);
 
-static UINT32 InitResourses(void);
-static void FreeResourses(void);
-
 static const char g_app_name[APP_NAME_LEN] = "P2kDoom8";
+
+/*
+ * Separate error APP section!!!!
+ */
+
+typedef enum {
+	APP_ERROR_STATE_ANY,
+	APP_ERROR_STATE_INIT,
+	APP_ERROR_STATE_MAIN,
+	APP_ERROR_STATE_MAX
+} APP_ERROR_STATE_T;
+
+typedef enum {
+	APP_ERROR_NO,
+	APP_ERROR_J2ME_HEAP,
+	APP_ERROR_WAD
+} APP_ERROR_T;
+
+typedef struct {
+	APPLICATION_T app;
+} APP_ERROR_INSTANCE_T;
+
+static APP_ERROR_T g_app_error;
 
 #if defined(EP2)
 static ldrElf g_app_elf;
@@ -190,6 +209,170 @@ static ldrElf *g_app_elf = NULL;
 
 WCHAR *g_res_file_path_ptr;
 static WCHAR g_res_file_path[FS_MAX_URI_NAME_LENGTH];
+
+static const WCHAR *g_msg_title = L"P2kDoom8";
+static const WCHAR *g_msg_error_j2me_heap =
+	L"Please Run and then Suspend any Java application before running this ELF to initialize the J2ME memory heap!";
+static const WCHAR *g_msg_error_wad =  L"Could not find the WAD resource file in the specified path:";
+
+static UINT32 AE_Start(EVENT_STACK_T *ev_st, REG_ID_T reg_id, void *reg_hdl);
+static UINT32 AE_Stop(EVENT_STACK_T *ev_st, APPLICATION_T *app);
+
+static UINT32 AE_HandleStateEnter(EVENT_STACK_T *ev_st, APPLICATION_T *app, ENTER_STATE_TYPE_T state);
+static UINT32 AE_HandleStateExit(EVENT_STACK_T *ev_st, APPLICATION_T *app, EXIT_STATE_TYPE_T state);
+static UINT32 AE_DeleteDialog(APPLICATION_T *app);
+
+static EVENT_HANDLER_ENTRY_T g_ae_state_any_hdls[] = {
+	{ EV_REVOKE_TOKEN, APP_HandleUITokenRevoked },
+	{ STATE_HANDLERS_END, NULL }
+};
+
+static EVENT_HANDLER_ENTRY_T g_ae_state_init_hdls[] = {
+	{ EV_GRANT_TOKEN, APP_HandleUITokenGranted },
+	{ STATE_HANDLERS_END, NULL }
+};
+
+static EVENT_HANDLER_ENTRY_T g_ae_state_main_hdls[] = {
+	{ EV_DONE, AE_Stop },
+	{ EV_DIALOG_DONE, AE_Stop },
+	{ STATE_HANDLERS_END, NULL }
+};
+
+static const STATE_HANDLERS_ENTRY_T g_ae_state_table_hdls[] = {
+	{ APP_ERROR_STATE_ANY, NULL, NULL, g_ae_state_any_hdls },
+	{ APP_ERROR_STATE_INIT, NULL, NULL, g_ae_state_init_hdls },
+	{ APP_ERROR_STATE_MAIN, AE_HandleStateEnter, AE_HandleStateExit, g_ae_state_main_hdls }
+};
+
+static UINT32 AE_Start(EVENT_STACK_T *ev_st, REG_ID_T reg_id, void *reg_hdl) {
+	UINT32 status;
+	APP_ERROR_INSTANCE_T *appi;
+
+	status = RESULT_FAIL;
+
+	if (AFW_InquireRoutingStackByRegId(reg_id) != RESULT_OK) {
+		appi = (APP_ERROR_INSTANCE_T *) APP_InitAppData((void *) APP_HandleEvent, sizeof(APP_ERROR_INSTANCE_T),
+			reg_id, 0, 1, 1, 1, 1, 0);
+
+		status = APP_Start(ev_st, &appi->app, APP_ERROR_STATE_MAIN,
+			g_ae_state_table_hdls, AE_Stop, g_app_name, 0);
+	}
+
+	return status;
+}
+
+static UINT32 AE_Stop(EVENT_STACK_T *ev_st, APPLICATION_T *app) {
+	UINT32 status;
+
+	APP_ConsumeEv(ev_st, app);
+
+	AE_DeleteDialog(app);
+
+	status = APP_Exit(ev_st, app, 0);
+
+#if defined(EP1)
+	LdrUnloadELF(&Lib);
+#elif defined(EP2)
+	ldrUnloadElf();
+#elif defined(EM1)
+	LoaderEndApp(&g_app_elf);
+#elif defined(EM2)
+	ldrUnloadElf(g_app_elf);
+#endif
+
+	return status;
+}
+
+static UINT32 AE_HandleStateEnter(EVENT_STACK_T *ev_st, APPLICATION_T *app, ENTER_STATE_TYPE_T state) {
+	SU_PORT_T port;
+	CONTENT_T content;
+	UIS_DIALOG_T dialog;
+
+	if (state != ENTER_STATE_ENTER) {
+		return RESULT_OK;
+	}
+
+	AE_DeleteDialog(app);
+
+	port = app->port;
+
+	memclr(&content, sizeof(CONTENT_T));
+
+	switch (g_app_error) {
+		case APP_ERROR_WAD:
+			UIS_MakeContentFromString("q0Nq1Nq2", &content, g_msg_title, g_msg_error_wad, g_res_file_path_ptr);
+			break;
+		case APP_ERROR_J2ME_HEAP:
+			UIS_MakeContentFromString("q0Nq1", &content, g_msg_title, g_msg_error_j2me_heap);
+			break;
+		default:
+			break;
+	}
+
+	dialog = UIS_CreateViewer(&port, &content, NULL);
+
+	if (dialog == DialogType_None) {
+		return RESULT_FAIL;
+	}
+
+	app->dialog = dialog;
+
+	return RESULT_OK;
+}
+
+static UINT32 AE_HandleStateExit(EVENT_STACK_T *ev_st, APPLICATION_T *app, EXIT_STATE_TYPE_T state) {
+	if (state == EXIT_STATE_EXIT) {
+		AE_DeleteDialog(app);
+		return RESULT_OK;
+	}
+	return RESULT_FAIL;
+}
+
+static UINT32 AE_DeleteDialog(APPLICATION_T *app) {
+	if (app->dialog != DialogType_None) {
+		UIS_Delete(app->dialog);
+		app->dialog = DialogType_None;
+		return RESULT_OK;
+	}
+
+	return RESULT_FAIL;
+}
+
+static APP_ERROR_T CheckEnvironment(void) {
+	APP_ERROR_T error = APP_ERROR_NO;
+
+	/* Check if J2ME Heap is present. */
+	UINT8 *m_ptr = NULL;
+	m_ptr = AmMemAllocPointer(1024);
+	if (!m_ptr) {
+		LOG("%s\n", "Error: Cannot allocate 1024 byte of J2ME HEAP memory! Is J2ME VM down?");
+		error = APP_ERROR_J2ME_HEAP;
+	} else {
+		AmMemFreePointer(m_ptr);
+	}
+
+	/* Check resource files. */
+	*(u_strrchr(g_res_file_path, L'/') + 1) = '\0';
+	u_strcat(g_res_file_path, L"P2kDoom8.wad");
+	g_res_file_path_ptr = g_res_file_path;
+	if (!DL_FsFFileExist(g_res_file_path_ptr)) {
+		LOG("%s\n", "Error: WAD file is not found!");
+		error = APP_ERROR_WAD;
+#if defined(EM1) || defined(EM2)
+		g_res_file_path_ptr = L"/e/mobile/P2kDoom8.wad";
+		if (!DL_FsFFileExist(g_res_file_path_ptr)) {
+			LOG("%s\n", "Error: WAD file is not found (Second Try)!");
+			error = APP_ERROR_WAD;
+		} else {
+			error = APP_ERROR_NO;
+		}
+#endif
+	}
+
+	g_app_error = error;
+
+	return error;
+}
 
 static EVENT_HANDLER_ENTRY_T g_state_any_hdls[] = {
 	{ EV_REVOKE_TOKEN, APP_HandleUITokenRevoked },
@@ -211,7 +394,7 @@ static EVENT_HANDLER_ENTRY_T g_state_main_hdls[] = {
 static const STATE_HANDLERS_ENTRY_T g_state_table_hdls[] = {
 	{ APP_STATE_ANY, NULL, NULL, g_state_any_hdls },
 	{ APP_STATE_INIT, NULL, NULL, g_state_init_hdls },
-	{ APP_STATE_MAIN, HandleStateEnter, HandleStateExit, g_state_main_hdls }
+	{ APP_STATE_MAIN, HandleStateEnter, HandleStateExit, g_state_main_hdls },
 };
 
 #if defined(EP1)
@@ -221,9 +404,13 @@ UINT32 Register(const char *elf_path_uri, const char *args, UINT32 ev_code) {
 
 	ev_code_base = ev_code;
 
-	status = APP_Register(&ev_code_base, 1, g_state_table_hdls, APP_STATE_MAX, (void *) ApplicationStart);
-
 	u_atou(elf_path_uri, g_res_file_path);
+
+	if (CheckEnvironment() == APP_ERROR_NO) {
+		status = APP_Register(&ev_code_base, 1, g_state_table_hdls, APP_STATE_MAX, (void *) ApplicationStart);
+	} else {
+		status = APP_Register(&ev_code_base, 1, g_ae_state_table_hdls, APP_ERROR_STATE_MAX, (void *) AE_Start);
+	}
 
 	LdrStartApp(ev_code_base);
 
@@ -241,16 +428,25 @@ ldrElf *_start(WCHAR *uri, WCHAR *arguments) {
 	}
 
 	status = RESULT_OK;
-	ev_code_base = ldrRequestEventBase();
-	reserve = ev_code_base + 1;
-	reserve = ldrInitEventHandlersTbl(g_state_any_hdls, reserve);
-	reserve = ldrInitEventHandlersTbl(g_state_init_hdls, reserve);
-	reserve = ldrInitEventHandlersTbl(g_state_main_hdls, reserve);
-
-	status |= APP_Register(&ev_code_base, 1, g_state_table_hdls, APP_STATE_MAX, (void *) ApplicationStart);
 
 	u_strcpy(g_res_file_path, uri);
 
+	ev_code_base = ldrRequestEventBase();
+	reserve = ev_code_base + 1;
+
+	if (CheckEnvironment() == APP_ERROR_NO) {
+		reserve = ldrInitEventHandlersTbl(g_state_any_hdls, reserve);
+		reserve = ldrInitEventHandlersTbl(g_state_init_hdls, reserve);
+		reserve = ldrInitEventHandlersTbl(g_state_main_hdls, reserve);
+
+		status |= APP_Register(&ev_code_base, 1, g_state_table_hdls, APP_STATE_MAX, (void *) ApplicationStart);
+	} else {
+		reserve = ldrInitEventHandlersTbl(g_ae_state_any_hdls, reserve);
+		reserve = ldrInitEventHandlersTbl(g_ae_state_init_hdls, reserve);
+		reserve = ldrInitEventHandlersTbl(g_ae_state_main_hdls, reserve);
+
+		status |= APP_Register(&ev_code_base, 1, g_ae_state_table_hdls, APP_ERROR_STATE_MAX, (void *) AE_Start);
+	}
 	status |= ldrSendEvent(ev_code_base);
 	g_app_elf.name = (char *) g_app_name;
 
@@ -264,9 +460,13 @@ int _main(ElfLoaderApp ela) {
 
 	memcpy((void *) &g_app_elf, (void *) &ela, sizeof(ElfLoaderApp));
 
-	status = APP_Register(&g_app_elf.evcode, 1, g_state_table_hdls, APP_STATE_MAX, (void *) ApplicationStart);
-
 	u_strcpy(g_res_file_path, uri);
+
+	if (CheckEnvironment() == APP_ERROR_NO) {
+		status = APP_Register(&g_app_elf.evcode, 1, g_state_table_hdls, APP_STATE_MAX, (void *) ApplicationStart);
+	} else {
+		status = APP_Register(&g_app_elf.evcode, 1, g_ae_state_table_hdls, APP_ERROR_STATE_MAX, (void *) AE_Start);
+	}
 
 	LoaderShowApp(&g_app_elf);
 
@@ -287,19 +487,27 @@ UINT32 ELF_Entry(ldrElf *elf, WCHAR *arguments) {
 		return RESULT_FAIL;
 	}
 
-	reserve = g_app_elf->evbase + 1;
-	reserve = ldrInitEventHandlersTbl(g_state_any_hdls, reserve);
-	reserve = ldrInitEventHandlersTbl(g_state_init_hdls, reserve);
-	reserve = ldrInitEventHandlersTbl(g_state_main_hdls, reserve);
+	ptr = NULL;
+	u_strcpy(g_res_file_path, L"file:/");
+	ptr = g_res_file_path + u_strlen(g_res_file_path);
+	DL_FsGetURIFromID(&g_app_elf->id, ptr);
 
-	status |= APP_Register(&g_app_elf->evbase, 1, g_state_table_hdls, APP_STATE_MAX, (void *) ApplicationStart);
+	reserve = g_app_elf->evbase + 1;
+	if (CheckEnvironment() == APP_ERROR_NO) {
+		reserve = ldrInitEventHandlersTbl(g_state_any_hdls, reserve);
+		reserve = ldrInitEventHandlersTbl(g_state_init_hdls, reserve);
+		reserve = ldrInitEventHandlersTbl(g_state_main_hdls, reserve);
+
+		status |= APP_Register(&g_app_elf->evbase, 1, g_state_table_hdls, APP_STATE_MAX, (void *) ApplicationStart);
+	} else {
+		reserve = ldrInitEventHandlersTbl(g_ae_state_any_hdls, reserve);
+		reserve = ldrInitEventHandlersTbl(g_ae_state_init_hdls, reserve);
+		reserve = ldrInitEventHandlersTbl(g_ae_state_main_hdls, reserve);
+
+		status |= APP_Register(&g_app_elf->evbase, 1, g_ae_state_table_hdls, APP_ERROR_STATE_MAX, (void *) AE_Start);
+	}
 	if (status == RESULT_OK) {
 		PFprintf("%s: Application has been registered successfully.\n", g_app_elf->name);
-
-		ptr = NULL;
-		u_strcpy(g_res_file_path, L"file:/");
-		ptr = g_res_file_path + u_strlen(g_res_file_path);
-		DL_FsGetURIFromID(&g_app_elf->id, ptr);
 
 		status |= ldrSendEvent(g_app_elf->evbase);
 	} else {
@@ -319,9 +527,6 @@ static UINT32 ApplicationStart(EVENT_STACK_T *ev_st, REG_ID_T reg_id, void *reg_
 	if (AFW_InquireRoutingStackByRegId(reg_id) != RESULT_OK) {
 		app_instance = (APP_INSTANCE_T *) APP_InitAppData((void *) APP_HandleEvent, sizeof(APP_INSTANCE_T),
 			reg_id, 0, 0, 1, 1, 1, 0);
-
-		g_res_file_path_ptr = NULL;
-		InitResourses();
 
 #if defined(EP1) || defined(EP2)
 		app_instance->ahi.info_driver = NULL;
@@ -371,8 +576,6 @@ static UINT32 ApplicationStop(EVENT_STACK_T *ev_st, APPLICATION_T *app) {
 
 	DL_AudSetVolumeSetting(PHONE, app_instance->keyboard_volume_level);
 
-	FreeResourses();
-
 	status |= GFX_Draw_Stop(app);
 	status |= SetLoopTimer(app, 0);
 #if defined(EP1) || defined(EP2)
@@ -380,6 +583,7 @@ static UINT32 ApplicationStop(EVENT_STACK_T *ev_st, APPLICATION_T *app) {
 #elif defined(EM1) || defined(EM2)
 	status |= Nvidia_Driver_Stop(app);
 #endif
+
 	status |= APP_Exit(ev_st, app, 0);
 
 #if defined(EP1)
@@ -2395,18 +2599,4 @@ void D_Wipe(void)
 
 	Z_Free(frontbuffer);
 	Z_Free(wipe_y_lookup);
-}
-
-static UINT32 InitResourses(void) {
-	*(u_strrchr(g_res_file_path, L'/') + 1) = '\0';
-	u_strcat(g_res_file_path, L"P2kDoom8.wad");
-#if defined(USE_FAST_E_DRIVE)
-	g_res_file_path_ptr = L"/e/mobile/P2kDoom8.wad";
-#else
-	g_res_file_path_ptr = g_res_file_path;
-#endif
-}
-
-static void FreeResourses(void) {
-
 }
