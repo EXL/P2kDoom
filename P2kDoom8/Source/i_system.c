@@ -25,13 +25,17 @@
 
 #if defined(SDL2)
 #include <SDL2/SDL.h>
+#elif defined(P2K)
+#include <stdargs.h>
 #else
 #include <conio.h>
 #include <dos.h>
 #endif
 
+#if !defined(P2K)
 #include <stdarg.h>
 #include <time.h>
+#endif
 
 #include "doomdef.h"
 #include "doomtype.h"
@@ -55,7 +59,7 @@ static boolean isGraphicsModeSet = false;
 
 void I_SetScreenMode(uint16_t mode)
 {
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 	union REGS regs;
 	regs.w.ax = mode;
 	int86(0x10, &regs, &regs);
@@ -75,7 +79,7 @@ void I_InitGraphics(void)
 // Keyboard code
 //
 
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 #define KEYBOARDINT 9
 #define KBDQUESIZE 32
 static byte keyboardqueue[KBDQUESIZE];
@@ -107,7 +111,7 @@ static void __interrupt __far I_KeyboardISR(void)
 
 void I_InitKeyboard(void)
 {
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 	replaceInterrupt(oldkeyboardisr, newkeyboardisr, KEYBOARDINT, I_KeyboardISR);
 	isKeyboardIsrSet = true;
 #endif
@@ -207,6 +211,8 @@ void I_StartTic(void)
 				break;
 		}
 	}
+#elif defined(P2K)
+	/* TODO */
 #else
 	byte k;
 	event_t ev;
@@ -350,9 +356,11 @@ static void I_TimerISR(void)
 
 int32_t I_GetTime(void)
 {
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
     return ticcount;
 #else
+
+#if defined(SDL2)
     int thistimereply;
 
     clock_t now = clock();
@@ -361,12 +369,22 @@ int32_t I_GetTime(void)
 
     return thistimereply;
 #endif
+
+#if defined(P2K)
+    #define TICKS_PER_SEC                  (8192)
+
+    int thistimereply = (((int) suPalReadTime() * TICRATE) / (TICKS_PER_SEC));
+
+    return thistimereply;
+#endif
+
+#endif
 }
 
 
 void I_InitTimer(void)
 {
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 	TS_ScheduleTask(I_TimerISR, TICRATE, TIMER_PRIORITY);
 #endif
 
@@ -376,7 +394,7 @@ void I_InitTimer(void)
 
 static void I_ShutdownTimer(void)
 {
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 	TS_Terminate(TIMER_PRIORITY);
 	TS_Shutdown();
 #endif
@@ -398,7 +416,7 @@ static void I_Shutdown(void)
 	if (isTimerSet)
 		I_ShutdownTimer();
 
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 	if (isKeyboardIsrSet)
 	{
 		restoreInterrupt(KEYBOARDINT, oldkeyboardisr, newkeyboardisr);
@@ -410,7 +428,7 @@ static void I_Shutdown(void)
 }
 
 
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 segment_t I_GetTextModeVideoMemorySegment(void);
 #endif
 
@@ -418,7 +436,7 @@ void I_Quit(void)
 {
 	I_Shutdown();
 
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 	int16_t lumpnum = W_GetNumForName("ENDOOM");
 	W_ReadLumpByNum(lumpnum, D_MK_FP(I_GetTextModeVideoMemorySegment(), 0 + __djgpp_conventional_base));
 
@@ -431,10 +449,13 @@ void I_Quit(void)
 #endif
 
 	printf("\n");
+
+#if !defined(P2K)
 	exit(0);
+#endif
 }
 
-
+#if !defined(P2K)
 void I_Error (const char *error, ...)
 {
 	va_list argptr;
@@ -447,3 +468,4 @@ void I_Error (const char *error, ...)
 	printf("\n");
 	exit(1);
 }
+#endif

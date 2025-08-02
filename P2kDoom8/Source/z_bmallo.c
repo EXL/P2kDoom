@@ -37,7 +37,11 @@
 #include "config.h"
 #endif
 
+#if !defined(P2K)
 #include <string.h>
+#else
+#include <typedefs.h>
+#endif
 
 #include "doomtype.h"
 #include "compiler.h"

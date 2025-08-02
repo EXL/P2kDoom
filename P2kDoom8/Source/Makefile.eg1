@@ -1,0 +1,96 @@
+# Script: Motorola P2K Makefile
+# Flavor: EG1, EA1 (ElfPack v1.x, ARM GCC, Linux)
+# Author: EXL, 06-Jan-2025
+
+P2K_ELF_SDK       = /home/exl/Storage/Projects/Git/MotoFanRu/P2K-ELF-SDK
+ARM_GCC_LIN_BIN   = $(P2K_ELF_SDK)/tool/compiler/ARM-GCC-LIN/bin
+
+CC                = $(shell command -v arm-none-eabi-gcc || echo $(ARM_GCC_LIN_BIN)/arm-none-eabi-gcc)
+
+INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
+DEFINES           = -std=c99 -D__P2K__ -DEP1 -DROT_0 -DFPS_30 -DNO_STRETCH -DGBA -DP2K -DUSE_BIG_ENDIAN -DFLAT_SPAN -DC_ONLY
+WARNINGS          = -Wall -Wno-implicit-function-declaration -Wno-incompatible-pointer-types
+OPTIMIZATIONS     = -Ofast -funroll-all-loops
+FEATURES          = -ffreestanding -fshort-wchar -fshort-enums -fpack-struct=4 -fno-builtin -funsigned-char
+ifeq ($(ARGON), 1)
+	FLAVOR        = -DEA1
+	CPU_FLAGS     = -mbig-endian -mthumb -mthumb-interwork -mbe32 -march=armv6j -mtune=arm1136jf-s
+else
+	FLAVOR        = -DEG1
+	CPU_FLAGS     = -mbig-endian -mthumb -mthumb-interwork -march=armv4t -mtune=arm7tdmi-s
+endif
+AFLAGS            = -marm
+CFLAGS            = $(INCLUDES) $(DEFINES) $(FLAVOR) $(WARNINGS) $(OPTIMIZATIONS) $(CPU_FLAGS) $(FEATURES)
+CXXFLAGS          = $(CFLAGS)
+LDFLAGS           = $(CFLAGS) -s -pie -Wl,--gc-sections -Wl,--allow-multiple-definition -Wl,-zmax-page-size=4 -Wl,-eRegister
+LIBS              = -nostdlib -nodefaultlibs -L$(P2K_ELF_SDK)/ep1/lib/gcc -leg1_gcc_stub -L. -lgcc_gba_m
+
+TARGET_ELF        = P2kDoom8088.elf
+
+OBJS = \
+	i_p2k.o \
+	p_enemy2.o \
+	p_map.o \
+	p_maputl.o \
+	p_mobj.o \
+	p_sight.o \
+	r_data.o \
+	r_draw.o \
+	r_plane.o \
+	tables.o \
+	w_wad.o \
+	z_zone.o \
+	am_map.o \
+	d_items.o \
+	d_main.o \
+	f_finale.o \
+	f_lib.o \
+	g_game.o \
+	hu_stuff.o \
+	i_audio.o \
+	i_main.o \
+	i_system.o \
+	info.o \
+	m_cheat.o \
+	m_menu.o \
+	m_random.o \
+	p_doors.o \
+	p_enemy.o \
+	p_floor.o \
+	p_inter.o \
+	p_lights.o \
+	p_map.o \
+	p_maputl.o \
+	p_mobj.o \
+	p_plats.o \
+	p_pspr.o \
+	p_setup.o \
+	p_sight.o \
+	p_spec.o \
+	p_switch.o \
+	p_telept.o \
+	p_tick.o \
+	p_user.o \
+	r_sky.o \
+	r_things.o \
+	s_sound.o \
+	sounds.o \
+	st_pal.o \
+	st_stuff.o \
+	v_video.o \
+	wi_lib.o \
+	wi_stuff.o \
+	z_bmallo.o
+
+all: $(TARGET_ELF)
+
+$(TARGET_ELF): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f *.o $(TARGET_ELF)
+
+.PHONY: all clean

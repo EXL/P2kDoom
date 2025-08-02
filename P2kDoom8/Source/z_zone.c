@@ -22,12 +22,15 @@
 //
 //-----------------------------------------------------------------------------
 
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 #include <dos.h>
 #endif
 
+#if !defined(P2K)
 #include <stdlib.h>
+#endif
 #include <stdint.h>
+
 #include "compiler.h"
 #include "z_zone.h"
 #include "doomdef.h"
@@ -237,7 +240,7 @@ static void Z_MoveExtendedMemoryBlock(const ExtMemMoveStruct_t __far* s)
 	UNUSED(s);
 }
 #endif
-#elif defined __DJGPP__ || defined _M_I386 || defined SDL2
+#elif defined __DJGPP__ || defined _M_I386 || defined SDL2 || defined P2K
 static uint8_t *fakeXMSHandle;
 
 static void Z_FreeExtendedMemoryBlock(uint16_t handle)
@@ -287,7 +290,11 @@ boolean Z_InitXms(uint32_t size)
 #endif
 #else
 	xmsHandle = 1;
+#if !defined(P2K)
 	fakeXMSHandle = malloc(size);
+#else
+	fakeXMSHandle = AmMemAllocPointer(size);
+#endif
 	return fakeXMSHandle != NULL;
 #endif
 }
@@ -319,7 +326,7 @@ void Z_Shutdown(void)
 {
 	if (emsHandle)
 	{
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 		union REGS regs;
 		regs.h.ah = EMS_FREEPAGES;
 		regs.w.dx = emsHandle;
@@ -334,7 +341,7 @@ void Z_Shutdown(void)
 }
 
 
-#if defined __DJGPP__ || defined _M_I386 || defined SDL2
+#if defined __DJGPP__ || defined _M_I386 || defined SDL2 || defined P2K
 static unsigned int _dos_allocmem(unsigned int __size, unsigned int *__seg)
 {
 	static uint8_t* ptr;
@@ -342,7 +349,12 @@ static unsigned int _dos_allocmem(unsigned int __size, unsigned int *__seg)
 	if (__size == 0xffff)
 	{
 		int32_t paragraphs = 640 * 1024L / PARAGRAPH_SIZE;
+
+#if !defined(P2K)
 		ptr = malloc(paragraphs * PARAGRAPH_SIZE);
+#else
+		ptr = AmMemAllocPointer(paragraphs * PARAGRAPH_SIZE);
+#endif
 
 		// align ptr
 		uint32_t m = (uint32_t) ptr;

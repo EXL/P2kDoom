@@ -38,9 +38,12 @@
  */
 
 #include <stdint.h>
+
+#if !defined(P2K)
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#endif
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

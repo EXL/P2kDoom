@@ -47,13 +47,15 @@
 // This must come first, since it redefines malloc(), free(), etc. -- killough:
 #include "z_zone.h"
 
+#if !defined(P2K)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#if !defined(P2K)
 #include <ctype.h>
-#endif
 #include <limits.h>
+#else
+#include "typedefs.h"
+#endif
 
 #include "m_swap.h"
 

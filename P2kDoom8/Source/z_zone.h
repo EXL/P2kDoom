@@ -26,7 +26,10 @@
 #ifndef __Z_ZONE__
 #define __Z_ZONE__
 
+#if !defined(P2K)
 #include <stddef.h>
+#endif
+
 #include "doomtype.h"
 
 void Z_Init(void);

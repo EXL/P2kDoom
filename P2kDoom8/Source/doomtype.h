@@ -74,6 +74,8 @@ typedef uint8_t byte;
 #endif
 
 /* CPhipps - use limits.h instead of depreciated values.h */
+#if !defined(P2K)
 #include <limits.h>
+#endif
 
 #endif

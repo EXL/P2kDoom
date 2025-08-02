@@ -37,7 +37,10 @@
  *
  *-----------------------------------------------------------------------------*/
 
+#if !defined(P2K)
 #include <stdio.h>
+#endif
+
 #include <stdint.h>
 
 #include "compiler.h"

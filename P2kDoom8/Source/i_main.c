@@ -57,17 +57,18 @@
 #include "i_sound.h"
 #include "globdata.h"
 
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 #include <dos.h>
 #include <signal.h>
 #endif
 
+#if !defined(P2K)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#endif
 
-
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 static void tprintf(void)
 {
 	union REGS regs;
@@ -97,7 +98,7 @@ int init_main(int argc, const char * const * argv)
 {
 	I_SetScreenMode(3);
 
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 	tprintf();
 #endif
 
@@ -106,7 +107,7 @@ int init_main(int argc, const char * const * argv)
 }
 
 
-#if !defined(SDL2)
+#if !defined(SDL2) && !defined(P2K)
 segment_t I_GetTextModeVideoMemorySegment(void)
 {
 	return 0xb800;

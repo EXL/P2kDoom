@@ -53,6 +53,10 @@
 
 #include "globdata.h"
 
+#if defined(P2K)
+#include <filesystem.h>
+#endif
+
 //#define BACKWARDS
 
 
@@ -73,7 +77,20 @@ typedef struct
 // GLOBALS
 //
 
+#if !defined(P2K)
 static FILE* fileWAD;
+
+#if !defined WAD_FILE
+#define WAD_FILE "DOOM1.WAD"
+#endif
+
+#else
+static FILE_HANDLE_T fileWAD;
+
+#if !defined WAD_FILE
+#define WAD_FILE "file://c/Elf/DOOM1.WAD"
+#endif
+#endif
 
 static int16_t numlumps;
 
@@ -87,14 +104,25 @@ static void __far*__far* lumpcache;
 
 #define BUFFERSIZE 512
 
+#if !defined(P2K)
 static void _ffread(void __far* ptr, uint16_t size, FILE* fp)
+#else
+static void _ffread(void __far* ptr, uint16_t size, FS_HANDLE_T fp)
+#endif
 {
+#if defined(P2K)
+	int32_t readen;
+#endif
 	uint8_t __far* dest = ptr;
 	uint8_t buffer[BUFFERSIZE];
 
 	while (size >= BUFFERSIZE)
 	{
+#if !defined(P2K)
 		fread(buffer, BUFFERSIZE, 1, fp);
+#else
+		DL_FsReadFile(buffer, BUFFERSIZE, 1, fp, &readen);
+#endif
 		_fmemcpy(dest, buffer, BUFFERSIZE);
 		dest += BUFFERSIZE;
 		size -= BUFFERSIZE;
@@ -102,7 +130,11 @@ static void _ffread(void __far* ptr, uint16_t size, FILE* fp)
 
 	if (size > 0)
 	{
+#if !defined(P2K)
 		fread(buffer, size, 1, fp);
+#else
+		DL_FsReadFile(buffer, size, 1, fp, &readen);
+#endif
 		_fmemcpy(dest, buffer, size);
 	}
 }
@@ -110,8 +142,16 @@ static void _ffread(void __far* ptr, uint16_t size, FILE* fp)
 
 static boolean W_LoadWADIntoXMS(void)
 {
+#if !defined(P2K)
 	fseek(fileWAD, 0, SEEK_END);
 	int32_t size = ftell(fileWAD);
+#else
+	int32_t readen;
+
+	DL_FsFSeekFile(fileWAD, 0, SEEK_WHENCE_END);
+	int32_t size = DL_FsGetFileSize(fileWAD);
+#endif
+
 	boolean xms = Z_InitXms(size);
 	if (!xms)
 	{
@@ -124,12 +164,21 @@ static boolean W_LoadWADIntoXMS(void)
 
 	uint8_t buffer[BUFFERSIZE];
 
+#if !defined(P2K)
 	fseek(fileWAD, 0, SEEK_SET);
+#else
+	DL_FsFSeekFile(fileWAD, 0, SEEK_WHENCE_SET);
+#endif
+
 	uint32_t dest = 0;
 
 	while (size >= BUFFERSIZE)
 	{
+#if !defined(P2K)
 		fread(buffer, BUFFERSIZE, 1, fileWAD);
+#else
+		DL_FsReadFile(buffer, BUFFERSIZE, 1, fileWAD, &readen);
+#endif
 		Z_MoveConventionalMemoryToExtendedMemory(dest, buffer, BUFFERSIZE);
 		dest += BUFFERSIZE;
 		size -= BUFFERSIZE;
@@ -137,7 +186,11 @@ static boolean W_LoadWADIntoXMS(void)
 
 	if (size > 0)
 	{
+#if !defined(P2K)
 		fread(buffer, size, 1, fileWAD);
+#else
+		DL_FsReadFile(buffer, size, 1, fileWAD, &readen);
+#endif
 		Z_MoveConventionalMemoryToExtendedMemory(dest, buffer, size);
 	}
 
@@ -147,7 +200,11 @@ static boolean W_LoadWADIntoXMS(void)
 
 static void W_ReadDataFromFile(void __far* dest, uint32_t src, uint16_t length)
 {
+#if !defined(P2K)
 	fseek(fileWAD, src, SEEK_SET);
+#else
+	DL_FsFSeekFile(fileWAD, src, SEEK_WHENCE_SET);
+#endif
 	_ffread(dest, length, fileWAD);
 }
 
@@ -164,19 +221,23 @@ typedef struct
   int32_t  infotableofs;
 } wadinfo_t;
 
-#if !defined WAD_FILE
-#define WAD_FILE "DOOM1.WAD"
-#endif
 
 void W_Init(void)
 {
 	printf("\tadding " WAD_FILE "\n");
 	printf("\tshareware version.\n");
 
+#if !defined(P2K)
 	fileWAD = fopen(WAD_FILE, "rb");
 	if (fileWAD == NULL)
 		I_Error("Can't open " WAD_FILE ".");
-
+#else
+	{
+		WCHAR wpath[64];
+		u_atou(WAD_FILE, wpath);
+		fileWAD = DL_FsOpenFile(wpath, FILE_READ_MODE, 0);
+	}
+#endif
 	boolean xms = W_LoadWADIntoXMS();
 	readfunc = xms ? Z_MoveExtendedMemoryToConventionalMemory : W_ReadDataFromFile;
 
@@ -196,6 +257,10 @@ void W_Init(void)
 void W_Shutdown(void)
 {
 	readfunc = W_ReadDataFromFile;
+
+#if defined(P2K)
+	DL_FsCloseFile(fileWAD);
+#endif
 }
 
 

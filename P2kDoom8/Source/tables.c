@@ -44,7 +44,10 @@
 #include "config.h"
 #endif
 
+#if !defined(P2K)
 #include <stddef.h>
+#endif
+
 #include "w_wad.h"
 #include "tables.h"
 #include "globdata.h"

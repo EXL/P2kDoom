@@ -55,9 +55,10 @@ typedef int32_t fixed_t;
  *
  */
 
+#if !defined(P2K)
 #include <stdlib.h>
+#endif
 #define D_abs labs
-
 
 /*
  * Fixed Point Multiplication

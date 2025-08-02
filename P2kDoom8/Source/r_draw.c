@@ -1191,7 +1191,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 	{
 		int16_t xc = maskedtexturecol[dcvars.x];
 
-		if (xc != SHRT_MAX) // dropoff overflow
+		if (xc != INT16_MAX) // dropoff overflow
 		{
 			xc &= widthmask;
 
@@ -1203,7 +1203,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 			const column_t __far* column = (const column_t __far*) ((const byte __far*)patch + (uint16_t)patch->columnofs[xc]);
 
 			R_DrawMaskedColumn(R_DrawColumnWall, &dcvars, column);
-			maskedtexturecol[dcvars.x] = SHRT_MAX; // dropoff overflow
+			maskedtexturecol[dcvars.x] = INT16_MAX; // dropoff overflow
 		}
 	}
 
