@@ -1,6 +1,9 @@
 CC       = gcc -m32
-CFLAGS   = -DFLAT_SPAN -DC_ONLY -DDROP_64BIT_IDS -DSDL2
-CFLAGS  += -O2 -Wall -pedantic
+CFLAGS   = -DFLAT_SPAN -DC_ONLY -DSDL2
+CFLAGS  += -O2 
+CFLAGS  += -Wall -Wextra -pedantic
+CFLAGS  += -Wno-sign-compare -Wno-implicit-fallthrough -Wno-stringop-truncation -Wno-absolute-value -Wno-unused-result
+CFLAGS  += -Wno-format-overflow
 LDFLAGS  = -s -Wl,--gc-sections -Wl,--allow-multiple-definition
 LIBS     = -lSDL2
 
@@ -64,7 +67,7 @@ TARGET = Doom8088
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(LIBS) 
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@

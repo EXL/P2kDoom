@@ -7,10 +7,17 @@ ARM_GCC_LIN_BIN   = $(P2K_ELF_SDK)/tool/compiler/ARM-GCC-LIN/bin
 
 CC                = $(shell command -v arm-none-eabi-gcc || echo $(ARM_GCC_LIN_BIN)/arm-none-eabi-gcc)
 
+PHONE            ?= E1
+
+DEFINES_E1        = -DFPS_30 -DFTR_GFX_ATI -DROT_0 -DSET_DISPLAY_MODE
+DEFINES_C650      = -DFPS_15 -DFTR_GFX_DAL -DKEYS_PORTRAIT -DFTR_V600 -DFTR_C650
+
 INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
-DEFINES           = -std=c99 -D__P2K__ -DEP1 -DROT_0 -DFPS_30 -DNO_STRETCH -DGBA -DP2K -DUSE_BIG_ENDIAN -DFLAT_SPAN -DC_ONLY -DDROP_64BIT_IDS
-#DEFINES           = -std=c99 -D__P2K__ -DEP1 -DROT_0 -DFPS_15 -DNO_STRETCH -DGBA -DP2K -DUSE_BIG_ENDIAN -DFLAT_SPAN -DC_ONLY -DDROP_64BIT_IDS -DFTR_V600 -DFTR_C650
-WARNINGS          = -Wall -Wno-implicit-function-declaration -Wno-incompatible-pointer-types
+DEFINES           = -std=c99 -D__P2K__ -DP2K
+DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(PHONE))
+DEFINES          += -DFLAT_SPAN -DC_ONLY
+WARNINGS          = -Wall -Wextra
+WARNINGS         += -Wno-sign-compare -Wno-implicit-fallthrough
 OPTIMIZATIONS     = -Ofast -funroll-all-loops
 FEATURES          = -ffreestanding -fshort-wchar -fshort-enums -fpack-struct=4 -fno-builtin -funsigned-char
 ifeq ($(ARGON), 1)
@@ -26,7 +33,7 @@ CXXFLAGS          = $(CFLAGS)
 LDFLAGS           = $(CFLAGS) -s -pie -Wl,--gc-sections -Wl,--allow-multiple-definition -Wl,-zmax-page-size=4 -Wl,-eRegister
 LIBS              = -nostdlib -nodefaultlibs -L$(P2K_ELF_SDK)/ep1/lib/gcc -leg1_gcc_stub -L. -lgcc_gba_m
 
-TARGET_ELF        = P2kDoom8.elf
+TARGET_ELF        = P2kDoom8_$(PHONE).elf
 
 OBJS = \
 	i_p2k.o \
@@ -94,4 +101,7 @@ $(TARGET_ELF): $(OBJS)
 clean:
 	rm -f *.o $(TARGET_ELF)
 
-.PHONY: all clean
+clean_objs:
+	rm -f *.o
+
+.PHONY: all clean clean_objs
