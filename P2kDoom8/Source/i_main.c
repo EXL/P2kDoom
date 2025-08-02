@@ -43,6 +43,8 @@
 #include <unistd.h>
 #endif
 
+#include "i_main.h"
+
 #include "doomdef.h"
 #include "compiler.h"
 #include "d_main.h"
@@ -91,7 +93,7 @@ static void tprintf(void)
 #endif
 
 
-int main(int argc, const char * const * argv)
+int init_main(int argc, const char * const * argv)
 {
 	I_SetScreenMode(3);
 

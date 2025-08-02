@@ -248,6 +248,42 @@ static void TryRunTics (void)
 }
 
 
+void D_DoomStep(void)
+{
+    // frame syncronous IO operations
+
+    // process one or more tics
+    if (singletics)
+    {
+        I_StartTic ();
+        G_BuildTiccmd ();
+
+        if (advancedemo)
+            D_DoAdvanceDemo ();
+
+        M_Ticker ();
+        G_Ticker ();
+
+        _g_gametic++;
+        maketic++;
+    }
+    else
+        TryRunTics (); // will run at least one tic
+
+    // killough 3/16/98: change consoleplayer to displayplayer
+    if (_g_player.mo) // cph 2002/08/10
+        S_UpdateSounds();// move positional sounds
+
+    // Update display, next frame, with current state.
+    D_Display();
+
+
+    if(_g_fps_show)
+    {
+        D_UpdateFPS();
+    }
+}
+
 //
 //  D_DoomLoop()
 //
@@ -519,5 +555,5 @@ void D_DoomMain(int argc, const char * const * argv)
 
     D_DoomMainSetup();
 
-    D_DoomLoop ();  // never returns
+//    D_DoomLoop ();  // never returns
 }

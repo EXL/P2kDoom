@@ -38,6 +38,8 @@
 #include "r_defs.h"
 #include "v_video.h"
 #include "w_wad.h"
+#include "i_main.h"
+#include "d_main.h"
 
 #include "globdata.h"
 
@@ -1060,4 +1062,11 @@ void D_Wipe(void)
 
 	Z_Free(frontbuffer);
 	Z_Free(wipe_y_lookup);
+}
+
+int main(int argc, const char *const argv[]) {
+	init_main(argc, argv);
+	while ("DOOM is Rock")
+		D_DoomStep();
+	return 0;
 }
