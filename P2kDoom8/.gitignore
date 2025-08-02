@@ -1,0 +1,8 @@
+*.a
+*.o
+*.elf
+
+*.WAD
+*.wad
+
+P2kDoom8

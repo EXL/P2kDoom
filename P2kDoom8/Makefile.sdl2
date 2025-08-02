@@ -1,0 +1,88 @@
+CC       = gcc -m32
+
+SRC_DIR  = Source
+OBJ_DIR  = $(SRC_DIR)/objs
+
+CFLAGS   = -I$(SRC_DIR) -I$(SRC_DIR)/stubs_sdl
+CFLAGS  += -DFLAT_SPAN -DC_ONLY -DSDL -DSDL2
+CFLAGS  += -O2
+CFLAGS  += -Wall -Wextra -pedantic
+CFLAGS  += -Wno-sign-compare -Wno-implicit-fallthrough -Wno-stringop-truncation -Wno-absolute-value -Wno-unused-result
+CFLAGS  += -Wno-format-overflow
+
+LDFLAGS  = -s -Wl,--gc-sections -Wl,--allow-multiple-definition
+
+LIBS     = -lSDL2
+
+OBJS = \
+	$(OBJ_DIR)/i_sdl2.o \
+	$(OBJ_DIR)/p_enemy2.o \
+	$(OBJ_DIR)/p_map.o \
+	$(OBJ_DIR)/p_maputl.o \
+	$(OBJ_DIR)/p_mobj.o \
+	$(OBJ_DIR)/p_sight.o \
+	$(OBJ_DIR)/r_data.o \
+	$(OBJ_DIR)/r_draw.o \
+	$(OBJ_DIR)/r_plane.o \
+	$(OBJ_DIR)/tables.o \
+	$(OBJ_DIR)/w_wad.o \
+	$(OBJ_DIR)/z_zone.o \
+	$(OBJ_DIR)/am_map.o \
+	$(OBJ_DIR)/d_items.o \
+	$(OBJ_DIR)/d_main.o \
+	$(OBJ_DIR)/f_finale.o \
+	$(OBJ_DIR)/f_lib.o \
+	$(OBJ_DIR)/g_game.o \
+	$(OBJ_DIR)/hu_stuff.o \
+	$(OBJ_DIR)/i_audio.o \
+	$(OBJ_DIR)/i_main.o \
+	$(OBJ_DIR)/i_system.o \
+	$(OBJ_DIR)/info.o \
+	$(OBJ_DIR)/m_cheat.o \
+	$(OBJ_DIR)/m_menu.o \
+	$(OBJ_DIR)/m_random.o \
+	$(OBJ_DIR)/p_doors.o \
+	$(OBJ_DIR)/p_enemy.o \
+	$(OBJ_DIR)/p_floor.o \
+	$(OBJ_DIR)/p_inter.o \
+	$(OBJ_DIR)/p_lights.o \
+	$(OBJ_DIR)/p_map.o \
+	$(OBJ_DIR)/p_maputl.o \
+	$(OBJ_DIR)/p_mobj.o \
+	$(OBJ_DIR)/p_plats.o \
+	$(OBJ_DIR)/p_pspr.o \
+	$(OBJ_DIR)/p_setup.o \
+	$(OBJ_DIR)/p_sight.o \
+	$(OBJ_DIR)/p_spec.o \
+	$(OBJ_DIR)/p_switch.o \
+	$(OBJ_DIR)/p_telept.o \
+	$(OBJ_DIR)/p_tick.o \
+	$(OBJ_DIR)/p_user.o \
+	$(OBJ_DIR)/r_sky.o \
+	$(OBJ_DIR)/r_things.o \
+	$(OBJ_DIR)/s_sound.o \
+	$(OBJ_DIR)/sounds.o \
+	$(OBJ_DIR)/st_pal.o \
+	$(OBJ_DIR)/st_stuff.o \
+	$(OBJ_DIR)/v_video.o \
+	$(OBJ_DIR)/wi_lib.o \
+	$(OBJ_DIR)/wi_stuff.o \
+	$(OBJ_DIR)/z_bmallo.o
+
+TARGET = P2kDoom8
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(OBJ_DIR)/*.o $(TARGET)
+
+clean_objs:
+	rm -f $(OBJ_DIR)/*.o
+
+.PHONY: all clean clean_objs
