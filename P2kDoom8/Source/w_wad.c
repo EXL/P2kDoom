@@ -90,9 +90,9 @@ static FILE_HANDLE_T fileWAD;
 #if !defined WAD_FILE
 
 #if defined(EP1) || defined(EP2)
-#define WAD_FILE "file://c/Elf/DOOM1.WAD"
+#define WAD_FILE "file://c/Elf/P2kDoom8.wad"
 #elif defined(EM1) || defined(EM2)
-#define WAD_FILE "/e/mobile/DOOM12.WAD"
+#define WAD_FILE "/e/mobile/P2kDoom8.wad"
 #endif
 
 #endif

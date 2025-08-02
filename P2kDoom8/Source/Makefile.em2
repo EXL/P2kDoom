@@ -18,7 +18,7 @@ CXXFLAGS          = $(CFLAGS)
 LDFLAGS           = -d -EB -N -r -s -Bstatic -Bsymbolic -Bsymbolic-functions -nostdinc -nostdlib --unresolved-symbols=report-all -z muldefs -z combreloc -z nodefaultlib
 LIBS              = libgcc.a -T$(P2K_ELF_SDK)/mcore-elf/lib/linker_elf.ld
 
-TARGET_ELF        = P2kDoom8088.elf
+TARGET_ELF        = P2kDoom8.elf
 
 OBJS = \
 	i_p2k.o \

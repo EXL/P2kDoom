@@ -25,7 +25,7 @@ CXXFLAGS          = $(CFLAGS)
 LDFLAGS           = $(CFLAGS) -s -pie -Wl,--gc-sections -Wl,--allow-multiple-definition -Wl,-zmax-page-size=4 -Wl,-eRegister
 LIBS              = -nostdlib -nodefaultlibs -L$(P2K_ELF_SDK)/ep1/lib/gcc -leg1_gcc_stub -L. -lgcc_gba_m
 
-TARGET_ELF        = P2kDoom8088.elf
+TARGET_ELF        = P2kDoom8.elf
 
 OBJS = \
 	i_p2k.o \
