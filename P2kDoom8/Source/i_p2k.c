@@ -42,9 +42,10 @@
 #include <mem.h>
 #include <time_date.h>
 #include <utilities.h>
-#if defined(EP1) || defined(EP2)
+
+#if defined(FTR_GFX_ATI)
 #include <ati.h>
-#elif defined(EM1) || defined(EM2)
+#elif defined(FTR_GFX_NVIDIA)
 #include <nvidia.h>
 #endif
 
@@ -68,7 +69,6 @@
 #elif defined(FPS_30)
 #define TIMER_FAST_UPDATE_MS              (1000 / 30) /* ~30 FPS. */
 #endif
-#define KEYPAD_BUTTONS                    (8)
 
 typedef enum {
 	APP_STATE_ANY,
@@ -82,7 +82,7 @@ typedef enum {
 	APP_TIMER_LOOP
 } APP_TIMER_T;
 
-#if defined(EP1) || defined(EP2)
+#if defined(FTR_GFX_ATI)
 typedef struct {
 	AHIDRVINFO_T *info_driver;
 	AHIDEVCONTEXT_T context;
@@ -97,12 +97,17 @@ typedef struct {
 	AHIRECT_T rect_draw;
 	AHIUPDATEPARAMS_T update_params;
 } APP_AHI_T;
-#elif defined(EM1) || defined(EM2)
+#elif defined(FTR_GFX_NVIDIA)
 typedef struct {
 	GF_HANDLE gxHandle;
 	GXRECT fb0_rect;
 	UINT8 *fb0;
 } APP_GFSDK_T;
+#elif defined(FTR_GFX_DAL)
+typedef struct {
+	UINT8 *bitmap;
+	GRAPHIC_REGION_T draw_region;
+} APP_DAL_T;
 #endif
 
 typedef struct {
@@ -121,15 +126,17 @@ typedef struct {
 
 	UINT8 *p_bitmap;
 
-#if defined(EP1) || defined(EP2)
+#if defined(FTR_GFX_ATI)
 	APP_AHI_T ahi;
-#elif defined(EM1) || defined(EM2)
+#elif defined(FTR_GFX_NVIDIA)
 	APP_GFSDK_T gfsdk;
+#elif defined(FTR_GFX_DAL)
+	APP_DAL_T dal;
 #endif
+
 	APP_KEYBOARD_T keys;
 	UINT32 timer_handle;
 	UINT8 keyboard_volume_level;
-	GRAPHIC_REGION_T dal_draw_region;
 } APP_INSTANCE_T;
 
 #if defined(EP1)
@@ -157,18 +164,20 @@ static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 k
 static UINT32 HandleEventTimerExpired(EVENT_STACK_T *ev_st, APPLICATION_T *app);
 static void FPS_Meter(void);
 
-#if defined(EP1) || defined(EP2)
-#if !defined(FTR_C650)
-	static UINT32 ATI_Driver_Log(APPLICATION_T *app);
-	static UINT32 ATI_Driver_Log_Memory(APPLICATION_T *app, AHIPIXFMT_T pixel_format);
-#endif
+#if defined(FTR_GFX_ATI)
+static UINT32 ATI_Driver_Log(APPLICATION_T *app);
+static UINT32 ATI_Driver_Log_Memory(APPLICATION_T *app, AHIPIXFMT_T pixel_format);
 static UINT32 ATI_Driver_Start(APPLICATION_T *app);
 static UINT32 ATI_Driver_Stop(APPLICATION_T *app);
 static UINT32 ATI_Driver_Flush(APPLICATION_T *app);
-#elif defined(EM1) || defined(EM2)
+#elif defined(FTR_GFX_NVIDIA)
 static UINT32 Nvidia_Driver_Start(APPLICATION_T *app);
 static UINT32 Nvidia_Driver_Stop(APPLICATION_T *app);
 static UINT32 Nvidia_Driver_Flush(APPLICATION_T *app);
+#elif defined(FTR_GFX_DAL)
+static UINT32 DAL_Driver_Start(APPLICATION_T *app);
+static UINT32 DAL_Driver_Stop(APPLICATION_T *app);
+static UINT32 DAL_Driver_Flush(APPLICATION_T *app);
 #endif
 
 static UINT32 GFX_Draw_Start(APPLICATION_T *app);
@@ -524,11 +533,13 @@ static UINT32 ApplicationStart(EVENT_STACK_T *ev_st, REG_ID_T reg_id, void *reg_
 		app_instance = (APP_INSTANCE_T *) APP_InitAppData((void *) APP_HandleEvent, sizeof(APP_INSTANCE_T),
 			reg_id, 0, 0, 1, 1, 1, 0);
 
-#if defined(EP1) || defined(EP2)
+#if defined(FTR_GFX_ATI)
 		app_instance->ahi.info_driver = NULL;
-#elif defined(EM1) || defined(EM2)
+#elif defined(FTR_GFX_NVIDIA)
 		app_instance->gfsdk.gxHandle = (GF_HANDLE) &GxHandle;
 		app_instance->gfsdk.fb0 = NULL;
+#elif defined(FTR_GFX_DAL)
+		app_instance->dal.bitmap = NULL;
 #endif
 		app_instance->bmp_width = SCREENWIDTH;
 		app_instance->bmp_height = SCREENHEIGHT;
@@ -540,10 +551,12 @@ static UINT32 ApplicationStart(EVENT_STACK_T *ev_st, REG_ID_T reg_id, void *reg_
 		DL_AudGetVolumeSetting(PHONE, &app_instance->keyboard_volume_level);
 		DL_AudSetVolumeSetting(PHONE, 0);
 
-#if defined(EP1) || defined(EP2)
+#if defined(FTR_GFX_ATI)
 		status |= ATI_Driver_Start((APPLICATION_T *) app_instance);
-#elif defined(EM1) || defined(EM2)
+#elif defined(FTR_GFX_NVIDIA)
 		status |= Nvidia_Driver_Start((APPLICATION_T *) app_instance);
+#elif defined(FTR_GFX_DAL)
+		status |= DAL_Driver_Start((APPLICATION_T *) app_instance);
 #endif
 
 		status |= APP_Start(ev_st, &app_instance->app, APP_STATE_MAIN,
@@ -574,10 +587,12 @@ static UINT32 ApplicationStop(EVENT_STACK_T *ev_st, APPLICATION_T *app) {
 
 	status |= GFX_Draw_Stop(app);
 	status |= SetLoopTimer(app, 0);
-#if defined(EP1) || defined(EP2)
+#if defined(FTR_GFX_ATI)
 	status |= ATI_Driver_Stop(app);
-#elif defined(EM1) || defined(EM2)
+#elif defined(FTR_GFX_NVIDIA)
 	status |= Nvidia_Driver_Stop(app);
+#elif defined(FTR_GFX_DAL)
+	status |= DAL_Driver_Stop(app);
 #endif
 
 	status |= APP_Exit(ev_st, app, 0);
@@ -724,7 +739,7 @@ static evtype_t modkey_state = ev_keyup;
 static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 key, BOOL pressed) {
 	event_t ev;
 	ev.data1 = 0;
-#if defined(KEYS_PORTRAIT) || defined(FTR_C650)
+#if defined(KEYS_PORTRAIT)
 	#define KK_2 MULTIKEY_2
 	#define KK_UP MULTIKEY_UP
 	#define KK_4 MULTIKEY_4
@@ -827,9 +842,6 @@ static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 k
 			break;
 	}
 
-//	ev.data2 = 0;
-//	ev.data3 = 0;
-
 	if(ev.data1 != 0)
 		D_PostEvent(&ev);
 
@@ -850,10 +862,12 @@ static UINT32 HandleEventTimerExpired(EVENT_STACK_T *ev_st, APPLICATION_T *app) 
 			FPS_Meter();
 			CheckKeyboard(ev_st, app);
 			GFX_Draw_Step(app);
-#if defined(EP1) || defined(EP2)
+#if defined(FTR_GFX_ATI)
 			ATI_Driver_Flush(app);
-#elif defined(EM1) || defined(EM2)
+#elif defined(FTR_GFX_NVIDIA)
 			Nvidia_Driver_Flush(app);
+#elif defined(FTR_GFX_DAL)
+			DAL_Driver_Flush(app);
 #endif
 			break;
 		case APP_TIMER_EXIT:
@@ -918,8 +932,7 @@ static void FPS_Meter(void) {
 
 static UINT32 doom_current_palette[256];
 
-#if defined(EP1) || defined(EP2)
-#if !defined(FTR_C650)
+#if defined(FTR_GFX_ATI)
 static UINT32 ATI_Driver_Log(APPLICATION_T *app) {
 	APP_INSTANCE_T *appi;
 
@@ -999,8 +1012,7 @@ static UINT32 ATI_Driver_Log_Memory(APPLICATION_T *app, AHIPIXFMT_T pixel_format
 	return status[INTERNAL_MEMORY] && status[EXTERNAL_MEMORY] && status[SYSTEM_MEMORY];
 }
 
-//#define NO_STRETCH
-#if defined(NO_STRETCH)
+#if defined(SET_DISPLAY_MODE)
 static UINT32 Find_Surface_Addresses_In_RAM(APPLICATION_T *app, UINT32 start_address, UINT32 size_search_region) {
 	APP_INSTANCE_T *appi;
 	UINT32 surface_block_offset;
@@ -1176,7 +1188,7 @@ static UINT32 ATI_Driver_Set_Display_Mode(APPLICATION_T *app, AHIROTATE_T mode) 
 
 	return status;
 }
-#endif
+#endif /* defined(SET_DISPLAY_MODE) */
 
 static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
 	UINT32 status;
@@ -1217,7 +1229,7 @@ static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
 			(display_mode.size.x < DISPLAY_WIDTH) ||
 			(display_mode.size.y < DISPLAY_HEIGHT);
 
-#if defined(NO_STRETCH)
+#if defined(SET_DISPLAY_MODE)
 #if defined(FTR_L6)
 	status |= ATI_Driver_Set_Display_Mode(app, AHIROT_90);
 #else
@@ -1238,7 +1250,7 @@ static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
 	appi->ahi.update_params.sync = FALSE;
 	appi->ahi.update_params.rect.x1 = 0;
 	appi->ahi.update_params.rect.y1 = 0;
-#if defined(NO_STRETCH)
+#if defined(SET_DISPLAY_MODE)
 	appi->ahi.update_params.rect.x2 = 0 + display_mode.size.y;
 	appi->ahi.update_params.rect.y2 = 0 + display_mode.size.x;
 #else
@@ -1297,7 +1309,7 @@ static UINT32 ATI_Driver_Stop(APPLICATION_T *app) {
 	status = RESULT_OK;
 	app_instance = (APP_INSTANCE_T *) app;
 
-#if defined(NO_STRETCH)
+#if defined(SET_DISPLAY_MODE)
 #if defined(FTR_L6)
 	status |= ATI_Driver_Set_Display_Mode(app, AHIROT_0);
 #else
@@ -1326,7 +1338,7 @@ static UINT32 ATI_Driver_Flush(APPLICATION_T *app) {
 
 	appi = (APP_INSTANCE_T *) app;
 
-#if defined(NO_STRETCH)
+#if defined(SET_DISPLAY_MODE)
 
 	AhiDrawSurfDstSet(appi->ahi.context, appi->ahi.draw, 0);
 	AhiDrawBitmapBlt(appi->ahi.context,
@@ -1359,16 +1371,16 @@ static UINT32 ATI_Driver_Flush(APPLICATION_T *app) {
 	AhiDrawStretchBlt(appi->ahi.context, &appi->ahi.update_params.rect, &appi->ahi.rect_draw, AHIFLAG_STRETCHFAST);
 #endif
 
-#endif
+#endif // defined(SET_DISPLAY_MODE)
 	if (appi->is_CSTN_display) {
 		AhiDispUpdate(appi->ahi.context, &appi->ahi.update_params);
 	}
 
 	return RESULT_OK;
 }
-#else
+#elif defined(FTR_GFX_DAL)
 /* Pure DAL driver for C650-like phones. */
-static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
+static UINT32 DAL_Driver_Start(APPLICATION_T *app) {
 	APP_INSTANCE_T *appi;
 	UINT8 *display_bitmap;
 	INT32 status;
@@ -1376,22 +1388,22 @@ static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
 	appi = (APP_INSTANCE_T *) app;
 	display_bitmap = (UINT8 *) &display_source_buffer;
 
-	appi->dal_draw_region.ulc.x = 0;
-	appi->dal_draw_region.ulc.y = 0;
-	appi->dal_draw_region.lrc.x = DISPLAY_WIDTH - 1;
-	appi->dal_draw_region.lrc.y = DISPLAY_HEIGHT - 1;
+	appi->dal.draw_region.ulc.x = 0;
+	appi->dal.draw_region.ulc.y = 0;
+	appi->dal.draw_region.lrc.x = DISPLAY_WIDTH - 1;
+	appi->dal.draw_region.lrc.y = DISPLAY_HEIGHT - 1;
 
 	memset(display_bitmap, 0x00, DISPLAY_WIDTH * DISPLAY_HEIGHT * DISPLAY_BYTESPP);
-	DAL_UpdateDisplayRegion(&appi->dal_draw_region, (UINT16 *) display_bitmap);
+	DAL_UpdateDisplayRegion(&appi->dal.draw_region, (UINT16 *) display_bitmap);
 
 #if defined(VIEW_96X64)
-	appi->dal_draw_region.ulc.x = (DISPLAY_WIDTH / 2) - (YETI_DISPLAY_WIDTH / 2);;
-	appi->dal_draw_region.ulc.y = (DISPLAY_HEIGHT / 2) - (YETI_DISPLAY_HEIGHT / 2);
-	appi->dal_draw_region.lrc.x = ((DISPLAY_WIDTH / 2) - (YETI_DISPLAY_WIDTH / 2)) + (YETI_DISPLAY_WIDTH - 1);
-	appi->dal_draw_region.lrc.y = ((DISPLAY_HEIGHT / 2) - (YETI_DISPLAY_HEIGHT / 2)) + (YETI_DISPLAY_HEIGHT - 1);
+	appi->dal.draw_region.ulc.x = (DISPLAY_WIDTH / 2) - (VIEW_DISPLAY_WIDTH / 2);;
+	appi->dal.draw_region.ulc.y = (DISPLAY_HEIGHT / 2) - (VIEW_DISPLAY_HEIGHT / 2);
+	appi->dal.draw_region.lrc.x = ((DISPLAY_WIDTH / 2) - (VIEW_DISPLAY_WIDTH / 2)) + (VIEW_DISPLAY_WIDTH - 1);
+	appi->dal.draw_region.lrc.y = ((DISPLAY_HEIGHT / 2) - (VIEW_DISPLAY_HEIGHT / 2)) + (VIEW_DISPLAY_HEIGHT - 1);
 #endif
 
-	appi->ahi.bitmap.image = uisAllocateMemory(appi->bmp_width * appi->bmp_height * 2, &status);
+	appi->dal.bitmap = uisAllocateMemory(appi->bmp_width * appi->bmp_height * 2, &status);
 	if (status != RESULT_OK) {
 		LOG("%s\n", "Error: Cannot allocate screen buffer bitmap image.");
 	}
@@ -1399,29 +1411,28 @@ static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
 	return status;
 }
 
-static UINT32 ATI_Driver_Stop(APPLICATION_T *app) {
+static UINT32 DAL_Driver_Stop(APPLICATION_T *app) {
 	APP_INSTANCE_T *appi;
 
 	appi = (APP_INSTANCE_T *) app;
 
-	uisFreeMemory(appi->ahi.bitmap.image);
+	uisFreeMemory(appi->dal.bitmap);
 
 	return RESULT_OK;
 }
 
-static UINT32 ATI_Driver_Flush(APPLICATION_T *app) {
+static UINT32 DAL_Driver_Flush(APPLICATION_T *app) {
 	APP_INSTANCE_T *appi;
 
 	appi = (APP_INSTANCE_T *) app;
 
-//	DAL_UpdateDisplayRegion(&appi->dal_draw_region, display_bitmap);
-	DAL_UpdateRectangleDisplayRegion(&appi->dal_draw_region, (UINT16 *) appi->p_bitmap, DISPLAY_MAIN);
-//	DAL_WriteDisplayRegion(&appi->dal_draw_region, display_bitmap, DISPLAY_MAIN, FALSE);
+//	DAL_UpdateDisplayRegion(&appi->dal.draw_region, display_bitmap);
+	DAL_UpdateRectangleDisplayRegion(&appi->dal.draw_region, (UINT16 *) appi->p_bitmap, DISPLAY_MAIN);
+//	DAL_WriteDisplayRegion(&appi->dal.draw_region, display_bitmap, DISPLAY_MAIN, FALSE);
 
 	return RESULT_OK;
 }
-#endif // !defined(FTR_C650)
-#elif defined(EM1) || defined(EM2)
+#elif defined(FTR_GFX_NVIDIA)
 static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 	INT32 result;
 	UINT32 status;
@@ -1512,70 +1523,6 @@ static UINT32 Nvidia_Driver_Flush(APPLICATION_T *app) {
 }
 #endif
 
-//#define MEMORY_MANUAL_ALLOCATION
-#if defined(MEMORY_MANUAL_ALLOCATION)
-#define MEMORY_ATTEMPTS (64)
-#define MEMORY_END_BLOCK_SIZE (4096)
-typedef struct {
-	void *ptr;
-	UINT32 size;
-} MEMORY_BLOCK_ALLOCATED;
-static MEMORY_BLOCK_ALLOCATED mem_blocks[MEMORY_ATTEMPTS];
-static int mem_total_size;
-static int mem_block_count;
-static void Allocate_Memory_Blocks(int start_size) {
-	INT32 status;
-	int i, size, block_idx;
-
-	status = RESULT_OK;
-	mem_total_size = 0;
-	mem_block_count = 0;
-	block_idx = 0;
-	size = start_size;
-
-	for (i = 0; i < MEMORY_ATTEMPTS; ++i) {
-		mem_blocks[i].ptr = NULL;
-		mem_blocks[i].size = 0;
-	}
-	for (i = 0; i < MEMORY_ATTEMPTS; ++i) {
-		mem_blocks[block_idx].ptr = suAllocMem(size, &status);
-		if (status != RESULT_OK) {
-			LOG("C=%d E=%d T=%d\n", i+1, size, mem_total_size);
-			size /= 2;
-			if (size < MEMORY_END_BLOCK_SIZE) {
-				break;
-			}
-		} else {
-			mem_total_size += size;
-			mem_blocks[block_idx].size = size;
-			LOG("C=%d A=%d T=%d P=0x%X\n", i+1, size, mem_total_size, mem_blocks[block_idx]);
-			block_idx++;
-		}
-	}
-
-	LOG("\n\n%s\n\n", "=== MEMORY BLOCKS STATISTIC TABLE ===");
-	for (i = 0; i < block_idx; ++i) {
-		LOG("Memory Block #%d: %d bytes, %d KiB, 0x%X\n",
-			i+1, mem_blocks[i].size, mem_blocks[i].size / 1024, mem_blocks[i].ptr);
-	}
-	LOG("Total Memory: %d bytes, %d KiB.\n\n", mem_total_size, mem_total_size / 1024);
-
-	mem_block_count = block_idx + 1;
-}
-
-static void Free_Memory_Blocks(void) {
-	int i;
-
-	for (i = 0; i < mem_block_count - 1; ++i) {
-		if (mem_blocks[i].ptr) {
-			LOG("Free Memory Block #%d: %d bytes, %d KiB, 0x%X\n",
-				i+1, mem_blocks[i].size, mem_blocks[i].size / 1024, mem_blocks[i].ptr);
-			suFreeMem(mem_blocks[i].ptr);
-		}
-	}
-}
-#endif
-
 uint8_t *dosAllocatedMem;
 uint8_t *doomXMSHandle;
 
@@ -1588,17 +1535,18 @@ static int16_t palettelumpnum;
 
 static UINT16 *pp_bitmap;
 static APP_INSTANCE_T *appi_g;
-static UINT8 *palette_g;
 
 static UINT32 GFX_Draw_Start(APPLICATION_T *app) {
 	APP_INSTANCE_T *appi;
 
 	appi = (APP_INSTANCE_T *) app;
 
-#if defined(EP1) || defined(EP2)
+#if defined(FTR_GFX_ATI)
 	appi->p_bitmap = (UINT8 *) appi->ahi.bitmap.image;
-#elif defined(EM1) || defined(EM2)
+#elif defined(FTR_GFX_NVIDIA)
 	appi->p_bitmap = (UINT8 *) appi->gfsdk.fb0;
+#elif defined(FTR_GFX_DAL)
+	appi->p_bitmap = (UINT8 *) appi->dal.bitmap;
 #endif
 
 	pp_bitmap = (UINT16 *) appi->p_bitmap;
@@ -1617,7 +1565,7 @@ static UINT32 GFX_Draw_Stop(APPLICATION_T *app) {
 
 	appi = (APP_INSTANCE_T *) app;
 
-#if defined(EM1) || defined(EM2) || defined(FTR_C650)
+#if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
 	uisFreeMemory(_s_screen);
 #endif
 
@@ -1656,11 +1604,10 @@ void I_ReloadPalette(void)
 	palettelumpnum = W_GetNumForName(lumpName);
 }
 
-
 #define PEL_WRITE_ADR   0x3c8
 #define PEL_DATA        0x3c9
 
-
+#if 0
 static const uint8_t colors[14][3] =
 {
 	// normal
@@ -1685,8 +1632,11 @@ static const uint8_t colors[14][3] =
 	// green
 	{0, 0x08, 0}
 };
+#endif
 
+#if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
 #define ATI_565RGB(r, g, b) (UINT32)((r & 0xf8) << 8 | (g & 0xFC) << 3 | (b & 0xf8) >> 3)
+#endif
 
 static void I_UploadNewPalette(int8_t pal)
 {
@@ -1726,45 +1676,41 @@ static void I_UploadNewPalette(int8_t pal)
 	}
 }
 
-static uint16_t * xtable  = 0;
-static uint16_t * ytable = 0;
-
+static uint16_t *xtable = NULL;
+static uint16_t *ytable = NULL;
 static uint16_t *indextable = NULL;
 
 // Generated by ChatGPT-4.1 by GitHub Copilot: https://github.com/copilot/
-static void genindextable(int video_w, int video_h)
-{
-    INT32 result;
-    indextable = (uint16_t*) uisAllocateMemory(sizeof(uint16_t) * video_w * video_h, &result);
-    if (result != RESULT_OK) {
-        LOG("%s\n", "Cannot allocate: indextable!");
-    }
-    for (int y = 0; y < video_h; ++y) {
-        int src_y = (y * SCREENHEIGHT) / video_h;
-        for (int x = 0; x < video_w; ++x) {
-            int src_x = (x * SCREENWIDTH) / video_w;
-            indextable[y * video_w + x] = src_y * SCREENWIDTH + src_x;
-        }
-    }
+static void genindextable(int video_w, int video_h) {
+	INT32 result;
+	indextable = (uint16_t*) uisAllocateMemory(sizeof(uint16_t) * video_w * video_h, &result);
+	if (result != RESULT_OK) {
+		LOG("%s\n", "Cannot allocate: indextable!");
+	}
+	for (int y = 0; y < video_h; ++y) {
+		int src_y = (y * SCREENHEIGHT) / video_h;
+		for (int x = 0; x < video_w; ++x) {
+			int src_x = (x * SCREENWIDTH) / video_w;
+			indextable[y * video_w + x] = src_y * SCREENWIDTH + src_x;
+		}
+	}
 }
 
 // Generated by ChatGPT-4.1 by GitHub Copilot: https://github.com/copilot/
-static void genscalexytable(int video_w, int video_h)
-{
-    int i;
+static void genscalexytable(int video_w, int video_h) {
+	int i;
 
-    // Allocate lookup tables
-    xtable  = suAllocMem(sizeof(uint16_t) * video_w, NULL);
-    ytable  = suAllocMem(sizeof(uint16_t) * video_h, NULL);
-    // src_y = ((video_w - 1 - x) * SCREENHEIGHT) / video_w  // scale "reverse x" to src_y
+	// Allocate lookup tables
+	xtable  = suAllocMem(sizeof(uint16_t) * video_w, NULL);
+	ytable  = suAllocMem(sizeof(uint16_t) * video_h, NULL);
 
-    for (i = 0; i < video_h; i++) {
-        ytable[i] = (i * SCREENWIDTH) / video_h;  // src_x
-    }
-    for (i = 0; i < video_w; i++) {
-        // For each x in output, precompute src_y (rotated)
-        xtable[i] = (((video_w - 1 - i) * SCREENHEIGHT) / video_w) * SCREENWIDTH;  // src_y
-    }
+	for (i = 0; i < video_h; i++) {
+		ytable[i] = (i * SCREENWIDTH) / video_h;  // src_x
+	}
+	for (i = 0; i < video_w; i++) {
+		// For each x in output, precompute src_y (rotated)
+		xtable[i] = (((video_w - 1 - i) * SCREENHEIGHT) / video_w) * SCREENWIDTH;  // src_y
+	}
 }
 
 void I_InitGraphicsHardwareSpecificCode(void)
@@ -1775,28 +1721,18 @@ void I_InitGraphicsHardwareSpecificCode(void)
 
 	__djgpp_nearptr_enable();
 
-#if defined(EP1) || defined(EP2)
-
-	#if defined(FTR_C650)
-		INT32 result;
-		_s_screen = uisAllocateMemory(SCREENWIDTH * SCREENHEIGHT, &result);
-		if (result != RESULT_OK) {
-			LOG("%s\n", "Cannot allocate: _s_screen!");
-		}
-	#else
-		_s_screen = pp_bitmap;
-	#endif
-
-#elif defined(EM1) || defined(EM2)
+#if defined(FTR_GFX_ATI)
+	_s_screen = pp_bitmap;
+#elif defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
 	INT32 result;
 	_s_screen = uisAllocateMemory(SCREENWIDTH * SCREENHEIGHT, &result);
 	if (result != RESULT_OK) {
-			LOG("%s\n", "Cannot allocate: _s_screen!");
+		LOG("%s\n", "Cannot allocate: _s_screen!");
 	}
 #endif
 	_fmemset(_s_screen, 0, SCREENWIDTH * SCREENHEIGHT);
 
-#if defined(EM1) || defined(EM2) || defined(FTR_C650)
+#if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
 	genscalexytable(VIDEO_W, VIDEO_H);
 	genindextable(VIDEO_W, VIDEO_H);
 #endif
@@ -1806,53 +1742,50 @@ static boolean drawStatusBar = true;
 
 static void I_DrawBuffer(uint8_t __far* buffer)
 {
-//	uint8_t __far* src = buffer;
-//	uint8_t __far* dst = _s_screen;
+#if 0
+	uint8_t __far* src = buffer;
+	uint8_t __far* dst = _s_screen;
 
-//	for (uint_fast8_t y = 0; y < SCREENHEIGHT - ST_HEIGHT; y++)
-//	{
-//		_fmemcpy(dst, src, SCREENWIDTH);
-//		dst += SCREENWIDTH;
-//		src += SCREENWIDTH;
-//	}
-
-//	if (drawStatusBar)
-//	{
-//		for (uint_fast8_t y = 0; y < ST_HEIGHT; y++)
-//		{
-//			_fmemcpy(dst, src, SCREENWIDTH);
-//			dst += SCREENWIDTH;
-//			src += SCREENWIDTH;
-//		}
-//	}
-//	drawStatusBar = true;
-
-#if defined(EP1) || defined(EP2)
-
-#if defined(FTR_C650)
-	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
-		pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
+	for (uint_fast8_t y = 0; y < SCREENHEIGHT - ST_HEIGHT; y++)
+	{
+		_fmemcpy(dst, src, SCREENWIDTH);
+		dst += SCREENWIDTH;
+		src += SCREENWIDTH;
 	}
-#else
+
+	if (drawStatusBar)
+	{
+		for (uint_fast8_t y = 0; y < ST_HEIGHT; y++)
+		{
+			_fmemcpy(dst, src, SCREENWIDTH);
+			dst += SCREENWIDTH;
+			src += SCREENWIDTH;
+		}
+	}
+	drawStatusBar = true;
+#endif
+
+#if defined(FTR_GFX_ATI)
 	appi_g->ahi.bitmap.image = (void *) buffer;
 #endif
 
-#elif defined(EM1) || defined(EM2)
+#if defined(FTR_GFX_DAL)
+	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
+		pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
+	}
+#endif
 
+#if defined(FTR_GFX_NVIDIA)
 #if !defined(NVIDIA_FULLSCREEN)
 	for (int i = 0; i < SCREENWIDTH * SCREENHEIGHT; i++) {
 		pp_bitmap[i] = doom_current_palette[buffer[i]];
 	}
 #else
-
 #if defined(NVIDIA_FULLSCREEN_PORTRAIT_240X320) || defined(NVIDIA_FULLSCREEN_PORTRAIT_176X220)
-
 	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
 		pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
 	}
-
 #elif defined(NVIDIA_FULLSCREEN_LANDSCAPE_320X240) || defined(NVIDIA_FULLSCREEN_LANDSCAPE_220X176)
-
 	for (int y = 0; y < VIDEO_H; ++y)
 	{
 		for (int x = 0; x < VIDEO_W; ++x)
@@ -1862,30 +1795,23 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 			pp_bitmap[y * VIDEO_W + x] = doom_current_palette[buffer[xtable[x] + ytable[y]]];
 		}
 	}
-
 #endif
-
 #endif
-
 #endif
-
 }
-
 
 void I_ShutdownGraphics(void)
 {
 	I_SetScreenMode(3);
 
-#if defined(EM1) || defined(EM2) || defined(FTR_C650)
+#if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
 	suFreeMem(xtable);
 	suFreeMem(ytable);
 	uisFreeMemory(indextable);
 #endif
 }
 
-
 static int8_t newpal;
-
 
 //
 // I_SetPalette
@@ -1894,7 +1820,6 @@ void I_SetPalette(int8_t pal)
 {
 	newpal = pal;
 }
-
 
 //
 // I_FinishUpdate
@@ -1929,7 +1854,6 @@ const uint8_t* colormap;
 const uint8_t __far* source;
 uint8_t __far* dest;
 
-
 inline static void R_DrawColumnPixel(uint8_t __far* dest, const byte __far* source, uint16_t frac)
 {
 	uint16_t color = colormap[source[frac>>COLBITS]];
@@ -1939,7 +1863,6 @@ inline static void R_DrawColumnPixel(uint8_t __far* dest, const byte __far* sour
 	*d++ = color;
 	*d   = color;
 }
-
 
 #if defined C_ONLY
 static void R_DrawColumn2(uint16_t fracstep, uint16_t frac, int16_t count)
@@ -1991,7 +1914,6 @@ static void R_DrawColumn2(uint16_t fracstep, uint16_t frac, int16_t count)
 void R_DrawColumn2(uint16_t fracstep, uint16_t frac, int16_t count);
 #endif
 
-
 void R_DrawColumnSprite(const draw_column_vars_t *dcvars)
 {
 	int16_t count = (dcvars->yh - dcvars->yl) + 1;
@@ -2016,12 +1938,10 @@ void R_DrawColumnSprite(const draw_column_vars_t *dcvars)
 	R_DrawColumn2(fracstep, frac, count);
 }
 
-
 void R_DrawColumnWall(const draw_column_vars_t *dcvars)
 {
 	R_DrawColumnSprite(dcvars);
 }
-
 
 #if defined C_ONLY
 static void R_DrawColumnFlat2(uint8_t col, uint8_t dontcare, int16_t count)
@@ -2081,7 +2001,6 @@ static void R_DrawColumnFlat2(uint8_t col, uint8_t dontcare, int16_t count)
 void R_DrawColumnFlat2(uint8_t col, uint8_t dontcare, int16_t count);
 #endif
 
-
 void R_DrawColumnFlat(uint8_t col, const draw_column_vars_t *dcvars)
 {
 	int16_t count = (dcvars->yh - dcvars->yl) + 1;
@@ -2094,7 +2013,6 @@ void R_DrawColumnFlat(uint8_t col, const draw_column_vars_t *dcvars)
 
 	R_DrawColumnFlat2(col, col, count);
 }
-
 
 #define FUZZOFF (VIEWWINDOWWIDTH)
 #define FUZZTABLE 50
@@ -2155,7 +2073,6 @@ void R_DrawFuzzColumn(const draw_column_vars_t *dcvars)
 	} while(--count);
 }
 
-
 #if !defined FLAT_SPAN
 inline static void R_DrawSpanPixel(uint32_t __far* dest, const byte __far* source, const byte __far* colormap, uint32_t position)
 {
@@ -2166,7 +2083,6 @@ inline static void R_DrawSpanPixel(uint32_t __far* dest, const byte __far* sourc
 	*d++ = color;
 	*d   = color;
 }
-
 
 void R_DrawSpan(uint16_t y, uint16_t x1, uint16_t x2, const draw_span_vars_t *dsvars)
 {
@@ -2226,7 +2142,6 @@ void R_DrawSpan(uint16_t y, uint16_t x1, uint16_t x2, const draw_span_vars_t *ds
 }
 #endif
 
-
 //
 // V_ClearViewWindow
 //
@@ -2235,18 +2150,15 @@ void V_ClearViewWindow(void)
 	_fmemset(_s_screen, 0, SCREENWIDTH * (SCREENHEIGHT - ST_HEIGHT));
 }
 
-
 void V_InitDrawLine(void)
 {
 	// Do nothing
 }
 
-
 void V_ShutdownDrawLine(void)
 {
 	// Do nothing
 }
-
 
 //
 // V_DrawLine()
@@ -2290,7 +2202,6 @@ void V_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color)
 	}
 }
 
-
 /*
  * V_DrawBackground tiles a 64x64 patch over the entire screen, providing the
  * background for the Help and Setup screens, and plot text between levels.
@@ -2321,7 +2232,6 @@ void V_DrawBackground(int16_t backgroundnum)
 	Z_ChangeTagToCache(src);
 }
 
-
 void V_DrawRaw(int16_t num, uint16_t offset)
 {
 	const uint8_t __far* lump = W_TryGetLumpByNum(num);
@@ -2336,7 +2246,6 @@ void V_DrawRaw(int16_t num, uint16_t offset)
 		W_ReadLumpByNum(num, &_s_screen[offset]);
 }
 
-
 void ST_Drawer(void)
 {
 	if (ST_NeedUpdate())
@@ -2344,7 +2253,6 @@ void ST_Drawer(void)
 	else
 		drawStatusBar = false;
 }
-
 
 void V_DrawPatchNotScaled(int16_t x, int16_t y, const patch_t __far* patch)
 {
@@ -2418,7 +2326,6 @@ void V_DrawPatchNotScaled(int16_t x, int16_t y, const patch_t __far* patch)
 	}
 }
 
-
 void V_DrawPatchScaled(int16_t x, int16_t y, const patch_t __far* patch)
 {
 	static const int32_t   DX  = (((int32_t)SCREENWIDTH)<<FRACBITS) / SCREENWIDTH_VGA;
@@ -2473,10 +2380,8 @@ void V_DrawPatchScaled(int16_t x, int16_t y, const patch_t __far* patch)
 	}
 }
 
-
 static uint16_t __far* frontbuffer;
 static  int16_t __far* wipe_y_lookup;
-
 
 void wipe_StartScreen(void)
 {
@@ -2488,7 +2393,6 @@ void wipe_StartScreen(void)
 	}
 }
 
-
 static boolean wipe_ScreenWipe(int16_t ticks)
 {
 	boolean done = true;
@@ -2499,10 +2403,12 @@ static boolean wipe_ScreenWipe(int16_t ticks)
 	{
 		I_DrawBuffer((uint8_t __far*)frontbuffer);
 
-#if defined(EP1) || defined(EP2)
+#if defined(FTR_GFX_ATI)
 		ATI_Driver_Flush((APPLICATION_T *) appi_g);
-#elif defined(EM1) || defined(EM2)
+#elif defined(FTR_GFX_NVIDIA)
 		Nvidia_Driver_Flush((APPLICATION_T *) appi_g);
+#elif defined(FTR_GFX_NVIDIA)
+		DAL_Driver_Flush((APPLICATION_T *) appi_g);
 #endif
 
 		for (int16_t i = 0; i < SCREENWIDTH / 2; i++)
@@ -2561,7 +2467,6 @@ static boolean wipe_ScreenWipe(int16_t ticks)
 	return done;
 }
 
-
 static void wipe_initMelt()
 {
 	wipe_y_lookup = Z_MallocStatic((SCREENWIDTH / 2) * sizeof(int16_t));
@@ -2580,7 +2485,6 @@ static void wipe_initMelt()
 			wipe_y_lookup[i] = -15;
 	}
 }
-
 
 //
 // D_Wipe
