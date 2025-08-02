@@ -295,6 +295,8 @@ boolean Z_InitXms(uint32_t size)
 #else
 	fakeXMSHandle = AmMemAllocPointer(size);
 #endif
+	doomXMSHandle = fakeXMSHandle;
+
 	return fakeXMSHandle != NULL;
 #endif
 }
@@ -355,6 +357,7 @@ static unsigned int _dos_allocmem(unsigned int __size, unsigned int *__seg)
 #else
 		ptr = AmMemAllocPointer(paragraphs * PARAGRAPH_SIZE);
 #endif
+		dosAllocatedMem = ptr;
 
 		// align ptr
 		uint32_t m = (uint32_t) ptr;

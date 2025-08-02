@@ -52,4 +52,7 @@ void Z_CheckHeap(void);
 
 boolean Z_EqualNames(const char __far* farName, const char* nearName);
 
+extern uint8_t *dosAllocatedMem;
+extern uint8_t *doomXMSHandle;
+
 #endif

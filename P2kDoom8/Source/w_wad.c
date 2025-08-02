@@ -250,7 +250,7 @@ void W_Init(void)
 	}
 #endif
 
-#if !defined(P2K)
+#if !defined(SDL2) && !defined(P2K)
 	boolean xms = W_LoadWADIntoXMS();
 #else
 	boolean xms = 0;

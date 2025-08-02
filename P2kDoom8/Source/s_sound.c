@@ -159,6 +159,14 @@ static void S_Stop(void)
         for (cnum=0 ; cnum<numChannels ; cnum++)
             if (channels[cnum].sfxinfo)
                 S_StopChannel(cnum);
+
+#if defined(P2K)
+    if (!nosfxparm)
+        suFreeMem(channels);
+#else
+    if (!nosfxparm)
+        free(channels);
+#endif
 }
 
 //
