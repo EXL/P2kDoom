@@ -74,7 +74,7 @@ int16_t I_StartSound(sfxenum_t id, int16_t channel, int16_t vol, int16_t sep)
 {
 	UNUSED(vol);
 	UNUSED(sep);
-#if defined(SDL2) || defined(P2K)
+#if defined(SDL) || defined(P2K)
 	UNUSED(id);
 #endif
 
@@ -90,7 +90,7 @@ int16_t I_StartSound(sfxenum_t id, int16_t channel, int16_t vol, int16_t sep)
 //	 || id == sfx_sawidl)
 //		return -1;
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 	int16_t lumpnum = firstsfx + id;
 	PCFX_Play(lumpnum);
 #endif
@@ -107,7 +107,7 @@ void I_InitSound(void)
 	if (nomusicparm && nosfxparm)
 		return;
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 	PCFX_Init();
 #else
 	nosfxparm = true;
@@ -129,7 +129,7 @@ void I_ShutdownSound(void)
 	if (nosfxparm)
 		return;
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 	PCFX_Shutdown();
 #endif
 }

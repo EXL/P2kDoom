@@ -140,7 +140,7 @@ static void _ffread(void __far* ptr, uint16_t size, FILE_HANDLE_T fp)
 	}
 }
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 static boolean W_LoadWADIntoXMS(void)
 {
 #if !defined(P2K)
@@ -236,7 +236,7 @@ void W_Init(void)
 	fileWAD = DL_FsOpenFile(g_res_file_path_ptr, FILE_READ_MODE, 0);
 #endif
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 	boolean xms = W_LoadWADIntoXMS();
 #else
 	boolean xms = 0;

@@ -284,7 +284,7 @@ void D_DoomStep(void)
     }
 }
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 //
 //  D_DoomLoop()
 //
@@ -526,7 +526,7 @@ static void D_DoomMainSetup(void)
     printf("ST_Init: Init status bar.\n");
     ST_Init();
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
     G_LoadSettings();
 #endif
 

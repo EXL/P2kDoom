@@ -23,8 +23,12 @@
  *
  *-----------------------------------------------------------------------------*/
 
+#if defined(SDL)
+
 #if defined(SDL2)
 #include <SDL2/SDL.h>
+#endif
+
 #elif defined(P2K)
 #include <time_date.h>
 #if defined(EP1) || defined(EP2)
@@ -66,7 +70,7 @@ static boolean isGraphicsModeSet = false;
 void I_SetScreenMode(uint16_t mode)
 {
 	UNUSED(mode);
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 	union REGS regs;
 	regs.w.ax = mode;
 	int86(0x10, &regs, &regs);
@@ -86,7 +90,7 @@ void I_InitGraphics(void)
 // Keyboard code
 //
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 #define KEYBOARDINT 9
 #define KBDQUESIZE 32
 static byte keyboardqueue[KBDQUESIZE];
@@ -118,7 +122,7 @@ static void __interrupt __far I_KeyboardISR(void)
 
 void I_InitKeyboard(void)
 {
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 	replaceInterrupt(oldkeyboardisr, newkeyboardisr, KEYBOARDINT, I_KeyboardISR);
 	isKeyboardIsrSet = true;
 #endif
@@ -158,7 +162,7 @@ void I_InitKeyboard(void)
 void I_SwitchPalette(void);
 #endif
 
-#if defined(SDL2)
+#if defined(SDL)
 static evtype_t modkey_state = ev_keyup;
 #endif
 
@@ -167,7 +171,7 @@ void I_StartTic(void)
 	//
 	// process keyboard events
 	//
-#if defined(SDL2)
+#if defined(SDL)
 	event_t ev;
 	SDL_Event event;
 	ev.data1 = 0;
@@ -391,7 +395,7 @@ void I_StartTic(void)
 // Returns time in 1/35th second tics.
 //
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 #define TIMER_PRIORITY 0
 
 static volatile int32_t ticcount;
@@ -407,11 +411,11 @@ static void I_TimerISR(void)
 
 int32_t I_GetTime(void)
 {
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
     return ticcount;
 #else
 
-#if defined(SDL2)
+#if defined(SDL)
     Uint32 ms = SDL_GetTicks();
 
     int thistimereply = ms * TICRATE / 1000;
@@ -433,14 +437,14 @@ int32_t I_GetTime(void)
 
 void I_InitTimer(void)
 {
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 	TS_ScheduleTask(I_TimerISR, TICRATE, TIMER_PRIORITY);
 
 	isTimerSet = true;
 #endif
 }
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 static void I_ShutdownTimer(void)
 {
 	TS_Terminate(TIMER_PRIORITY);
@@ -460,7 +464,7 @@ static void I_Shutdown(void)
 
 	I_ShutdownSound();
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 	if (isTimerSet)
 		I_ShutdownTimer();
 
@@ -475,7 +479,7 @@ static void I_Shutdown(void)
 }
 
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 segment_t I_GetTextModeVideoMemorySegment(void);
 #endif
 
@@ -483,7 +487,7 @@ void I_Quit(void)
 {
 	I_Shutdown();
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 	int16_t lumpnum = W_GetNumForName("ENDOOM");
 	W_ReadLumpByNum(lumpnum, D_MK_FP(I_GetTextModeVideoMemorySegment(), 0 + __djgpp_conventional_base));
 

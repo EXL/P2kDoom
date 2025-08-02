@@ -58,7 +58,7 @@ void G_BuildTiccmd (void);
 
 void G_UpdateSaveGameStrings();
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 void G_LoadSettings();
 void G_SaveSettings();
 #endif

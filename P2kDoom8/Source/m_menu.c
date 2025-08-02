@@ -158,7 +158,7 @@ static void M_ChangeGamma(int16_t choice);
 static void M_SfxVol(int16_t choice);
 static void M_MusicVol(int16_t choice);
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 static void M_Sound(int16_t choice);
 #endif
 
@@ -664,7 +664,7 @@ static void M_DrawSound(void)
   M_DrawThermo(SoundDef.x, SoundDef.y + LINEHEIGHT * (music_vol + 1), 16, snd_MusicVolume);
 }
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 static void M_Sound(int16_t choice)
 {
 	UNUSED(choice);
@@ -686,7 +686,7 @@ static void M_SfxVol(int16_t choice)
         snd_SfxVolume++;
       break;
     }
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
   G_SaveSettings();
 #endif
 
@@ -707,7 +707,7 @@ static void M_MusicVol(int16_t choice)
       break;
     }
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
   G_SaveSettings();
 #endif
 
@@ -754,7 +754,7 @@ static void M_ChangeMessages(int16_t choice)
 
   _g_message_dontfuckwithme = true;
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
   G_SaveSettings();
 #endif
 }
@@ -771,7 +771,7 @@ static void M_ChangeAlwaysRun(int16_t choice)
     else
       _g_player.message = RUNON ; // Ty 03/27/98 - externalized
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
     G_SaveSettings();
 #endif
 }
@@ -792,7 +792,7 @@ static void M_ChangeGamma(int16_t choice)
 	I_ReloadPalette();
 	I_SetPalette(0);
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
     G_SaveSettings();
 #endif
 }

@@ -179,7 +179,7 @@ typedef struct gba_save_data_t
     int32_t maxammo[NUMAMMO];
 } gba_save_data_t;
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 typedef struct gba_save_settings_t
 {
     uint32_t cookie;
@@ -823,7 +823,7 @@ static void G_DoSaveGame(void)
     G_UpdateSaveGameStrings();
 }
 
-#if !defined(SDL2) && !defined(P2K)
+#if !defined(SDL) && !defined(P2K)
 void G_SaveSettings()
 {
     gba_save_settings_t settings;
