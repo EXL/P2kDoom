@@ -1,7 +1,7 @@
 /*-----------------------------------------------------------------------------
  *
  *
- *  Copyright (C) 2023-2024 Frenkel Smeijers
+ *  Copyright (C) 2023-2025 Frenkel Smeijers
  *  Copyright (C) 2025 EXL
  *
  *  This program is free software; you can redistribute it and/or
@@ -21,6 +21,12 @@
  *
  * DESCRIPTION:
  *      Video code for VGA Mode 13h 320x200 256 colors
+ *      Effective resolutions  60x128
+ *                            120x128
+ *                            240x128
+ *
+ * EXL, 04-Aug-2025:
+ *      SDL2 platfrom implementation based on i_vvga13.c blitter by FrenkelS.
  *
  *-----------------------------------------------------------------------------*/
 
@@ -253,24 +259,7 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 	uint8_t __far* src = buffer;
 	uint8_t __far* dst = surface->pixels;
 
-    // For each pixel in dest (x=0..175, y=0..219)
-//    for (int y = 0; y < VIDEO_H; ++y)
-//    {
-//        for (int x = 0; x < VIDEO_W; ++x)
-//        {
-//            // CCW 90deg: dest(x, y) <- src(y', x')
-//            // src index = xtable[x] + ytable[y]
-//            dst[y * VIDEO_W + x] = src[xtable[x] + ytable[y]];
-//        }
-//    }
-
-    for (int i = 0; i < VIDEO_W * VIDEO_H; ++i)
-        dst[i] = src[indextable[i]];
-
 #if 0
-	uint8_t __far* src = buffer;
-	uint8_t __far* dst = surface->pixels;
-
 	for (uint_fast8_t y = 0; y < SCREENHEIGHT - ST_HEIGHT; y++)
 	{
 		_fmemcpy(dst, src, SCREENWIDTH);
@@ -289,6 +278,20 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 	}
 	drawStatusBar = true;
 #endif
+
+#if 0
+	// For each pixel in dest (x=0..175, y=0..219)
+	for (int y = 0; y < VIDEO_H; ++y) {
+		for (int x = 0; x < VIDEO_W; ++x) {
+			// CCW 90deg: dest(x, y) <- src(y', x')
+			// src index = xtable[x] + ytable[y]
+			dst[y * VIDEO_W + x] = src[xtable[x] + ytable[y]];
+		}
+	}
+#endif
+
+	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i)
+		dst[i] = src[indextable[i]];
 }
 
 
@@ -375,12 +378,24 @@ uint8_t __far* dest;
 
 inline static void R_DrawColumnPixel(uint8_t __far* dest, const byte __far* source, uint16_t frac)
 {
+#if VIEWWINDOWWIDTH == 60
 	uint16_t color = colormap[source[frac>>COLBITS]];
 	color = (color | (color << 8));
 
 	uint16_t __far* d = (uint16_t __far*) dest;
 	*d++ = color;
 	*d   = color;
+#elif VIEWWINDOWWIDTH == 120
+	uint16_t color = colormap[source[frac>>COLBITS]];
+	color = (color | (color << 8));
+
+	uint16_t __far* d = (uint16_t __far*) dest;
+	*d   = color;
+#elif VIEWWINDOWWIDTH == 240
+	*dest = colormap[source[frac>>COLBITS]];
+#else
+#error unsupported VIEWWINDOWWIDTH value
+#endif
 }
 
 
@@ -447,7 +462,7 @@ void R_DrawColumnSprite(const draw_column_vars_t *dcvars)
 
 	colormap = dcvars->colormap;
 
-	dest = _s_screen + (dcvars->yl * SCREENWIDTH) + (dcvars->x << 2);
+	dest = _s_screen + (dcvars->yl * SCREENWIDTH) + (dcvars->x * 4 * 60 / VIEWWINDOWWIDTH);
 
 	const uint16_t fracstep = dcvars->fracstep;
 	uint16_t frac = (dcvars->texturemid >> COLEXTRABITS) + (dcvars->yl - CENTERY) * fracstep;
@@ -533,13 +548,13 @@ void R_DrawColumnFlat(uint8_t col, const draw_column_vars_t *dcvars)
 	if (count <= 0)
 		return;
 
-	dest = _s_screen + (dcvars->yl * SCREENWIDTH) + (dcvars->x << 2);
+	dest = _s_screen + (dcvars->yl * SCREENWIDTH) + (dcvars->x * 4 * 60 / VIEWWINDOWWIDTH);
 
 	R_DrawColumnFlat2(col, col, count);
 }
 
 
-#define FUZZOFF (VIEWWINDOWWIDTH)
+#define FUZZOFF 120 /* SCREENWIDTH / 2 so it fits in an int8_t */
 #define FUZZTABLE 50
 
 static const int8_t fuzzoffset[FUZZTABLE] =
@@ -582,13 +597,13 @@ void R_DrawFuzzColumn(const draw_column_vars_t *dcvars)
 
 	colormap = &fullcolormap[6 * 256];
 
-	uint8_t __far* dest = _s_screen + (dc_yl * SCREENWIDTH) + (dcvars->x << 2);
+	uint8_t __far* dest = _s_screen + (dc_yl * SCREENWIDTH) + (dcvars->x * 4 * 60 / VIEWWINDOWWIDTH);
 
 	static int16_t fuzzpos = 0;
 
 	do
 	{
-		R_DrawColumnPixel(dest, &dest[fuzzoffset[fuzzpos] * 4], 0);
+		R_DrawColumnPixel(dest, &dest[fuzzoffset[fuzzpos] * 2], 0);
 		dest += SCREENWIDTH;
 
 		fuzzpos++;
