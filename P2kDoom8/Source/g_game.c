@@ -38,12 +38,9 @@
  */
 
 #include <stdint.h>
-
-#if !defined(P2K)
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#endif
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -167,6 +164,7 @@ static void G_DoPlayDemo(void);
 static void G_InitNew(skill_t skill, int16_t map);
 static void G_ReadDemoTiccmd (void);
 
+
 typedef struct gba_save_data_t
 {
     int32_t save_present;
@@ -178,6 +176,7 @@ typedef struct gba_save_data_t
     int32_t ammo[NUMAMMO];
     int32_t maxammo[NUMAMMO];
 } gba_save_data_t;
+
 
 #if !defined(SDL) && !defined(P2K)
 typedef struct gba_save_settings_t
@@ -1107,6 +1106,7 @@ void G_CheckDemoStatus (void)
         if (_g_singledemo)
             exit(0);  // killough
 #endif
+
         G_ReloadDefaults();    // killough 3/1/98
         D_AdvanceDemo ();
     }

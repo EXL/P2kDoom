@@ -55,8 +55,10 @@ typedef int32_t fixed_t;
  *
  */
 
-#if !defined(P2K)
 #include <stdlib.h>
+
+#if !defined(P2K)
+#define D_abs labs
 #endif
 
 /*

@@ -30,9 +30,9 @@ typedef unsigned int       size_t;
 #define UINT32_MAX     (4294967295U)
 #define UINT64_MAX     (18446744073709551615ULL)
 
-#if defined(P2K)
+#define SHRT_MAX      (32767)
+
 #include <utilities.h>
-#endif
 
 #define I_Error PFprintf
 

@@ -34,9 +34,7 @@
  *
  *-----------------------------------------------------------------------------*/
 
-#if !defined(P2K)
 #include <stddef.h>
-#endif
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

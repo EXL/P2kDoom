@@ -22,21 +22,15 @@
 //
 //-----------------------------------------------------------------------------
 
-#if !defined(SDL) && !defined(P2K)
-#include <dos.h>
-#endif
-
-#if !defined(P2K)
-#include <stdlib.h>
-#endif
-#include <stdint.h>
-
 #if defined(P2K)
 #include <mem.h>
 #include <loader.h>
 #include <utilities.h>
 #endif
 
+#include <dos.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include "compiler.h"
 #include "z_zone.h"
 #include "doomdef.h"

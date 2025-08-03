@@ -1,1 +1,1 @@
-Just a stub header files for SDL port.
+Just stub header files for the SDL port.

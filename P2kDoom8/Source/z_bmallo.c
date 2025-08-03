@@ -37,9 +37,9 @@
 #include "config.h"
 #endif
 
-#if !defined(P2K)
 #include <string.h>
-#else
+
+#if defined(P2K)
 #include <typedefs.h>
 #endif
 

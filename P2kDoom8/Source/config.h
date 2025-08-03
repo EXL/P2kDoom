@@ -148,10 +148,11 @@
 
 #if defined __WATCOMC__
 	#define _Noreturn __declspec(aborts)
-#else
-	#define _Noreturn
 #endif
 
+#if defined(SDL) || defined(P2K)
+	#define _Noreturn
+#endif
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1

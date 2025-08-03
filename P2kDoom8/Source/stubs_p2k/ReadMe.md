@@ -1,1 +1,1 @@
-Just a stub header files for P2K port.
+Just stub header files for the P2K port.

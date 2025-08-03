@@ -37,10 +37,7 @@
  *
  *-----------------------------------------------------------------------------*/
 
-#if !defined(P2K)
 #include <stdio.h>
-#endif
-
 #include <stdint.h>
 
 #include "compiler.h"
@@ -527,6 +524,7 @@ static void M_SaveGame (int16_t choice)
 }
 #endif
 
+
 /////////////////////////////
 //
 // QUIT DOOM
@@ -686,6 +684,7 @@ static void M_SfxVol(int16_t choice)
         snd_SfxVolume++;
       break;
     }
+
 #if !defined(SDL) && !defined(P2K)
   G_SaveSettings();
 #endif

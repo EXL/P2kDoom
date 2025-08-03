@@ -24,11 +24,8 @@
  *
  *-----------------------------------------------------------------------------*/
 
-#if 0
 #include <conio.h>
 #include <dos.h>
-#endif
-
 #include <stdint.h>
 
 #include "compiler.h"
@@ -42,6 +39,7 @@
 #include "i_main.h"
 #include "d_main.h"
 #include "z_zone.h"
+#include "m_cheat.h"
 
 #include "globdata.h"
 
@@ -1065,11 +1063,113 @@ void D_Wipe(void)
 	Z_Free(wipe_y_lookup);
 }
 
+#if defined(SDL)
+static evtype_t modkey_state = ev_keyup;
+#endif
+
+void ProcessEvents(void) {
+	event_t ev;
+	SDL_Event event;
+	ev.data1 = 0;
+
+	while (SDL_PollEvent(&event) != 0) {
+		switch (event.type) {
+			case SDL_KEYUP:
+			case SDL_KEYDOWN:
+				ev.type = (event.type == SDL_KEYUP) ? ev_keyup : ev_keydown;
+				switch (event.key.keysym.scancode) {
+					case SDL_SCANCODE_Q:
+						ev.data1 = KEYD_START;
+						break;
+					case SDL_SCANCODE_X:
+						if (modkey_state == ev_keyup) {
+							ev.data1 = KEYD_A;
+						} else {
+							if (ev.type == ev_keydown) {
+								Apply_Cheat(CHEAT_IDKFA_GIVE_ALL);
+							}
+						}
+						break;
+					case SDL_SCANCODE_UP:
+						ev.data1 = KEYD_UP;
+						break;
+					case SDL_SCANCODE_DOWN:
+						ev.data1 = KEYD_DOWN;
+						break;
+					case SDL_SCANCODE_LEFT:
+						ev.data1 = KEYD_LEFT;
+						break;
+					case SDL_SCANCODE_RIGHT:
+						ev.data1 = KEYD_RIGHT;
+						break;
+					case SDL_SCANCODE_W:
+						if (modkey_state == ev_keyup) {
+							ev.data1 = KEYD_SELECT;
+						} else {
+							if (ev.type == ev_keydown) {
+								Apply_Cheat(CHEAT_ROCKETS_ENABLE);
+							}
+						}
+						break;
+					case SDL_SCANCODE_Z:
+						if (modkey_state == ev_keyup) {
+							ev.data1 = KEYD_B;
+						} else {
+							if (ev.type == ev_keydown) {
+								Apply_Cheat(CHEAT_IDDQD_GOD);
+							}
+						}
+						break;
+					case SDL_SCANCODE_A:
+						if (modkey_state == ev_keyup) {
+							ev.data1 = KEYD_L;
+						} else {
+							if (ev.type == ev_keydown) {
+								Apply_Cheat(CHEAT_CHOPPERS_CHAINSAW);
+							}
+						}
+						break;
+					case SDL_SCANCODE_S:
+						if (modkey_state == ev_keyup) {
+							ev.data1 = KEYD_R;
+						} else {
+							if (ev.type == ev_keydown) {
+								Apply_Cheat(CHEAT_IDRATE_FPS);
+							}
+						}
+						break;
+					case SDL_SCANCODE_1:
+						ev.data1 = KEYD_BRACKET_LEFT;
+						break;
+					case SDL_SCANCODE_2:
+						ev.data1 = KEYD_BRACKET_RIGHT;
+						break;
+					case SDL_SCANCODE_C:
+						modkey_state = ev.type;
+						ev.data1 = KEYD_STRAFE;
+						break;
+					default:
+						break;
+				}
+				if(ev.data1 != 0)
+					D_PostEvent(&ev);
+				break;
+			case SDL_QUIT:
+				I_Quit();
+				return;
+			default:
+				break;
+		}
+	}
+}
+
 int main(int argc, const char *const argv[]) {
 	dosAllocatedMem = NULL;
 	doomXMSHandle = NULL;
 	init_main(argc, argv);
-	while ("DOOM is Rock")
+	while ("DOOM is Rock") {
 		D_DoomStep();
+		ProcessEvents();
+	}
 	return 0;
 }

@@ -65,7 +65,11 @@ extern fixed_t  viewcos, viewsin;
 
 extern angle_t viewangle;
 
+#if !defined(SDL) && !defined(P2K)
+extern const uint8_t fullcolormap[256 * 34];
+#else
 extern uint8_t fullcolormap[256 * 34];
+#endif
 extern const uint8_t* fixedcolormap;
 
 extern int16_t   __far* textureheight; //needed for texture pegging (and TFE fix - killough)

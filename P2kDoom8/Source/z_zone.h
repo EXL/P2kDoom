@@ -26,10 +26,7 @@
 #ifndef __Z_ZONE__
 #define __Z_ZONE__
 
-#if !defined(P2K)
 #include <stddef.h>
-#endif
-
 #include "doomtype.h"
 
 void Z_Init(void);
@@ -52,7 +49,9 @@ void Z_CheckHeap(void);
 
 boolean Z_EqualNames(const char __far* farName, const char* nearName);
 
+#if defined(SDL) || defined(P2K)
 extern uint8_t *dosAllocatedMem;
 extern uint8_t *doomXMSHandle;
+#endif
 
 #endif

@@ -29,22 +29,25 @@
 #include <SDL2/SDL.h>
 #endif
 
-#elif defined(P2K)
-#include <time_date.h>
-#if defined(EP1) || defined(EP2)
-#include <stdargs.h>
-#else
-#include <stdarg.h>
-#endif
-#else
-#include <conio.h>
-#include <dos.h>
 #endif
 
-#if !defined(P2K)
+
+#if defined(P2K)
+
+#include <time_date.h>
+
+#if defined(EP1) || defined(EP2)
+#include <stdargs.h>
+#elif defined(EM1) || defined(EM2)
+#include <stdarg.h>
+#endif
+
+#endif
+
+#include <conio.h>
+#include <dos.h>
 #include <stdarg.h>
 #include <time.h>
-#endif
 
 #include "doomdef.h"
 #include "doomtype.h"
@@ -54,6 +57,7 @@
 #include "i_system.h"
 #include "globdata.h"
 #include "m_cheat.h"
+
 
 void I_InitGraphicsHardwareSpecificCode(void);
 void I_ShutdownGraphics(void);
@@ -69,11 +73,12 @@ static boolean isGraphicsModeSet = false;
 
 void I_SetScreenMode(uint16_t mode)
 {
-	UNUSED(mode);
 #if !defined(SDL) && !defined(P2K)
 	union REGS regs;
 	regs.w.ax = mode;
 	int86(0x10, &regs, &regs);
+#else
+	UNUSED(mode);
 #endif
 }
 
@@ -162,112 +167,13 @@ void I_InitKeyboard(void)
 void I_SwitchPalette(void);
 #endif
 
-#if defined(SDL)
-static evtype_t modkey_state = ev_keyup;
-#endif
 
 void I_StartTic(void)
 {
 	//
 	// process keyboard events
 	//
-#if defined(SDL)
-	event_t ev;
-	SDL_Event event;
-	ev.data1 = 0;
-
-	while (SDL_PollEvent(&event) != 0) {
-		switch (event.type) {
-			case SDL_KEYUP:
-			case SDL_KEYDOWN:
-				ev.type = (event.type == SDL_KEYUP) ? ev_keyup : ev_keydown;
-				switch (event.key.keysym.scancode) {
-					case SDL_SCANCODE_Q:
-						ev.data1 = KEYD_START;
-						break;
-					case SDL_SCANCODE_X:
-						if (modkey_state == ev_keyup) {
-							ev.data1 = KEYD_A;
-						} else {
-							if (ev.type == ev_keydown) {
-								Apply_Cheat(CHEAT_IDKFA_GIVE_ALL);
-							}
-						}
-						break;
-					case SDL_SCANCODE_UP:
-						ev.data1 = KEYD_UP;
-						break;
-					case SDL_SCANCODE_DOWN:
-						ev.data1 = KEYD_DOWN;
-						break;
-					case SDL_SCANCODE_LEFT:
-						ev.data1 = KEYD_LEFT;
-						break;
-					case SDL_SCANCODE_RIGHT:
-						ev.data1 = KEYD_RIGHT;
-						break;
-					case SDL_SCANCODE_W:
-						if (modkey_state == ev_keyup) {
-							ev.data1 = KEYD_SELECT;
-						} else {
-							if (ev.type == ev_keydown) {
-								Apply_Cheat(CHEAT_ROCKETS_ENABLE);
-							}
-						}
-						break;
-					case SDL_SCANCODE_Z:
-						if (modkey_state == ev_keyup) {
-							ev.data1 = KEYD_B;
-						} else {
-							if (ev.type == ev_keydown) {
-								Apply_Cheat(CHEAT_IDDQD_GOD);
-							}
-						}
-						break;
-					case SDL_SCANCODE_A:
-						if (modkey_state == ev_keyup) {
-							ev.data1 = KEYD_L;
-						} else {
-							if (ev.type == ev_keydown) {
-								Apply_Cheat(CHEAT_CHOPPERS_CHAINSAW);
-							}
-						}
-						break;
-					case SDL_SCANCODE_S:
-						if (modkey_state == ev_keyup) {
-							ev.data1 = KEYD_R;
-						} else {
-							if (ev.type == ev_keydown) {
-								Apply_Cheat(CHEAT_IDRATE_FPS);
-							}
-						}
-						break;
-					case SDL_SCANCODE_1:
-						ev.data1 = KEYD_BRACKET_LEFT;
-						break;
-					case SDL_SCANCODE_2:
-						ev.data1 = KEYD_BRACKET_RIGHT;
-						break;
-					case SDL_SCANCODE_C:
-						modkey_state = ev.type;
-						ev.data1 = KEYD_STRAFE;
-						break;
-					default:
-						break;
-				}
-				if(ev.data1 != 0)
-					D_PostEvent(&ev);
-				break;
-			case SDL_QUIT:
-				I_Quit();
-				return;
-			default:
-				break;
-		}
-	}
-#elif defined(P2K)
-	/* TODO */
-#else
+#if !defined(SDL) && !defined(P2K)
 	byte k;
 	event_t ev;
 
@@ -409,6 +315,7 @@ static void I_TimerISR(void)
 }
 #endif
 
+
 int32_t I_GetTime(void)
 {
 #if !defined(SDL) && !defined(P2K)
@@ -444,6 +351,7 @@ void I_InitTimer(void)
 #endif
 }
 
+
 #if !defined(SDL) && !defined(P2K)
 static void I_ShutdownTimer(void)
 {
@@ -451,6 +359,7 @@ static void I_ShutdownTimer(void)
 	TS_Shutdown();
 }
 #endif
+
 
 //**************************************************************************************
 //
@@ -507,6 +416,7 @@ void I_Quit(void)
 	exit(0);
 #endif
 }
+
 
 #if !defined(P2K)
 void I_Error (const char *error, ...)

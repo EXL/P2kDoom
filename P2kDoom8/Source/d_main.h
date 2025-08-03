@@ -61,7 +61,8 @@ void D_AdvanceDemo(void);
 void D_PageTicker(void);
 void D_StartTitle(void);
 void D_DoomMain(int argc, const char * const * argv);
-
+#if defined(SDL) || defined(P2K)
 void D_DoomStep(void);
+#endif
 
 #endif

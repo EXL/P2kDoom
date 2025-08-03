@@ -247,7 +247,7 @@ static void TryRunTics (void)
     }
 }
 
-
+#if defined(SDL) || defined(P2K)
 void D_DoomStep(void)
 {
     // frame syncronous IO operations
@@ -283,8 +283,8 @@ void D_DoomStep(void)
         D_UpdateFPS();
     }
 }
+#endif
 
-#if !defined(SDL) && !defined(P2K)
 //
 //  D_DoomLoop()
 //
@@ -295,7 +295,8 @@ void D_DoomStep(void)
 //  calls all ?_Responder, ?_Ticker, and ?_Drawer,
 //  calls I_GetTime and I_StartTic
 //
-static void D_DoomLoop(void)
+#if !defined(SDL) && !defined(P2K)
+_Noreturn static void D_DoomLoop(void)
 {
     for (;;)
     {
@@ -467,7 +468,11 @@ static const char * const * myargv;
 int16_t M_CheckParm(char *check)
 {
 	for (int16_t i = 1; i < myargc; i++)
+#if !defined(SDL) && !defined(P2K)
+		if (!stricmp(check, myargv[i]))
+#else
 		if (!strcmp(check, myargv[i]))
+#endif
 			return i;
 
 	return 0;
@@ -559,5 +564,7 @@ void D_DoomMain(int argc, const char * const * argv)
 
     D_DoomMainSetup();
 
-//    D_DoomLoop ();  // never returns
+#if !defined(SDL) && !defined(P2K)
+    D_DoomLoop ();  // never returns
+#endif
 }

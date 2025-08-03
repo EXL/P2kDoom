@@ -84,7 +84,9 @@ static FILE* fileWAD;
 #define WAD_FILE "DOOM1.WAD"
 #endif
 
-#else /* defined(P2K) */
+#endif
+
+#if defined(P2K)
 static FILE_HANDLE_T fileWAD;
 
 #if !defined WAD_FILE
@@ -139,6 +141,7 @@ static void _ffread(void __far* ptr, uint16_t size, FILE_HANDLE_T fp)
 		_fmemcpy(dest, buffer, size);
 	}
 }
+
 
 #if !defined(SDL) && !defined(P2K)
 static boolean W_LoadWADIntoXMS(void)
@@ -198,6 +201,7 @@ static boolean W_LoadWADIntoXMS(void)
 	return true;
 }
 #endif
+
 
 static void W_ReadDataFromFile(void __far* dest, uint32_t src, uint16_t length)
 {

@@ -43,8 +43,6 @@
 #include <unistd.h>
 #endif
 
-#include "i_main.h"
-
 #include "doomdef.h"
 #include "compiler.h"
 #include "d_main.h"
@@ -56,17 +54,14 @@
 #include "doomtype.h"
 #include "i_sound.h"
 #include "globdata.h"
+#include "i_main.h"
 
-#if !defined(SDL) && !defined(P2K)
 #include <dos.h>
 #include <signal.h>
-#endif
-
-#if !defined(P2K)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#endif
+
 
 #if !defined(SDL) && !defined(P2K)
 static void tprintf(void)
@@ -94,7 +89,11 @@ static void tprintf(void)
 #endif
 
 
+#if !defined(SDL) && !defined(P2K)
+int main(int argc, const char * const * argv)
+#else
 int init_main(int argc, const char * const * argv)
+#endif
 {
 	I_SetScreenMode(3);
 

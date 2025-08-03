@@ -74,13 +74,12 @@ typedef uint8_t byte;
 #endif
 
 /* CPhipps - use limits.h instead of depreciated values.h */
-#if !defined(P2K)
 #include <limits.h>
-#endif
-
-#define D_abs(x) labs(x)
 
 #if defined(P2K)
+#define D_abs(x) labs(x)
+
+/* TODO: EXL, 04-Aug-2025: using of define macros instead of inline function is dangerous here! */
 static inline int labs(int i) { return i < 0 ? -i : i; }
 #endif
 

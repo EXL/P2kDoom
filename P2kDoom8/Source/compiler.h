@@ -46,11 +46,15 @@ typedef uint32_t segment_t;
 #define __far
 
 #if defined(P2K)
+
 #include <mem.h>
 #include <utilities.h>
+
+/* TODO: EXL, 03-Aug-2025: This should be moved to a general SDK. */
 #if defined(EM1) || defined(EM2)
 #define printf PFprintf
 #endif
+
 #endif
 
 #define _fmemchr	memchr
