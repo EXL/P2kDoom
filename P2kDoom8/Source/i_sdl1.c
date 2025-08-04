@@ -203,7 +203,7 @@ void I_InitGraphicsHardwareSpecificCode(void)
 		fprintf(stderr, "SDL_SetVideoMode (video) failed: %s", SDL_GetError());
 		return;
 	}
-	SDL_WM_SetCaption("Doom8088", NULL);
+	SDL_WM_SetCaption("P2kDoom8 SDL1", NULL);
 
 	surface = SDL_CreateRGBSurface(SDL_HWPALETTE, screen_width, screen_height, 8, 0x00, 0x00, 0x00, 0x00);
 	if (surface == NULL) {

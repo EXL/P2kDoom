@@ -200,7 +200,7 @@ void I_InitGraphicsHardwareSpecificCode(void)
 {
 	int screen_width =VIDEO_W, screen_height = VIDEO_H;
 	window = SDL_CreateWindow(
-		"Doom8088",
+		"P2kDoom8 SDL3",
 		screen_width, screen_height,
 		SDL_WINDOW_RESIZABLE
 	);
