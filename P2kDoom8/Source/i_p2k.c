@@ -66,11 +66,10 @@
 
 #include "globdata.h"
 
-#define TIMER_FAST_TRIGGER_MS             (1)
-#if defined(FPS_15)
-#define TIMER_FAST_UPDATE_MS              (1000 / 15) /* ~15 FPS. */
-#elif defined(FPS_30)
-#define TIMER_FAST_UPDATE_MS              (1000 / 30) /* ~30 FPS. */
+#if defined(FPS)
+#define TIMER_FAST_UPDATE_MS (1000 / FPS) /* Dynamic FPS based on -DFPS flag. */
+#else
+#error "FPS not defined! Please compile it with -DFPS=<value> (e.g., -DFPS=30)."
 #endif
 
 typedef enum {
