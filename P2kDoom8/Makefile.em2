@@ -5,8 +5,12 @@ P2K_ELF_SDK       = /home/exl/Storage/Projects/Git/MotoFanRu/P2K-ELF-SDK-OLD/ELF
 CC                = /opt/mcore-elf-gcc/bin/mcore-elf-gcc
 LD                = /opt/mcore-elf-gcc/bin/mcore-elf-ld
 
-RES              ?= 240x320
+QUALITY          ?= LOW
+DEFINES_LOW       = -DVIEWWINDOWWIDTH=60
+DEFINES_MID       = -DVIEWWINDOWWIDTH=120
+DEFINES_HIGH      = -DVIEWWINDOWWIDTH=240 -DHIGH_DETAIL
 
+RES              ?= 240x320
 DEFINES_240x160   = -DKEYS_PORTRAIT
 DEFINES_240x320   = -DNVIDIA_FULLSCREEN -DNVIDIA_FULLSCREEN_PORTRAIT_240X320 -DKEYS_PORTRAIT
 DEFINES_320x240   = -DNVIDIA_FULLSCREEN -DNVIDIA_FULLSCREEN_LANDSCAPE_320X240
@@ -19,7 +23,8 @@ OBJ_DIR           = $(SRC_DIR)/objs
 INCLUDES          = -nostdinc -nostdlib -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
 INCLUDES         += -I$(SRC_DIR) -I$(SRC_DIR)/stubs_p2k
 DEFINES           = -std=c99 -D__P2K__ -DP2K
-DEFINES          += -DEM2 -DUSE_BIG_ENDIAN -DUSE_UIS_ALLOCA -DFPS_30 -DFTR_GFX_NVIDIA $(DEFINES_$(RES))
+DEFINES          += -DEM2 -DUSE_BIG_ENDIAN -DUSE_UIS_ALLOCA -DFPS_30 -DFTR_GFX_NVIDIA
+DEFINES          += $(DEFINES_$(RES)) $(DEFINES_$(QUALITY))
 DEFINES          += -DFLAT_SPAN -DC_ONLY
 WARNINGS          = -Wall -Wextra
 WARNINGS         += -Wno-sign-compare -Wno-strict-aliasing

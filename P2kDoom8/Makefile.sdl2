@@ -3,8 +3,13 @@ CC       = gcc -m32
 SRC_DIR  = Source
 OBJ_DIR  = $(SRC_DIR)/objs
 
+QUALITY ?= LOW
+DEF_LOW  = -DVIEWWINDOWWIDTH=60
+DEF_MID  = -DVIEWWINDOWWIDTH=120
+DEF_HIGH = -DVIEWWINDOWWIDTH=240 -DHIGH_DETAIL
+
 CFLAGS   = -I$(SRC_DIR) -I$(SRC_DIR)/stubs_sdl
-CFLAGS  += -DFLAT_SPAN -DC_ONLY -DSDL -DSDL2
+CFLAGS  += -DFLAT_SPAN -DC_ONLY -DSDL -DSDL2 $(DEF_$(QUALITY))
 CFLAGS  += -O2
 CFLAGS  += -Wall -Wextra -pedantic
 CFLAGS  += -Wno-sign-compare -Wno-implicit-fallthrough -Wno-stringop-truncation -Wno-absolute-value -Wno-unused-result

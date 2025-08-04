@@ -7,8 +7,12 @@ ARM_GCC_LIN_BIN   = $(P2K_ELF_SDK)/tool/compiler/ARM-GCC-LIN/bin
 
 CC                = $(shell command -v arm-none-eabi-gcc || echo $(ARM_GCC_LIN_BIN)/arm-none-eabi-gcc)
 
-PHONE            ?= E1
+QUALITY          ?= LOW
+DEFINES_LOW       = -DVIEWWINDOWWIDTH=60
+DEFINES_MID       = -DVIEWWINDOWWIDTH=120
+DEFINES_HIGH      = -DVIEWWINDOWWIDTH=240 -DHIGH_DETAIL
 
+PHONE            ?= E1
 DEFINES_E1        = -DFPS_30 -DFTR_GFX_ATI -DROT_0 -DSET_DISPLAY_MODE
 DEFINES_C650      = -DFPS_15 -DFTR_GFX_DAL -DKEYS_PORTRAIT -DFTR_V600 -DFTR_C650
 
@@ -18,7 +22,7 @@ OBJ_DIR           = $(SRC_DIR)/objs
 INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
 INCLUDES         += -I$(SRC_DIR) -I$(SRC_DIR)/stubs_p2k
 DEFINES           = -std=c99 -D__P2K__ -DP2K
-DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(PHONE))
+DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(PHONE)) $(DEFINES_$(QUALITY))
 DEFINES          += -DFLAT_SPAN -DC_ONLY
 WARNINGS          = -Wall -Wextra
 WARNINGS         += -Wno-sign-compare -Wno-implicit-fallthrough
