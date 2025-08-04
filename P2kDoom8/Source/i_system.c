@@ -29,6 +29,10 @@
 #include <SDL2/SDL.h>
 #endif
 
+#if defined(SDL3)
+#include <SDL3/SDL.h>
+#endif
+
 #endif
 
 
