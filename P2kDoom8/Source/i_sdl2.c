@@ -216,7 +216,7 @@ void I_InitGraphicsHardwareSpecificCode(void)
 		return;
 	}
 
-	video = SDL_CreateRGBSurface(0, screen_width, screen_height, 32, 0x00FF0000, 0x0000FF00, 0x000000FF, 0xFF000000);
+	video = SDL_CreateRGBSurface(0, screen_width, screen_height, 16, 0xF800, 0x07E0, 0x001F, 0x0000);
 	if (video == NULL) {
 		SDL_Log("SDL_CreateRGBSurface (video) failed: %s", SDL_GetError());
 		return;
@@ -228,7 +228,7 @@ void I_InitGraphicsHardwareSpecificCode(void)
 		return;
 	}
 
-	texture = SDL_CreateTexture(render, SDL_PIXELFORMAT_ARGB8888,
+	texture = SDL_CreateTexture(render, SDL_PIXELFORMAT_RGB565,
 								SDL_TEXTUREACCESS_STREAMING, screen_width, screen_height);
 	if (texture == NULL) {
 		SDL_Log("SDL_CreateTexture failed: %s", SDL_GetError());
