@@ -13,7 +13,7 @@ CFLAGS  += -DFLAT_SPAN -DC_ONLY -DSDL -DSDL2 $(DEF_$(QUALITY))
 CFLAGS  += -O2
 CFLAGS  += -Wall -Wextra -pedantic
 CFLAGS  += -Wno-sign-compare -Wno-implicit-fallthrough -Wno-stringop-truncation -Wno-absolute-value -Wno-unused-result
-CFLAGS  += -Wno-format-overflow
+CFLAGS  += -Wno-format-overflow -Wno-switch-bool
 
 LDFLAGS  = -s -Wl,--gc-sections -Wl,--allow-multiple-definition
 

@@ -48,11 +48,27 @@
 #ifndef __BYTEBOOL__
 #define __BYTEBOOL__
 /* Fixed to use builtin bool type with C++. */
+
+#if !defined(SDL) && !defined(P2K)
+
 #ifdef __cplusplus
 typedef bool boolean;
 #else
 typedef enum {false, true} boolean;
 #endif
+
+#endif
+
+#if defined(SDL)
+#include <stdbool.h>
+
+typedef bool boolean;
+#endif
+
+#if defined(P2K)
+typedef BOOL boolean;
+#endif
+
 typedef uint8_t byte;
 #endif
 
