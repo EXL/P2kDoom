@@ -25,6 +25,10 @@
 
 #if defined(SDL)
 
+#if defined(SDL1)
+#include <SDL/SDL.h>
+#endif
+
 #if defined(SDL2)
 #include <SDL2/SDL.h>
 #endif
