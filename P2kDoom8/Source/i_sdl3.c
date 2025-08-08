@@ -1119,7 +1119,13 @@ void ProcessEvents(void) {
 						}
 						break;
 					case SDL_SCANCODE_UP:
-						ev.data1 = KEYD_UP;
+						if (modkey_state == ev_keyup) {
+							ev.data1 = KEYD_UP;
+						} else {
+							if (ev.type == ev_keydown) {
+								Apply_Cheat(CHEAT_LEVEL_END);
+							}
+						}
 						break;
 					case SDL_SCANCODE_DOWN:
 						ev.data1 = KEYD_DOWN;

@@ -108,6 +108,9 @@ void Apply_Cheat(FAST_CHEAT_T cheat) {
 		case CHEAT_ROCKETS_ENABLE:
 			cheat_rockets();
 			break;
+		case CHEAT_LEVEL_END:
+			cheat_exit();
+			break;
 		default:
 			break;
 	}

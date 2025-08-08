@@ -798,7 +798,13 @@ static UINT32 ProcessKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app, UINT32 k
 			break;
 		case KK_2:
 		case KK_UP:
-			ev.data1 = KEYD_UP;
+			if (modkey_state == ev_keyup) {
+				ev.data1 = KEYD_UP;
+			} else {
+				if (ev.type == ev_keydown) {
+					Apply_Cheat(CHEAT_LEVEL_END);
+				}
+			}
 			break;
 		case MULTIKEY_3:
 			modkey_state = ev.type;
