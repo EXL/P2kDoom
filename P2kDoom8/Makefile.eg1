@@ -12,17 +12,35 @@ DEFINES_LOW       = -DVIEWWINDOWWIDTH=60
 DEFINES_MID       = -DVIEWWINDOWWIDTH=120
 DEFINES_HIGH      = -DVIEWWINDOWWIDTH=240 -DHIGH_DETAIL
 
-PHONE            ?= E398
-DEFINES_E398      = -DFPS=10 -DFTR_GFX_ATI -DROT_0 -DSET_DISPLAY_MODE
-DEFINES_C650      = -DFPS=8  -DFTR_GFX_DAL -DKEYS_PORTRAIT -DFTR_V600 -DFTR_C650
+
+ifeq ($(ARGON), 1)
+	RES              ?= 240x320
+	DEFINES_240x160   = -DFPS=35 -DKEYS_PORTRAIT
+	DEFINES_240x320   = -DFPS=35 -DNVIDIA_FULLSCREEN -DNVIDIA_FULLSCREEN_PORTRAIT_240X320 -DKEYS_PORTRAIT
+	DEFINES_320x240   = -DFPS=35 -DNVIDIA_FULLSCREEN -DNVIDIA_FULLSCREEN_LANDSCAPE_320X240
+	DEFINES_176x220   = -DFPS=35 -DNVIDIA_FULLSCREEN -DNVIDIA_FULLSCREEN_PORTRAIT_176X220 -DKEYS_PORTRAIT
+	DEFINES_220x176   = -DFPS=35 -DNVIDIA_FULLSCREEN -DNVIDIA_FULLSCREEN_LANDSCAPE_220X176
+else
+	PHONE            ?= E398
+	DEFINES_E398      = -DFPS=10 -DFTR_GFX_ATI -DROT_0 -DSET_DISPLAY_MODE
+	DEFINES_C650      = -DFPS=8  -DFTR_GFX_DAL -DKEYS_PORTRAIT -DFTR_V600 -DFTR_C650
+endif
 
 SRC_DIR           = Source
 OBJ_DIR           = $(SRC_DIR)/objs
 
-INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
-INCLUDES         += -I$(SRC_DIR) -I$(SRC_DIR)/stubs_p2k
 DEFINES           = -std=c99 -D__P2K__ -DP2K
-DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(PHONE)) $(DEFINES_$(QUALITY))
+
+ifeq ($(ARGON), 1)
+	INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk_mcore -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
+	DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(RES)) $(DEFINES_$(QUALITY)) -DUSE_UIS_ALLOCA -DFTR_GFX_NVIDIA
+else
+	INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
+	DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(PHONE)) $(DEFINES_$(QUALITY))
+endif
+
+INCLUDES         += -I$(SRC_DIR) -I$(SRC_DIR)/stubs_p2k
+
 DEFINES          += -DFLAT_SPAN -DC_ONLY
 WARNINGS          = -Wall -Wextra
 WARNINGS         += -Wno-sign-compare -Wno-implicit-fallthrough
@@ -41,7 +59,11 @@ CXXFLAGS          = $(CFLAGS)
 LDFLAGS           = $(CFLAGS) -s -pie -Wl,--gc-sections -Wl,--allow-multiple-definition -Wl,-zmax-page-size=4 -Wl,-eRegister
 LIBS              = -nostdlib -nodefaultlibs -L$(P2K_ELF_SDK)/ep1/lib/gcc -leg1_gcc_stub -L. -lgcc_gba_m
 
-TARGET_ELF        = P2kDoom8_$(PHONE).elf
+ifeq ($(ARGON), 1)
+	TARGET_ELF        = P2kDoom8_$(RES).elf
+else
+	TARGET_ELF        = P2kDoom8_$(PHONE).elf
+endif
 
 OBJS = \
 	$(OBJ_DIR)/i_p2k.o \

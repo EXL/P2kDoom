@@ -1472,8 +1472,11 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 
 	app_instance->gfsdk.fb0_rect.x = 0;
 	app_instance->gfsdk.fb0_rect.y = 0;
-
+#if defined(EA1)
+	point = UIS_CanvasGetDisplaySize();
+#else
 	UIS_CanvasGetDisplaySize(&point);
+#endif
 	app_instance->gfsdk.fb0_rect.w = point.x + 1;
 	app_instance->gfsdk.fb0_rect.h = point.y + 1;
 	app_instance->gfsdk.fb0 = uisAllocateMemory(
