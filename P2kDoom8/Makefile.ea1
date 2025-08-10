@@ -1,9 +1,9 @@
 # Script: Motorola P2K Makefile
 
-P2K_ELF_SDK       = /home/exl/Storage/Projects/Git/MotoFanRu/P2K-ELF-SDK-OLD/ELFKIT_EM2_Windows
+P2K_ELF_SDK       = /home/exl/Storage/Projects/Git/MotoFanRu/P2K-ELF-SDK
+ARM_GCC_LIN_BIN   = $(P2K_ELF_SDK)/tool/compiler/ARM-GCC-LIN/bin
 
-CC                = /opt/mcore-elf-gcc/bin/mcore-elf-gcc
-LD                = /opt/mcore-elf-gcc/bin/mcore-elf-ld
+CC                = $(shell command -v arm-none-eabi-gcc || echo $(ARM_GCC_LIN_BIN)/arm-none-eabi-gcc)
 
 QUALITY          ?= LOW
 DEFINES_LOW       = -DVIEWWINDOWWIDTH=60
@@ -12,31 +12,30 @@ DEFINES_HIGH      = -DVIEWWINDOWWIDTH=240 -DHIGH_DETAIL
 
 RES              ?= 240x320
 DEFINES_240x160   = -DFPS=35 -DKEYS_PORTRAIT
-DEFINES_240x320   = -DFPS=21 -DNVIDIA_FULLSCREEN -DFULLSCREEN_240X320 -DKEYS_PORTRAIT
-DEFINES_320x240   = -DFPS=22 -DNVIDIA_FULLSCREEN -DFULLSCREEN_320X240
+DEFINES_240x320   = -DFPS=35 -DNVIDIA_FULLSCREEN -DFULLSCREEN_240X320 -DKEYS_PORTRAIT
+DEFINES_320x240   = -DFPS=35 -DNVIDIA_FULLSCREEN -DFULLSCREEN_320X240
 DEFINES_176x220   = -DFPS=35 -DNVIDIA_FULLSCREEN -DFULLSCREEN_176X220 -DKEYS_PORTRAIT
 DEFINES_220x176   = -DFPS=35 -DNVIDIA_FULLSCREEN -DFULLSCREEN_220X176
 
 SRC_DIR           = Source
 OBJ_DIR           = $(SRC_DIR)/objs
 
-INCLUDES          = -nostdinc -nostdlib -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
+INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk_mcore -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
 INCLUDES         += -I$(SRC_DIR) -I$(SRC_DIR)/stubs_p2k
 DEFINES           = -std=c99 -D__P2K__ -DP2K
-DEFINES          += -DEM2 -DUSE_BIG_ENDIAN -DUSE_UIS_ALLOCA -DFTR_GFX_NVIDIA
-DEFINES          += $(DEFINES_$(RES)) $(DEFINES_$(QUALITY))
+DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(RES)) $(DEFINES_$(QUALITY)) -DUSE_UIS_ALLOCA -DFTR_GFX_NVIDIA
 DEFINES          += -DFLAT_SPAN -DC_ONLY
 WARNINGS          = -Wall -Wextra
-WARNINGS         += -Wno-sign-compare -Wno-strict-aliasing
-OPTIMIZATIONS     = -O3
-FEATURES          = -fomit-frame-pointer -fshort-wchar -fshort-enums -fno-builtin -funsigned-char
-FLAVOR            = -DEM2
-CPU_FLAGS         = -m340 -m4align -mbig-endian
+WARNINGS         += -Wno-sign-compare -Wno-implicit-fallthrough
+OPTIMIZATIONS     = -Ofast -funroll-all-loops
+FEATURES          = -ffreestanding -fshort-wchar -fshort-enums -fpack-struct=4 -fno-builtin -funsigned-char
+FLAVOR            = -DEA1
+CPU_FLAGS         = -mbig-endian -mthumb -mthumb-interwork -mbe32 -march=armv6j -mtune=arm1136jf-s
+AFLAGS            = -marm
 CFLAGS            = $(INCLUDES) $(DEFINES) $(FLAVOR) $(WARNINGS) $(OPTIMIZATIONS) $(CPU_FLAGS) $(FEATURES)
 CXXFLAGS          = $(CFLAGS)
-LDFLAGS           = -d -EB -N -r -s -Bstatic -Bsymbolic -Bsymbolic-functions
-LDFLAGS          += -nostdinc -nostdlib --unresolved-symbols=report-all -z muldefs -z combreloc -z nodefaultlib
-LIBS              = libgcc.a -T$(P2K_ELF_SDK)/mcore-elf/lib/linker_elf.ld
+LDFLAGS           = $(CFLAGS) -s -pie -Wl,--gc-sections -Wl,--allow-multiple-definition -Wl,-zmax-page-size=4 -Wl,-eRegister
+LIBS              = -nostdlib -nodefaultlibs -L$(P2K_ELF_SDK)/ep1/lib/gcc -leg1_gcc_stub -L. -lgcc_gba_m
 
 TARGET_ELF        = P2kDoom8_$(RES).elf
 
@@ -98,7 +97,7 @@ OBJS = \
 all: $(TARGET_ELF)
 
 $(TARGET_ELF): $(OBJS)
-	$(LD) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
+	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@

@@ -940,10 +940,10 @@ static void FPS_Meter(void) {
 #endif
 }
 
-#if defined(NVIDIA_FULLSCREEN_PORTRAIT_240X320) || defined(NVIDIA_FULLSCREEN_LANDSCAPE_320X240)
+#if defined(FULLSCREEN_240X320) || defined(FULLSCREEN_320X240)
 #define VIDEO_W 240
 #define VIDEO_H 320
-#elif defined(NVIDIA_FULLSCREEN_PORTRAIT_176X220) || defined(NVIDIA_FULLSCREEN_LANDSCAPE_220X176)
+#elif defined(FULLSCREEN_176X220) || defined(FULLSCREEN_220X176)
 #define VIDEO_W 176
 #define VIDEO_H 220
 #elif defined(FTR_C650)
@@ -1498,7 +1498,7 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 	app_instance->gfsdk.fb0_rect.h = SCREENHEIGHT;
 #endif
 
-	// EXL, 28-Jul-2025: Uncomment it for emulate Motorola E770v display on Motorola RAZR V3x.
+	// EXL, 28-Jul-2025: Uncomment it to emulate Motorola E770v display on Motorola RAZR V3x screen.
 //	app_instance->gfsdk.fb0_rect.x = 0;
 //	app_instance->gfsdk.fb0_rect.y = 0;
 //	app_instance->gfsdk.fb0_rect.w = 176;
@@ -1816,11 +1816,11 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 		pp_bitmap[i] = doom_current_palette[buffer[i]];
 	}
 #else
-#if defined(NVIDIA_FULLSCREEN_PORTRAIT_240X320) || defined(NVIDIA_FULLSCREEN_PORTRAIT_176X220)
+#if defined(FULLSCREEN_240X320) || defined(FULLSCREEN_176X220)
 	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
 		pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
 	}
-#elif defined(NVIDIA_FULLSCREEN_LANDSCAPE_320X240) || defined(NVIDIA_FULLSCREEN_LANDSCAPE_220X176)
+#elif defined(FULLSCREEN_320X240) || defined(FULLSCREEN_220X176)
 	for (int y = 0; y < VIDEO_H; ++y)
 	{
 		for (int x = 0; x < VIDEO_W; ++x)

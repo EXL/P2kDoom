@@ -1,6 +1,4 @@
 # Script: Motorola P2K Makefile
-# Flavor: EG1, EA1 (ElfPack v1.x, ARM GCC, Linux)
-# Author: EXL, 06-Jan-2025
 
 P2K_ELF_SDK       = /home/exl/Storage/Projects/Git/MotoFanRu/P2K-ELF-SDK
 ARM_GCC_LIN_BIN   = $(P2K_ELF_SDK)/tool/compiler/ARM-GCC-LIN/bin
@@ -12,58 +10,31 @@ DEFINES_LOW       = -DVIEWWINDOWWIDTH=60
 DEFINES_MID       = -DVIEWWINDOWWIDTH=120
 DEFINES_HIGH      = -DVIEWWINDOWWIDTH=240 -DHIGH_DETAIL
 
-
-ifeq ($(ARGON), 1)
-	RES              ?= 240x320
-	DEFINES_240x160   = -DFPS=35 -DKEYS_PORTRAIT
-	DEFINES_240x320   = -DFPS=35 -DNVIDIA_FULLSCREEN -DNVIDIA_FULLSCREEN_PORTRAIT_240X320 -DKEYS_PORTRAIT
-	DEFINES_320x240   = -DFPS=35 -DNVIDIA_FULLSCREEN -DNVIDIA_FULLSCREEN_LANDSCAPE_320X240
-	DEFINES_176x220   = -DFPS=35 -DNVIDIA_FULLSCREEN -DNVIDIA_FULLSCREEN_PORTRAIT_176X220 -DKEYS_PORTRAIT
-	DEFINES_220x176   = -DFPS=35 -DNVIDIA_FULLSCREEN -DNVIDIA_FULLSCREEN_LANDSCAPE_220X176
-else
-	PHONE            ?= E398
-	DEFINES_E398      = -DFPS=10 -DFTR_GFX_ATI -DROT_0 -DSET_DISPLAY_MODE
-	DEFINES_C650      = -DFPS=8  -DFTR_GFX_DAL -DKEYS_PORTRAIT -DFTR_V600 -DFTR_C650
-endif
+PHONE            ?= E1
+DEFINES_E1        = -DFPS=10 -DFTR_GFX_ATI -DROT_0 -DSET_DISPLAY_MODE
+DEFINES_C650      = -DFPS=8  -DFTR_GFX_DAL -DKEYS_PORTRAIT -DFTR_V600 -DFTR_C650
 
 SRC_DIR           = Source
 OBJ_DIR           = $(SRC_DIR)/objs
 
-DEFINES           = -std=c99 -D__P2K__ -DP2K
-
-ifeq ($(ARGON), 1)
-	INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk_mcore -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
-	DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(RES)) $(DEFINES_$(QUALITY)) -DUSE_UIS_ALLOCA -DFTR_GFX_NVIDIA
-else
-	INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
-	DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(PHONE)) $(DEFINES_$(QUALITY))
-endif
-
+INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
 INCLUDES         += -I$(SRC_DIR) -I$(SRC_DIR)/stubs_p2k
-
+DEFINES           = -std=c99 -D__P2K__ -DP2K
+DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(PHONE)) $(DEFINES_$(QUALITY))
 DEFINES          += -DFLAT_SPAN -DC_ONLY
 WARNINGS          = -Wall -Wextra
 WARNINGS         += -Wno-sign-compare -Wno-implicit-fallthrough
 OPTIMIZATIONS     = -Ofast -funroll-all-loops
 FEATURES          = -ffreestanding -fshort-wchar -fshort-enums -fpack-struct=4 -fno-builtin -funsigned-char
-ifeq ($(ARGON), 1)
-	FLAVOR        = -DEA1
-	CPU_FLAGS     = -mbig-endian -mthumb -mthumb-interwork -mbe32 -march=armv6j -mtune=arm1136jf-s
-else
-	FLAVOR        = -DEG1
-	CPU_FLAGS     = -mbig-endian -mthumb -mthumb-interwork -march=armv4t -mtune=arm7tdmi-s
-endif
+FLAVOR            = -DEG1
+CPU_FLAGS         = -mbig-endian -mthumb -mthumb-interwork -march=armv4t -mtune=arm7tdmi-s
 AFLAGS            = -marm
 CFLAGS            = $(INCLUDES) $(DEFINES) $(FLAVOR) $(WARNINGS) $(OPTIMIZATIONS) $(CPU_FLAGS) $(FEATURES)
 CXXFLAGS          = $(CFLAGS)
 LDFLAGS           = $(CFLAGS) -s -pie -Wl,--gc-sections -Wl,--allow-multiple-definition -Wl,-zmax-page-size=4 -Wl,-eRegister
 LIBS              = -nostdlib -nodefaultlibs -L$(P2K_ELF_SDK)/ep1/lib/gcc -leg1_gcc_stub -L. -lgcc_gba_m
 
-ifeq ($(ARGON), 1)
-	TARGET_ELF        = P2kDoom8_$(RES).elf
-else
-	TARGET_ELF        = P2kDoom8_$(PHONE).elf
-endif
+TARGET_ELF        = P2kDoom8_$(PHONE).elf
 
 OBJS = \
 	$(OBJ_DIR)/i_p2k.o \
@@ -129,9 +100,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJ_DIR)/*.o $(TARGET_ELF)
+	rm -Rf $(OBJ_DIR)/*.o *.elf
 
-clean_objs:
-	rm -f $(OBJ_DIR)/*.o
-
-.PHONY: all clean clean_objs
+.PHONY: all clean

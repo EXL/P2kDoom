@@ -74,7 +74,7 @@ OBJS = \
 	$(OBJ_DIR)/wi_stuff.o \
 	$(OBJ_DIR)/z_bmallo.o
 
-TARGET = P2kDoom8
+TARGET = P2kDoom8_SDL3
 
 all: $(TARGET)
 
@@ -85,9 +85,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJ_DIR)/*.o $(TARGET)
+	rm -Rf $(OBJ_DIR)/*.o P2kDoom8_SDL*
 
-clean_objs:
-	rm -f $(OBJ_DIR)/*.o
-
-.PHONY: all clean clean_objs
+.PHONY: all clean
