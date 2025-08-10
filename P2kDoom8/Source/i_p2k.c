@@ -940,21 +940,12 @@ static void FPS_Meter(void) {
 #endif
 }
 
-#if defined(FULLSCREEN_240X320) || defined(FULLSCREEN_320X240)
-#define VIDEO_W 240
-#define VIDEO_H 320
-#elif defined(FULLSCREEN_176X220) || defined(FULLSCREEN_220X176)
-#define VIDEO_W 176
-#define VIDEO_H 220
-#elif defined(FTR_C650)
-#define VIDEO_W 128
-#define VIDEO_H 128
-#elif defined(FTR_L6)
-#define VIDEO_W 128
-#define VIDEO_H 160
-#else
-#define VIDEO_W 240
-#define VIDEO_H 320
+#if !defined(VIDEO_W)
+#error "VIDEO_W not defined! Please compile it with -DVIDEO_W=<value> (e.g., -DVIDEO_W=240)."
+#endif
+
+#if !defined(VIDEO_H)
+#error "VIDEO_H not defined! Please compile it with -DVIDEO_H=<value> (e.g., -DVIDEO_H=320)."
 #endif
 
 static UINT32 doom_current_palette[256];
@@ -1406,23 +1397,35 @@ static UINT32 ATI_Driver_Flush(APPLICATION_T *app) {
 	return RESULT_OK;
 }
 #elif defined(FTR_GFX_DAL)
-/* Pure DAL driver for C650-like phones. */
+/* Pure DAL driver for C650-like and M702iS-like phones. */
 static UINT32 DAL_Driver_Start(APPLICATION_T *app) {
 	APP_INSTANCE_T *appi;
-	UINT8 *display_bitmap;
 	INT32 status;
 
 	appi = (APP_INSTANCE_T *) app;
+
 	appi->dal.draw_region.ulc.x = 0;
 	appi->dal.draw_region.ulc.y = 0;
 	appi->dal.draw_region.lrc.x = VIDEO_W - 1;
 	appi->dal.draw_region.lrc.y = VIDEO_H - 1;
 
-
 	appi->dal.bitmap = uisAllocateMemory(VIDEO_W * VIDEO_H * 2, &status);
 	if (status != RESULT_OK) {
 		LOG("%s\n", "Error: Cannot allocate screen buffer bitmap image.");
 	}
+
+#if !defined(FULLSCREEN) && defined(FTR_C650)
+	appi->dal.draw_region.lrc.x = DISPLAY_WIDTH - 1;
+	appi->dal.draw_region.lrc.y = DISPLAY_HEIGHT - 1;
+
+	memset(appi->dal.bitmap, 0x00, DISPLAY_WIDTH * DISPLAY_HEIGHT * DISPLAY_BYTESPP);
+	DAL_UpdateDisplayRegion(&appi->dal.draw_region, (UINT16 *) appi->dal.bitmap);
+
+	appi->dal.draw_region.ulc.x = (DISPLAY_WIDTH / 2) - (VIDEO_W / 2);
+	appi->dal.draw_region.ulc.y = (DISPLAY_HEIGHT / 2) - (VIDEO_H / 2);
+	appi->dal.draw_region.lrc.x = ((DISPLAY_WIDTH / 2) - (VIDEO_W / 2)) + (VIDEO_W - 1);
+	appi->dal.draw_region.lrc.y = ((DISPLAY_HEIGHT / 2) - (VIDEO_H / 2)) + (VIDEO_H - 1);
+#endif
 
 	return status;
 }
@@ -1442,9 +1445,12 @@ static UINT32 DAL_Driver_Flush(APPLICATION_T *app) {
 
 	appi = (APP_INSTANCE_T *) app;
 
-//	DAL_UpdateDisplayRegion(&appi->dal.draw_region, display_bitmap);
-	//DAL_UpdateRectangleDisplayRegion(&appi->dal.draw_region, (UINT16 *) appi->p_bitmap, DISPLAY_MAIN);
+//	DAL_UpdateRectangleDisplayRegion(&appi->dal.draw_region, (UINT16 *) appi->p_bitmap, DISPLAY_MAIN);
+#if defined(FTR_C650)
+	DAL_UpdateRectangleDisplayRegion(&appi->dal.draw_region, (UINT16 *) appi->p_bitmap, DISPLAY_MAIN);
+#else
 	DAL_WriteDisplayRegion(&appi->dal.draw_region, (UINT16 *) appi->p_bitmap, DISPLAY_MAIN, FALSE);
+#endif
 
 	return RESULT_OK;
 }
@@ -1479,7 +1485,7 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 	uisFreeMemory(appi->gfsdk.fb0);
 
 	appi->gfsdk.fb0_rect.w = point.x + 1;
-#if defined(NVIDIA_FULLSCREEN)
+#if defined(FULLSCREEN)
 	appi->gfsdk.fb0_rect.h = point.y + 1;
 #else
 	appi->gfsdk.fb0_rect.h = SCREENHEIGHT;
@@ -1497,7 +1503,7 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 		status = RESULT_FAIL;
 	}
 
-#if !defined(NVIDIA_FULLSCREEN)
+#if !defined(FULLSCREEN)
 	appi->gfsdk.fb0_rect.y = (point.y + 1) / 2 - SCREENHEIGHT / 2;
 #endif
 
@@ -1527,7 +1533,7 @@ static UINT32 Nvidia_Driver_Flush(APPLICATION_T *app) {
 		appi->gfsdk.gxHandle,
 		appi->gfsdk.fb0_rect.x, appi->gfsdk.fb0_rect.y,
 		appi->gfsdk.fb0_rect.w, appi->gfsdk.fb0_rect.h,
-#if defined(NVIDIA_FULLSCREEN)
+#if defined(FULLSCREEN)
 		appi->gfsdk.fb0_rect.x, appi->gfsdk.fb0_rect.y,
 #else
 		appi->gfsdk.fb0_rect.x, 0,
@@ -1792,26 +1798,24 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 #endif
 
 #if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
-#if !defined(NVIDIA_FULLSCREEN)
+#if !defined(FULLSCREEN) && !defined(FTR_C650)
 	for (int i = 0; i < SCREENWIDTH * SCREENHEIGHT; i++) {
 		pp_bitmap[i] = doom_current_palette[buffer[i]];
 	}
 #else
-#if defined(FULLSCREEN_240X320) || defined(FULLSCREEN_176X220) || defined(FTR_C650)
-	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
-		pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
-	}
-#elif defined(FULLSCREEN_320X240) || defined(FULLSCREEN_220X176)
-	for (int y = 0; y < VIDEO_H; ++y)
-	{
-		for (int x = 0; x < VIDEO_W; ++x)
-		{
-			// CCW 90deg: dest(x, y) <- src(y', x')
-			// src index = xtable[x] + ytable[y]
-			pp_bitmap[y * VIDEO_W + x] = doom_current_palette[buffer[xtable[x] + ytable[y]]];
+	#if defined(LANDSCAPE)
+		for (int y = 0; y < VIDEO_H; ++y) {
+			for (int x = 0; x < VIDEO_W; ++x) {
+				// CCW 90deg: dest(x, y) <- src(y', x').
+				// src index = xtable[x] + ytable[y].
+				pp_bitmap[y * VIDEO_W + x] = doom_current_palette[buffer[xtable[x] + ytable[y]]];
+			}
 		}
-	}
-#endif
+	#else
+		for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
+			pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
+		}
+	#endif
 #endif
 #endif
 }
