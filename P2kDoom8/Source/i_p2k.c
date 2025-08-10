@@ -1253,8 +1253,8 @@ static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
 	 * Motorola ROKR E1: 176x220
 	 */
 	appi->is_CSTN_display =
-			(display_mode.size.x < DISPLAY_WIDTH) ||
-			(display_mode.size.y < DISPLAY_HEIGHT);
+			(display_mode.size.x < 176) ||
+			(display_mode.size.y < 220);
 
 #if defined(SET_DISPLAY_MODE)
 #if defined(FTR_L6)
@@ -1417,20 +1417,20 @@ static UINT32 DAL_Driver_Start(APPLICATION_T *app) {
 
 	appi->dal.draw_region.ulc.x = 0;
 	appi->dal.draw_region.ulc.y = 0;
-	appi->dal.draw_region.lrc.x = DISPLAY_WIDTH - 1;
-	appi->dal.draw_region.lrc.y = DISPLAY_HEIGHT - 1;
+	appi->dal.draw_region.lrc.x = VIDEO_W - 1;
+	appi->dal.draw_region.lrc.y = VIDEO_H - 1;
 
-	memset(display_bitmap, 0x00, DISPLAY_WIDTH * DISPLAY_HEIGHT * DISPLAY_BYTESPP);
+	memset(display_bitmap, 0x00, VIDEO_W * VIDEO_H * 2);
 	DAL_UpdateDisplayRegion(&appi->dal.draw_region, (UINT16 *) display_bitmap);
 
 #if defined(VIEW_96X64)
-	appi->dal.draw_region.ulc.x = (DISPLAY_WIDTH / 2) - (VIEW_DISPLAY_WIDTH / 2);;
-	appi->dal.draw_region.ulc.y = (DISPLAY_HEIGHT / 2) - (VIEW_DISPLAY_HEIGHT / 2);
-	appi->dal.draw_region.lrc.x = ((DISPLAY_WIDTH / 2) - (VIEW_DISPLAY_WIDTH / 2)) + (VIEW_DISPLAY_WIDTH - 1);
-	appi->dal.draw_region.lrc.y = ((DISPLAY_HEIGHT / 2) - (VIEW_DISPLAY_HEIGHT / 2)) + (VIEW_DISPLAY_HEIGHT - 1);
+	appi->dal.draw_region.ulc.x = (VIDEO_W / 2) - (VIEW_DISPLAY_WIDTH / 2);;
+	appi->dal.draw_region.ulc.y = (VIDEO_H / 2) - (VIEW_DISPLAY_HEIGHT / 2);
+	appi->dal.draw_region.lrc.x = ((VIDEO_W / 2) - (VIEW_DISPLAY_WIDTH / 2)) + (VIEW_DISPLAY_WIDTH - 1);
+	appi->dal.draw_region.lrc.y = ((VIDEO_H / 2) - (VIEW_DISPLAY_HEIGHT / 2)) + (VIEW_DISPLAY_HEIGHT - 1);
 #endif
 
-	appi->dal.bitmap = uisAllocateMemory(appi->bmp_width * appi->bmp_height * 2, &status);
+	appi->dal.bitmap = uisAllocateMemory(VIDEO_W * VIDEO_H * 2, &status);
 	if (status != RESULT_OK) {
 		LOG("%s\n", "Error: Cannot allocate screen buffer bitmap image.");
 	}
