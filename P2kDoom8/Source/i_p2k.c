@@ -1413,22 +1413,11 @@ static UINT32 DAL_Driver_Start(APPLICATION_T *app) {
 	INT32 status;
 
 	appi = (APP_INSTANCE_T *) app;
-	display_bitmap = (UINT8 *) &display_source_buffer;
-
 	appi->dal.draw_region.ulc.x = 0;
 	appi->dal.draw_region.ulc.y = 0;
 	appi->dal.draw_region.lrc.x = VIDEO_W - 1;
 	appi->dal.draw_region.lrc.y = VIDEO_H - 1;
 
-	memset(display_bitmap, 0x00, VIDEO_W * VIDEO_H * 2);
-	DAL_UpdateDisplayRegion(&appi->dal.draw_region, (UINT16 *) display_bitmap);
-
-#if defined(VIEW_96X64)
-	appi->dal.draw_region.ulc.x = (VIDEO_W / 2) - (VIEW_DISPLAY_WIDTH / 2);;
-	appi->dal.draw_region.ulc.y = (VIDEO_H / 2) - (VIEW_DISPLAY_HEIGHT / 2);
-	appi->dal.draw_region.lrc.x = ((VIDEO_W / 2) - (VIEW_DISPLAY_WIDTH / 2)) + (VIEW_DISPLAY_WIDTH - 1);
-	appi->dal.draw_region.lrc.y = ((VIDEO_H / 2) - (VIEW_DISPLAY_HEIGHT / 2)) + (VIEW_DISPLAY_HEIGHT - 1);
-#endif
 
 	appi->dal.bitmap = uisAllocateMemory(VIDEO_W * VIDEO_H * 2, &status);
 	if (status != RESULT_OK) {
@@ -1454,8 +1443,8 @@ static UINT32 DAL_Driver_Flush(APPLICATION_T *app) {
 	appi = (APP_INSTANCE_T *) app;
 
 //	DAL_UpdateDisplayRegion(&appi->dal.draw_region, display_bitmap);
-	DAL_UpdateRectangleDisplayRegion(&appi->dal.draw_region, (UINT16 *) appi->p_bitmap, DISPLAY_MAIN);
-//	DAL_WriteDisplayRegion(&appi->dal.draw_region, display_bitmap, DISPLAY_MAIN, FALSE);
+	//DAL_UpdateRectangleDisplayRegion(&appi->dal.draw_region, (UINT16 *) appi->p_bitmap, DISPLAY_MAIN);
+	DAL_WriteDisplayRegion(&appi->dal.draw_region, (UINT16 *) appi->p_bitmap, DISPLAY_MAIN, FALSE);
 
 	return RESULT_OK;
 }
@@ -1802,19 +1791,13 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 	appi_g->ahi.bitmap.image = (void *) buffer;
 #endif
 
-#if defined(FTR_GFX_DAL)
-	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
-		pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
-	}
-#endif
-
-#if defined(FTR_GFX_NVIDIA)
+#if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
 #if !defined(NVIDIA_FULLSCREEN)
 	for (int i = 0; i < SCREENWIDTH * SCREENHEIGHT; i++) {
 		pp_bitmap[i] = doom_current_palette[buffer[i]];
 	}
 #else
-#if defined(FULLSCREEN_240X320) || defined(FULLSCREEN_176X220)
+#if defined(FULLSCREEN_240X320) || defined(FULLSCREEN_176X220) || defined(FTR_C650)
 	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
 		pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
 	}
