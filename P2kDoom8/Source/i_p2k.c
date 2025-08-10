@@ -3,6 +3,7 @@
  *
  *  Copyright (C) 2023-2025 Frenkel Smeijers
  *  Copyright (C) 2025 EXL
+ *  Copyright (C) 2025 fkcoder / Siesta
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -538,49 +539,48 @@ UINT32 ELF_Entry(ldrElf *elf, WCHAR *arguments) {
 
 static UINT32 ApplicationStart(EVENT_STACK_T *ev_st, REG_ID_T reg_id, void *reg_hdl) {
 	UINT32 status;
-	APP_INSTANCE_T *app_instance;
+	APP_INSTANCE_T *appi;
 
 	UNUSED(reg_hdl);
 
 	status = RESULT_OK;
 
 	if (AFW_InquireRoutingStackByRegId(reg_id) != RESULT_OK) {
-		app_instance = (APP_INSTANCE_T *) APP_InitAppData((void *) APP_HandleEvent, sizeof(APP_INSTANCE_T),
+		appi = (APP_INSTANCE_T *) APP_InitAppData((void *) APP_HandleEvent, sizeof(APP_INSTANCE_T),
 			reg_id, 0, 0, 1, 1, 1, 0);
 
 #if defined(FTR_GFX_ATI)
-		app_instance->ahi.info_driver = NULL;
+		appi->ahi.info_driver = NULL;
 #elif defined(FTR_GFX_NVIDIA)
-		app_instance->gfsdk.gxHandle = (GF_HANDLE) &GxHandle;
-		app_instance->gfsdk.fb0 = NULL;
+		appi->gfsdk.gxHandle = (GF_HANDLE) &GxHandle;
+		appi->gfsdk.fb0 = NULL;
 #elif defined(FTR_GFX_DAL)
-		app_instance->dal.bitmap = NULL;
+		appi->dal.bitmap = NULL;
 #endif
-		app_instance->bmp_width = SCREENWIDTH;
-		app_instance->bmp_height = SCREENHEIGHT;
-		app_instance->p_bitmap = NULL;
-		app_instance->timer_handle = 0;
-		app_instance->keys.pressed = 0;
-		app_instance->keys.released = 0;
+		appi->bmp_width = SCREENWIDTH;
+		appi->bmp_height = SCREENHEIGHT;
+		appi->p_bitmap = NULL;
+		appi->timer_handle = 0;
+		appi->keys.pressed = 0;
+		appi->keys.released = 0;
 
-		DL_AudGetVolumeSetting(PHONE, &app_instance->keyboard_volume_level);
+		DL_AudGetVolumeSetting(PHONE, &appi->keyboard_volume_level);
 		DL_AudSetVolumeSetting(PHONE, 0);
 
 #if defined(FTR_GFX_ATI)
-		status |= ATI_Driver_Start((APPLICATION_T *) app_instance);
+		status |= ATI_Driver_Start((APPLICATION_T *) appi);
 #elif defined(FTR_GFX_NVIDIA)
-		status |= Nvidia_Driver_Start((APPLICATION_T *) app_instance);
+		status |= Nvidia_Driver_Start((APPLICATION_T *) appi);
 #elif defined(FTR_GFX_DAL)
-		status |= DAL_Driver_Start((APPLICATION_T *) app_instance);
+		status |= DAL_Driver_Start((APPLICATION_T *) appi);
 #endif
 
-		status |= APP_Start(ev_st, &app_instance->app, APP_STATE_MAIN,
-			g_state_table_hdls, ApplicationStop, g_app_name, 0);
+		status |= APP_Start(ev_st, &appi->app, APP_STATE_MAIN, g_state_table_hdls, ApplicationStop, g_app_name, 0);
 
 #if defined(EP2)
-		g_app_elf.app = (APPLICATION_T *) app_instance;
+		g_app_elf.app = (APPLICATION_T *) appi;
 #elif defined(EM2)
-		g_app_elf->app = &app_instance->app;
+		g_app_elf->app = &appi;
 #endif
 	}
 
@@ -589,16 +589,16 @@ static UINT32 ApplicationStart(EVENT_STACK_T *ev_st, REG_ID_T reg_id, void *reg_
 
 static UINT32 ApplicationStop(EVENT_STACK_T *ev_st, APPLICATION_T *app) {
 	UINT32 status;
-	APP_INSTANCE_T *app_instance;
+	APP_INSTANCE_T *appi;
 
 	status = RESULT_OK;
-	app_instance = (APP_INSTANCE_T *) app;
+	appi = (APP_INSTANCE_T *) app;
 
 	APP_ConsumeEv(ev_st, app);
 
 	DeleteDialog(app);
 
-	DL_AudSetVolumeSetting(PHONE, app_instance->keyboard_volume_level);
+	DL_AudSetVolumeSetting(PHONE, appi->keyboard_volume_level);
 
 	status |= GFX_Draw_Stop(app);
 	status |= SetLoopTimer(app, 0);
@@ -706,21 +706,21 @@ static UINT32 DeleteDialog(APPLICATION_T *app) {
 
 static UINT32 SetLoopTimer(APPLICATION_T *app, UINT32 period) {
 	UINT32 status;
-	APP_INSTANCE_T *app_instance;
+	APP_INSTANCE_T *appi;
 	IFACE_DATA_T iface_data;
 
 	status = RESULT_OK;
-	app_instance = (APP_INSTANCE_T *) app;
+	appi = (APP_INSTANCE_T *) app;
 	iface_data.port = app->port;
 
-	if (app_instance->timer_handle != 0) {
-		iface_data.handle = app_instance->timer_handle;
+	if (appi->timer_handle != 0) {
+		iface_data.handle = appi->timer_handle;
 		status |= DL_ClkStopTimer(&iface_data);
 	}
 
 	if (period != 0) {
 		DL_ClkStartCyclicalTimer(&iface_data, period, APP_TIMER_LOOP);
-		status |= app_instance->timer_handle = iface_data.handle;
+		status |= appi->timer_handle = iface_data.handle;
 	}
 
 	return status;
@@ -728,21 +728,21 @@ static UINT32 SetLoopTimer(APPLICATION_T *app, UINT32 period) {
 
 static UINT32 CheckKeyboard(EVENT_STACK_T *ev_st, APPLICATION_T *app) {
 	UINT32 key;
-	APP_INSTANCE_T *app_instance;
+	APP_INSTANCE_T *appi;
 
 	key = 0x00080000;
 
-	app_instance = (APP_INSTANCE_T *) app;
-	app_instance->keys.released = app_instance->keys.pressed;
-	app_instance->keys.pressed = DL_KeyKjavaGetKeyState();
+	appi = (APP_INSTANCE_T *) app;
+	appi->keys.released = appi->keys.pressed;
+	appi->keys.pressed = DL_KeyKjavaGetKeyState();
 
 	while (key) {
-		if ((app_instance->keys.released & key) != (app_instance->keys.pressed & key)) {
-			if (app_instance->keys.pressed & key) {
+		if ((appi->keys.released & key) != (appi->keys.pressed & key)) {
+			if (appi->keys.pressed & key) {
 				/* Key Pressed. */
 				ProcessKeyboard(ev_st, app, key, TRUE);
 			}
-			if (app_instance->keys.released & key) {
+			if (appi->keys.released & key) {
 				/* Key Released. */
 				ProcessKeyboard(ev_st, app, key, FALSE);
 			}
@@ -1331,30 +1331,30 @@ static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
 
 static UINT32 ATI_Driver_Stop(APPLICATION_T *app) {
 	UINT32 status;
-	APP_INSTANCE_T *app_instance;
+	APP_INSTANCE_T *appi;
 
 	status = RESULT_OK;
-	app_instance = (APP_INSTANCE_T *) app;
+	appi = (APP_INSTANCE_T *) app;
 
 #if defined(SET_DISPLAY_MODE)
 #if defined(FTR_L6)
 	status |= ATI_Driver_Set_Display_Mode(app, AHIROT_0);
 #else
-	status |= ATI_Driver_Set_Display_Mode(app, (app_instance->is_CSTN_display) ? AHIROT_180 : AHIROT_0);
+	status |= ATI_Driver_Set_Display_Mode(app, (appi->is_CSTN_display) ? AHIROT_180 : AHIROT_0);
 #endif
 #endif
 
-	if (app_instance->ahi.bitmap.image) {
+	if (appi->ahi.bitmap.image) {
 		LOG("%s\n", "Free: ATI Bitmap memory.");
-		suFreeMem(app_instance->ahi.bitmap.image);
-		app_instance->ahi.bitmap.image = NULL;
-		app_instance->p_bitmap = NULL;
+		suFreeMem(appi->ahi.bitmap.image);
+		appi->ahi.bitmap.image = NULL;
+		appi->p_bitmap = NULL;
 	}
 
-	status |= AhiDevClose(app_instance->ahi.context);
-	if (app_instance->ahi.info_driver) {
+	status |= AhiDevClose(appi->ahi.context);
+	if (appi->ahi.info_driver) {
 		LOG("%s\n", "Free: ATI Driver Info memory.");
-		suFreeMem(app_instance->ahi.info_driver);
+		suFreeMem(appi->ahi.info_driver);
 	}
 
 	return status;
@@ -1463,55 +1463,53 @@ static UINT32 DAL_Driver_Flush(APPLICATION_T *app) {
 static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 	INT32 result;
 	UINT32 status;
-	APP_INSTANCE_T *app_instance;
+	APP_INSTANCE_T *appi;
 	GRAPHIC_POINT_T point;
 
 	result = RESULT_OK;
 	status = RESULT_OK;
-	app_instance = (APP_INSTANCE_T *) app;
+	appi = (APP_INSTANCE_T *) app;
 
-	app_instance->gfsdk.fb0_rect.x = 0;
-	app_instance->gfsdk.fb0_rect.y = 0;
+	appi->gfsdk.fb0_rect.x = 0;
+	appi->gfsdk.fb0_rect.y = 0;
 #if defined(EA1)
 	point = UIS_CanvasGetDisplaySize();
 #else
 	UIS_CanvasGetDisplaySize(&point);
 #endif
-	app_instance->gfsdk.fb0_rect.w = point.x + 1;
-	app_instance->gfsdk.fb0_rect.h = point.y + 1;
-	app_instance->gfsdk.fb0 = uisAllocateMemory(
-		app_instance->gfsdk.fb0_rect.w * app_instance->gfsdk.fb0_rect.h * 2, &result
-	);
+	appi->gfsdk.fb0_rect.w = point.x + 1;
+	appi->gfsdk.fb0_rect.h = point.y + 1;
+	appi->gfsdk.fb0 = uisAllocateMemory(appi->gfsdk.fb0_rect.w * appi->gfsdk.fb0_rect.h * 2, &result);
 	if (result != RESULT_OK) {
 		LOG("Cannot allocate '%d' bytes of memory for fill screen!\n",
-			app_instance->gfsdk.fb0_rect.w * app_instance->gfsdk.fb0_rect.h * 2);
+			appi->gfsdk.fb0_rect.w * appi->gfsdk.fb0_rect.h * 2);
 		status = RESULT_FAIL;
 	}
-	memclr(app_instance->gfsdk.fb0, app_instance->gfsdk.fb0_rect.w * app_instance->gfsdk.fb0_rect.h * 2);
+	memclr(appi->gfsdk.fb0, appi->gfsdk.fb0_rect.w * appi->gfsdk.fb0_rect.h * 2);
 	Nvidia_Driver_Flush(app);
-	uisFreeMemory(app_instance->gfsdk.fb0);
+	uisFreeMemory(appi->gfsdk.fb0);
 
-	app_instance->gfsdk.fb0_rect.w = point.x + 1;
+	appi->gfsdk.fb0_rect.w = point.x + 1;
 #if defined(NVIDIA_FULLSCREEN)
-	app_instance->gfsdk.fb0_rect.h = point.y + 1;
+	appi->gfsdk.fb0_rect.h = point.y + 1;
 #else
-	app_instance->gfsdk.fb0_rect.h = SCREENHEIGHT;
+	appi->gfsdk.fb0_rect.h = SCREENHEIGHT;
 #endif
 
 	// EXL, 28-Jul-2025: Uncomment it to emulate Motorola E770v display on Motorola RAZR V3x screen.
-//	app_instance->gfsdk.fb0_rect.x = 0;
-//	app_instance->gfsdk.fb0_rect.y = 0;
-//	app_instance->gfsdk.fb0_rect.w = 176;
-//	app_instance->gfsdk.fb0_rect.h = 220;
+//	appi->gfsdk.fb0_rect.x = 0;
+//	appi->gfsdk.fb0_rect.y = 0;
+//	appi->gfsdk.fb0_rect.w = 176;
+//	appi->gfsdk.fb0_rect.h = 220;
 
-	app_instance->gfsdk.fb0 = uisAllocateMemory(app_instance->gfsdk.fb0_rect.w * app_instance->gfsdk.fb0_rect.h * 2, &result);
+	appi->gfsdk.fb0 = uisAllocateMemory(appi->gfsdk.fb0_rect.w * appi->gfsdk.fb0_rect.h * 2, &result);
 	if (result != RESULT_OK) {
-		LOG("Cannot allocate '%d' bytes of memory for screen!\n", app_instance->gfsdk.fb0_rect.w * app_instance->gfsdk.fb0_rect.h * 2);
+		LOG("Cannot allocate '%d' bytes of memory for screen!\n", appi->gfsdk.fb0_rect.w * appi->gfsdk.fb0_rect.h * 2);
 		status = RESULT_FAIL;
 	}
 
 #if !defined(NVIDIA_FULLSCREEN)
-	app_instance->gfsdk.fb0_rect.y = (point.y + 1) / 2 - SCREENHEIGHT / 2;
+	appi->gfsdk.fb0_rect.y = (point.y + 1) / 2 - SCREENHEIGHT / 2;
 #endif
 
 	return status;
@@ -1519,34 +1517,34 @@ static UINT32 Nvidia_Driver_Start(APPLICATION_T *app) {
 
 static UINT32 Nvidia_Driver_Stop(APPLICATION_T *app) {
 	UINT32 status;
-	APP_INSTANCE_T *app_instance;
+	APP_INSTANCE_T *appi;
 
 	status = RESULT_OK;
-	app_instance = (APP_INSTANCE_T *) app;
+	appi = (APP_INSTANCE_T *) app;
 
-	uisFreeMemory(app_instance->gfsdk.fb0);
+	uisFreeMemory(appi->gfsdk.fb0);
 
 	return status;
 }
 
 static UINT32 Nvidia_Driver_Flush(APPLICATION_T *app) {
 	UINT32 status;
-	APP_INSTANCE_T *app_instance;
+	APP_INSTANCE_T *appi;
 
 	status = RESULT_OK;
-	app_instance = (APP_INSTANCE_T *) app;
+	appi = (APP_INSTANCE_T *) app;
 
 	GFGxCopyColorBitmap(
-		app_instance->gfsdk.gxHandle,
-		app_instance->gfsdk.fb0_rect.x, app_instance->gfsdk.fb0_rect.y,
-		app_instance->gfsdk.fb0_rect.w, app_instance->gfsdk.fb0_rect.h,
+		appi->gfsdk.gxHandle,
+		appi->gfsdk.fb0_rect.x, appi->gfsdk.fb0_rect.y,
+		appi->gfsdk.fb0_rect.w, appi->gfsdk.fb0_rect.h,
 #if defined(NVIDIA_FULLSCREEN)
-		app_instance->gfsdk.fb0_rect.x, app_instance->gfsdk.fb0_rect.y,
+		appi->gfsdk.fb0_rect.x, appi->gfsdk.fb0_rect.y,
 #else
-		app_instance->gfsdk.fb0_rect.x, 0,
+		appi->gfsdk.fb0_rect.x, 0,
 #endif
-		app_instance->gfsdk.fb0_rect.w * 2,
-		app_instance->gfsdk.fb0
+		appi->gfsdk.fb0_rect.w * 2,
+		appi->gfsdk.fb0
 	);
 
 	return status;
