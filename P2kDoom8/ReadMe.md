@@ -40,6 +40,20 @@ A collection of photos featuring various Motorola phones running the **P2kDoom8*
 
 // TODO: Photos with C650, ROKR E1 or Motorola E398?, RAZR-like V3i?
 
+## Files
+
+The ready-to-run ELF builds can be downloaded from the [Releases](https://github.com/EXL/P2kDoom/releases) section on GitHub.
+
+```
+TODO: Tree with descriptions, or table.
+```
+
+## Install
+
+The application uses the [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format for distribution, requiring custom firmware with ElfLoader and ElfPack patches installed on the phone. Check out the [ELFs by EXL: Nostalgia for Developing on Motorola P2K](https://forum.motofan.ru/index.php?showtopic=1742337) thread on the MotoFan.Ru forum, where you can find instructions, awesome custom firmware, and more exciting ELF applications for Motorola phones!
+
+The WAD file named `P2kDoom8.wad` should be placed in the same directory as the ELF application. On Rainbow and Argon platforms, you can use the `/e/mobile/P2kDoom8.wad` path to significantly optimize I/O performance in the game, thanks to the faster `/e/` disk on these devices.
+
 ## Keys and Controls
 
 Description of the key controls in a schematic diagram and shortcut sheet. Click on the image thumbnail to enlarge it.
@@ -77,14 +91,6 @@ Use the <kbd>3</kbd> button (Mod Key) pressed together with these keys:
 | <kbd>7</kbd>                                                      | Give All          |
 | <kbd>9</kbd>                                                      | Chainsaw          |
 | <kbd>Up</kbd>                                                     | End Level         |
-
-## Files
-
-The ready-to-run ELF builds can be downloaded from the [Releases](https://github.com/EXL/P2kDoom/releases) section on GitHub.
-
-```
-TODO: Tree with descriptions, or table.
-```
 
 ## ELF Recipe
 

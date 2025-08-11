@@ -13,7 +13,7 @@ P2kDoom is an ambitious project focused on porting various [id Tech 1](https://e
 
 ## Ports to P2K
 
-The ports are implemented as ELF applications and require some custom firmware (Monster Pack) to run Doom on these devices.
+The ports are implemented as ELF applications and require some custom firmware (Monster Pack) to run Doom on these devices. Interested? Check out the [ELFs by EXL: Nostalgia for Developing on Motorola P2K](https://forum.motofan.ru/index.php?showtopic=1742337) thread on the MotoFan.Ru forum, where you can find cool custom firmware and more exciting ELF applications for Motorola phones!
 
 ### 1. [P2kDoom8](P2kDoom8)
 
