@@ -87,7 +87,7 @@ typedef struct menu_s
 //
 // defaulted values
 //
-int16_t _g_alwaysRun;
+int16_t _g_alwaysRun = 1;
 
 uint16_t _g_gamma;
 
