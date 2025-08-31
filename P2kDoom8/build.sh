@@ -11,8 +11,7 @@ main() {
 	build_sdl 3
 	build_neptune
 	build_rainbow
-	build_argon_lv
-	build_argon_plus
+	build_argon
 
 	get_files_info
 }
@@ -59,26 +58,15 @@ build_rainbow() {
 	echo -e "\033[32mBuilding for P2K/Rainbow...done!\033[0m"
 }
 
-build_argon_lv() {
-	echo -e "\033[32mBuilding for P2K/ArgonLV...\033[0m"
+build_argon() {
+	echo -e "\033[32mBuilding for P2K/Argon...\033[0m"
 	for res in "240x160" "240x320" "320x240"; do
 		make -f Makefile.ea1 clean
 		RES="$res" GFX=NVIDIA QUALITY=MID make -f Makefile.ea1
 		mv *.elf "Release/Argon" 2>/dev/null || true
 		make -f Makefile.ea1 clean
 	done
-	echo -e "\033[32mBuilding for P2K/ArgonLV...done!\033[0m"
-}
-
-build_argon_plus() {
-	echo -e "\033[32mBuilding for P2K/Argon+...\033[0m"
-	for res in "240x160" "240x320" "320x240"; do
-		make -f Makefile.ea1 clean
-		RES="$res" GFX=DAL QUALITY=MID make -f Makefile.ea1
-		mv *.elf "Release/Argon" 2>/dev/null || true
-		make -f Makefile.ea1 clean
-	done
-	echo -e "\033[32mBuilding for P2K/Argon+...done!\033[0m"
+	echo -e "\033[32mBuilding for P2K/Argon...done!\033[0m"
 }
 
 get_files_info() {
