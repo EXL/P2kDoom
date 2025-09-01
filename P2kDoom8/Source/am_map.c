@@ -55,6 +55,7 @@
 
 #include "globdata.h"
 
+#include "i_p2k_iram.h"
 
 enum automapmode_e automapmode; // Mode that the automap is in
 

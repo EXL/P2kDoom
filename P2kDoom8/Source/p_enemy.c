@@ -52,6 +52,7 @@
 
 #include "globdata.h"
 
+#include "i_p2k_iram.h"
 
 static fixed_t dropoff_deltax, dropoff_deltay, floorz;
 

@@ -41,6 +41,7 @@
 
 #include "globdata.h"
 
+#include "i_p2k_iram.h"
 
 typedef struct {
   fixed_t sightzstart, t2x, t2y;   // eye z of looker

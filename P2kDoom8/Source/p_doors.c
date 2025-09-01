@@ -43,6 +43,7 @@
 
 #include "globdata.h"
 
+#include "i_p2k_iram.h"
 
 /* killough 10/98:
  *

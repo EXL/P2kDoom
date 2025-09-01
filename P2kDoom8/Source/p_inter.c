@@ -50,6 +50,8 @@
 
 #include "p_inter.h"
 
+#include "i_p2k_iram.h"
+
 #define BONUSADD        6
 
 // Ty 03/07/98 - add deh externals

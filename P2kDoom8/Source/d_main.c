@@ -64,6 +64,7 @@
 #include "am_map.h"
 #include "m_cheat.h"
 #include "globdata.h"
+#include "i_p2k_iram.h"
 
 static void D_DoAdvanceDemo(void);
 static void D_PageDrawer(void);

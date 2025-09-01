@@ -408,6 +408,7 @@ fixed_t finecosine(int16_t x)
 	}
 }
 
+#if !defined(IRAM)
 
 fixed_t finesineapprox(int16_t x)
 {
@@ -436,6 +437,7 @@ fixed_t finecosineapprox(int16_t x)
 	}
 }
 
+#endif
 
 const angle16_t xtoviewangleTable[VIEWWINDOWWIDTH + 1] =
 {

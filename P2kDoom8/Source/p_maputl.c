@@ -44,6 +44,7 @@
 
 #include "globdata.h"
 
+#include "i_p2k_iram.h"
 
 fixed_t _g_opentop;
 fixed_t _g_openbottom;

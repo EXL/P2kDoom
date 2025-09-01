@@ -47,6 +47,8 @@
 
 #include "globdata.h"
 
+#include "i_p2k_iram.h"
+
 #define LOWERSPEED   (FRACUNIT*6)
 #define RAISESPEED   (FRACUNIT*6)
 #define WEAPONBOTTOM (FRACUNIT*128)

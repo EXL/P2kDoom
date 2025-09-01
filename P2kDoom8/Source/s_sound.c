@@ -50,6 +50,7 @@
 
 #include "globdata.h"
 
+#include "i_p2k_iram.h"
 
 typedef struct
 {

@@ -61,6 +61,8 @@ extern const mapnode_t __far* nodes;
 #if !defined FLAT_SPAN
 extern fixed_t  viewx, viewy, viewz;
 extern fixed_t  viewcos, viewsin;
+#else
+extern fixed_t  viewx, viewy, viewz;
 #endif
 
 extern angle_t viewangle;

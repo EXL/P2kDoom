@@ -90,6 +90,8 @@ static int16_t openings[MAXOPENINGS];
 static int16_t* lastopening;
 
 
+#if !defined(IRAM)
+
 #if VIEWWINDOWWIDTH == 240
 #define VIEWANGLETOXMAX 1029
 #elif VIEWWINDOWWIDTH == 120
@@ -147,6 +149,7 @@ static const angle16_t* tantoangle16Table = ((angle16_t*)&tantoangleTable[0]);
 #define tantoangle(t) tantoangleTable[t]
 #define tantoangle16(t) tantoangle16Table[(t)*2]
 
+#endif /* !defined(IRAM) */
 
 static const uint16_t finetangentTable_part_3[1024];
 #if VIEWWINDOWWIDTH == 240
@@ -434,7 +437,7 @@ int16_t numnodes;
 const mapnode_t __far* nodes;
 
 #if defined FLAT_SPAN
-static fixed_t  viewx, viewy, viewz;
+fixed_t  viewx, viewy, viewz;
 static fixed_t  viewcos, viewsin;
 #else
 fixed_t  viewx, viewy, viewz;
@@ -550,6 +553,8 @@ static const uint16_t PSPRITEYFRACSTEP = (FRACUNIT * SCREENHEIGHT_VGA / (VIEWWIN
 
 static const angle16_t clipangle = 0x2008; // = xtoviewangleTable[0]
 
+
+#if !defined(IRAM)
 
 #if defined __WATCOMC__
 //
@@ -683,6 +688,8 @@ static PUREFUNC int8_t R_PointOnSide(fixed_t x, fixed_t y, const mapnode_t __far
 	return (y >> 8) * node->dx >= (x >> 8) * node->dy;
 }
 
+#endif // !defined(IRAM)
+
 //
 // R_PointInSubsector
 //
@@ -715,6 +722,7 @@ subsector_t __far* R_PointInSubsector(fixed_t x, fixed_t y)
 	return prevr;
 }
 
+#if !defined(IRAM)
 
 #define SLOPERANGE 2048
 
@@ -835,10 +843,10 @@ CONSTFUNC angle_t R_PointToAngle3(fixed_t x, fixed_t y)
 #define R_PointToAngle(x,y) R_PointToAngle16((x)>>FRACBITS,(y)>>FRACBITS)
 
 
-static angle16_t R_PointToAngle16(int16_t x, int16_t y)
+static angle16_t R_PointToAngle16(fixed_t a_viewx, fixed_t a_viewy, int16_t x, int16_t y)
 {
-    x = x - (viewx >> FRACBITS);
-    y = y - (viewy >> FRACBITS);
+    x = x - (a_viewx >> FRACBITS);
+    y = y - (a_viewy >> FRACBITS);
 
     if (!x && !y)
         return 0;
@@ -920,13 +928,13 @@ static angle16_t R_PointToAngle16(int16_t x, int16_t y)
 #define SLOPEBITS    11
 #define DBITS      (FRACBITS-SLOPEBITS)
 
-static CONSTFUNC int16_t R_PointToDist(int16_t x, int16_t y)
+static CONSTFUNC int16_t R_PointToDist(fixed_t a_viewx, fixed_t a_viewy, int16_t x, int16_t y)
 {
-    if (viewx == (fixed_t)x << FRACBITS && viewy == (fixed_t)y << FRACBITS)
+    if (a_viewx == (fixed_t)x << FRACBITS && a_viewy == (fixed_t)y << FRACBITS)
         return 0;
 
-    fixed_t dx = D_abs(((fixed_t)x << FRACBITS) - viewx);
-    fixed_t dy = D_abs(((fixed_t)y << FRACBITS) - viewy);
+    fixed_t dx = D_abs(((fixed_t)x << FRACBITS) - a_viewx);
+    fixed_t dy = D_abs(((fixed_t)y << FRACBITS) - a_viewy);
 
     if (dy > dx)
     {
@@ -938,6 +946,7 @@ static CONSTFUNC int16_t R_PointToDist(int16_t x, int16_t y)
     return dx / finecosineapprox((FixedApproxDiv(dy,dx) >> DBITS) / 2);
 }
 
+#endif // !defined(IRAM)
 
 // Lighting constants.
 
@@ -1039,31 +1048,6 @@ void R_InitColormaps(void)
 }
 
 
-//
-// A vissprite_t is a thing that will be drawn during a refresh.
-// i.e. a sprite object that is partly visible.
-//
-
-typedef struct vissprite_s
-{
-  int16_t x1, x2;
-  fixed_t gx, gy;              // for line side calculation
-  fixed_t gz;                   // global bottom for silhouette clipping
-  fixed_t startfrac;           // horizontal position of x1
-  fixed_t scale;
-  fixed_t xiscale;             // negative if flipped
-  fixed_t texturemid;
-  uint16_t fracstep;
-
-  int16_t lump_num;
-  int16_t patch_topoffset;
-
-  // for color translation and shadow draw, maxbright frames as well
-  const uint8_t* colormap;
-
-} vissprite_t;
-
-
 void R_DrawFuzzColumn (const draw_column_vars_t *dcvars);
 
 
@@ -1115,7 +1099,7 @@ static void R_DrawVisSprite(const vissprite_t *vis)
     Z_ChangeTagToCache(patch);
 }
 
-
+#if !defined(IRAM)
 static void R_GetColumn(const texture_t __far* texture, int16_t texcolumn, int16_t* patch_num, int16_t* x_c)
 {
 	const uint8_t patchcount = texture->patchcount;
@@ -1146,7 +1130,7 @@ static void R_GetColumn(const texture_t __far* texture, int16_t texcolumn, int16
 		} while (++i < patchcount);
 	}
 }
-
+#endif
 
 //
 // R_RenderMaskedSegRange
@@ -1225,7 +1209,7 @@ static void R_RenderMaskedSegRange(const drawseg_t *ds, int16_t x1, int16_t x2)
 	curline = NULL; /* cph 2001/11/18 - must clear curline now we're done with it, so R_LoadColorMap doesn't try using it for other things */
 }
 
-
+#if !defined(IRAM)
 static PUREFUNC boolean R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t __far* line)
 {
     const int16_t lx = line->v1.x;
@@ -1248,7 +1232,7 @@ static PUREFUNC boolean R_PointOnSegSide(fixed_t x, fixed_t y, const seg_t __far
 
     return FixedMul3216(y, ldx) >= FixedMul3216(x, ldy);
 }
-
+#endif
 
 //
 // R_DrawSprite
@@ -1459,6 +1443,7 @@ static void R_DrawPlayerSprites(void)
 // R_SortVisSprites
 //
 
+#if !defined(IRAM)
 // insertion sort
 static void isort(vissprite_t **s, int16_t n)
 {
@@ -1474,6 +1459,7 @@ static void isort(vissprite_t **s, int16_t n)
 		}
 	}
 }
+#endif
 
 #define MAXVISSPRITES 80
 static int16_t num_vissprite;
@@ -1620,7 +1606,7 @@ static void R_ProjectSprite (mobj_t __far* thing, int16_t lightlevel)
     if (sprframe->rotate)
     {
         // choose a different rotation based on player view
-        angle16_t ang = R_PointToAngle(fx, fy);
+        angle16_t ang = R_PointToAngle16(viewx, viewy, (fx)>>FRACBITS,(fy)>>FRACBITS); // R_PointToAngle(fx, fy);
         rot = (angle16_t)(ang - (angle16_t)(thing->angle >> FRACBITS) + (angle16_t)(ANG45_16 / 2) * 9) >> 13;
     }
 
@@ -2134,7 +2120,7 @@ static void R_ClearOpenings(void)
 	lastopening = openings;
 }
 
-
+#if !defined(IRAM)
 /* CPhipps -
  * Mod - returns a % b, guaranteeing 0 <= a < b
  * (notice that the C standard for % does not guarantee this)
@@ -2153,7 +2139,7 @@ inline static int16_t CONSTFUNC Mod(int16_t a, int16_t b)
     else
         return (a & (b-1));
 }
-
+#endif
 
 //
 // R_StoreWallRange
@@ -2191,7 +2177,7 @@ static void R_StoreWallRange(const int16_t start, const int16_t stop)
         offsetangle = ANG90_16;
 #endif
 
-    int16_t hyp = R_PointToDist(curline->v1.x, curline->v1.y);
+    int16_t hyp = R_PointToDist(viewx, viewy, curline->v1.x, curline->v1.y);
 
     rw_distance = (hyp * finecosineapprox(offsetangle >> ANGLETOFINESHIFT_16)) >> FRACBITS;
 
@@ -2583,8 +2569,8 @@ static void R_AddLine(const seg_t __far* line)
 {
     curline = line;
 
-    angle16_t angle1 = R_PointToAngle16(line->v1.x, line->v1.y);
-    angle16_t angle2 = R_PointToAngle16(line->v2.x, line->v2.y);
+    angle16_t angle1 = R_PointToAngle16(viewx, viewy, line->v1.x, line->v1.y);
+    angle16_t angle2 = R_PointToAngle16(viewx, viewy, line->v2.x, line->v2.y);
 
     // Clip to view edges.
     angle16_t span = angle1 - angle2;
@@ -2749,8 +2735,8 @@ static boolean R_CheckBBox(const int16_t __far* bspcoord)
         return true;
 
     const byte* check = checkcoord[boxpos];
-    angle16_t angle1 = R_PointToAngle16(bspcoord[check[0]], bspcoord[check[1]]) - viewangle16;
-    angle16_t angle2 = R_PointToAngle16(bspcoord[check[2]], bspcoord[check[3]]) - viewangle16;
+    angle16_t angle1 = R_PointToAngle16(viewx, viewy, bspcoord[check[0]], bspcoord[check[1]]) - viewangle16;
+    angle16_t angle2 = R_PointToAngle16(viewx, viewy, bspcoord[check[2]], bspcoord[check[3]]) - viewangle16;
 
 
     // cph - replaced old code, which was unclear and badly commented
@@ -2977,6 +2963,7 @@ void R_RenderPlayerView (player_t* player)
     R_DrawMasked ();
 }
 
+#if !defined(IRAM)
 
 static const uint8_t viewangletoxTable[4096 - 1023 - VIEWANGLETOXMAX] =
 {
@@ -3822,6 +3809,7 @@ static const angle_t tantoangleTable[2049] =
     536870912
 };
 
+#endif /* !defined(IRAM) */
 
 // Tangens LUT.
 // Should work with BAM fairly well (12 of 16bit, effectively, by shifting).

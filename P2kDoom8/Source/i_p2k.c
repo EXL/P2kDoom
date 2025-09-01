@@ -1767,9 +1767,11 @@ void I_InitGraphicsHardwareSpecificCode(void)
 	_fmemset(_s_screen, 0, SCREENWIDTH * SCREENHEIGHT);
 
 #if defined(IRAM)
-	IRAM_GLOBALS_T g;
-	g.screen = _s_screen;
-	IRAM_Globals_Init(&g);
+	{
+		IRAM_GLOBALS_T g;
+		g._s_screen = _s_screen;
+		IRAM_Globals_Init(&g);
+	}
 #endif
 
 #if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)

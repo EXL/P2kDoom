@@ -53,7 +53,7 @@ build_neptune_iram() {
 	for phone in "C650" "E1"; do
 		make -f Makefile.eg1 clean
 		NEPTUNE=IRAM_YES PHONE="$phone" make -f Makefile.eg1
-		rm -f P2kDoom8_IRAM.elf
+		rm -f P2kDoom8_IRAM.elf P2kDoom8_$phone.elf
 		mv *.elf "Release/Neptune" 2>/dev/null || true
 		make -f Makefile.eg1 clean
 	done

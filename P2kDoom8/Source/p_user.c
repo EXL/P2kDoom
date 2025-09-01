@@ -46,6 +46,7 @@
 
 #include "globdata.h"
 
+#include "i_p2k_iram.h"
 
 static boolean onground; // whether player is on ground or in air
 

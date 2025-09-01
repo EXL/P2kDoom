@@ -52,6 +52,7 @@
 
 #include "globdata.h"
 
+#include "i_p2k_iram.h"
 
 void A_CyberAttack(mobj_t __far* actor);
 
