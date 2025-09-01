@@ -7,3 +7,6 @@
 
 P2kDoom8*
 Release
+
+.qtc_clangd
+callgrind*

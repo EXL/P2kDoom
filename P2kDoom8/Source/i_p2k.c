@@ -67,6 +67,8 @@
 
 #include "globdata.h"
 
+#include "i_p2k_iram.h"
+
 #if defined(FPS)
 #define TIMER_FAST_UPDATE_MS (1000 / FPS) /* Dynamic FPS based on -DFPS flag. */
 #else
@@ -1764,6 +1766,12 @@ void I_InitGraphicsHardwareSpecificCode(void)
 #endif
 	_fmemset(_s_screen, 0, SCREENWIDTH * SCREENHEIGHT);
 
+#if defined(IRAM)
+	IRAM_GLOBALS_T g;
+	g.screen = _s_screen;
+	IRAM_Globals_Init(&g);
+#endif
+
 #if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
 #if defined(LANDSCAPE)
 	genscalexytable(VIDEO_H, VIDEO_W);
@@ -1906,6 +1914,7 @@ inline static void R_DrawColumnPixel(uint8_t __far* dest, const byte __far* sour
 #endif
 }
 
+#if !defined(IRAM)
 #if defined C_ONLY
 static void R_DrawColumn2(uint16_t fracstep, uint16_t frac, int16_t count)
 {
@@ -1979,12 +1988,14 @@ void R_DrawColumnSprite(const draw_column_vars_t *dcvars)
 
 	R_DrawColumn2(fracstep, frac, count);
 }
+#endif /* !defined(IRAM) */
 
 void R_DrawColumnWall(const draw_column_vars_t *dcvars)
 {
 	R_DrawColumnSprite(dcvars);
 }
 
+#if !defined(IRAM)
 #if defined C_ONLY
 static void R_DrawColumnFlat2(uint8_t col, uint8_t dontcare, int16_t count)
 {
@@ -2055,6 +2066,7 @@ void R_DrawColumnFlat(uint8_t col, const draw_column_vars_t *dcvars)
 
 	R_DrawColumnFlat2(col, col, count);
 }
+#endif /* !defined(IRAM) */
 
 #define FUZZOFF 120 /* SCREENWIDTH / 2 so it fits in an int8_t */
 #define FUZZTABLE 50

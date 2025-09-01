@@ -10,6 +10,7 @@ main() {
 	build_sdl 2
 	build_sdl 3
 	build_neptune
+	build_neptune_iram
 	build_rainbow
 	build_argon
 
@@ -45,6 +46,18 @@ build_neptune() {
 		make -f Makefile.eg1 clean
 	done
 	echo -e "\033[32mBuilding for P2K/Neptune...done!\033[0m"
+}
+
+build_neptune_iram() {
+	echo -e "\033[32mBuilding for P2K/Neptune (IRAM)...\033[0m"
+	for phone in "C650" "E1"; do
+		make -f Makefile.eg1 clean
+		NEPTUNE=IRAM_YES PHONE="$phone" make -f Makefile.eg1
+		rm -f P2kDoom8_IRAM.elf
+		mv *.elf "Release/Neptune" 2>/dev/null || true
+		make -f Makefile.eg1 clean
+	done
+	echo -e "\033[32mBuilding for P2K/Neptune (IRAM)...done!\033[0m"
 }
 
 build_rainbow() {

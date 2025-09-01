@@ -27,6 +27,7 @@
 #include "r_main.h"
 #include "w_wad.h"
 
+#include "i_p2k_iram.h"
 
 #if !defined FLAT_SKY_COLOR
 #define FLAT_SKY_COLOR 99

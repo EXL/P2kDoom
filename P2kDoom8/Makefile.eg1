@@ -11,8 +11,12 @@ DEFINES_MID       = -DVIEWWINDOWWIDTH=120
 DEFINES_HIGH      = -DVIEWWINDOWWIDTH=240 -DHIGH_DETAIL
 
 PHONE            ?= E1
-DEFINES_E1        = -DFPS=10 -DFTR_GFX_ATI -DROT_0 -DSET_DISPLAY_MODE -DVIDEO_W=220 -DVIDEO_H=176 -DLANDSCAPE
-DEFINES_C650      = -DFPS=8 -DFTR_GFX_DAL -DVIDEO_W=128 -DVIDEO_H=128 -DFULLSCREEN -DKEYS_PORTRAIT -DFTR_V600 -DFTR_C650
+DEFINES_E1        = -DFPS=30 -DFTR_GFX_ATI -DROT_0 -DSET_DISPLAY_MODE -DVIDEO_W=220 -DVIDEO_H=176 -DLANDSCAPE
+DEFINES_C650      = -DFPS=30 -DFTR_GFX_DAL -DVIDEO_W=128 -DVIDEO_H=128 -DFULLSCREEN -DKEYS_PORTRAIT -DFTR_V600 -DFTR_C650
+
+NEPTUNE          ?= IRAM_NO
+DEFINES_IRAM_YES  = -DIRAM
+IRAM_ADDRESS     ?= 0x03FCF7F4
 
 SRC_DIR           = Source
 OBJ_DIR           = $(SRC_DIR)/objs
@@ -20,7 +24,7 @@ OBJ_DIR           = $(SRC_DIR)/objs
 INCLUDES          = -nostdinc -I$(P2K_ELF_SDK)/sdk -I$(P2K_ELF_SDK)/ep1/inc -Iinc -I.
 INCLUDES         += -I$(SRC_DIR) -I$(SRC_DIR)/stubs_p2k
 DEFINES           = -std=c99 -D__P2K__ -DP2K
-DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(PHONE)) $(DEFINES_$(QUALITY))
+DEFINES          += -DEP1 -DUSE_BIG_ENDIAN $(DEFINES_$(PHONE)) $(DEFINES_$(QUALITY)) $(DEFINES_$(NEPTUNE))
 DEFINES          += -DFLAT_SPAN -DC_ONLY
 WARNINGS          = -Wall -Wextra
 WARNINGS         += -Wno-sign-compare -Wno-implicit-fallthrough
@@ -34,6 +38,7 @@ CXXFLAGS          = $(CFLAGS)
 LDFLAGS           = $(CFLAGS) -s -pie -Wl,--gc-sections -Wl,--allow-multiple-definition -Wl,-zmax-page-size=4 -Wl,-eRegister
 LIBS              = -nostdlib -nodefaultlibs -L$(P2K_ELF_SDK)/ep1/lib/gcc -leg1_gcc_stub -L. -lgcc_gba_m
 
+TARGET_BIN        = P2kDoom8_IRAM.bin
 TARGET_ELF        = P2kDoom8_$(PHONE).elf
 
 OBJS = \
@@ -95,11 +100,16 @@ all: $(TARGET_ELF)
 
 $(TARGET_ELF): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(LIBS)
+ifeq ($(NEPTUNE),IRAM_YES)
+	PHONE=$(PHONE) IRAM_ADDRESS=$(IRAM_ADDRESS) $(MAKE) -f Makefile.iram clean
+	PHONE=$(PHONE) IRAM_ADDRESS=$(IRAM_ADDRESS) $(MAKE) -f Makefile.iram
+	python PostLinkerIram.py $(TARGET_ELF) $(TARGET_BIN) $(IRAM_ADDRESS)
+endif
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -Rf $(OBJ_DIR)/*.o *.elf
+	rm -Rf $(OBJ_DIR)/*.o *.bin *.elf
 
 .PHONY: all clean
