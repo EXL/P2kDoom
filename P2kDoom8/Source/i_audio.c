@@ -131,6 +131,8 @@ void I_ShutdownSound(void)
 
 #if !defined(SDL) && !defined(P2K)
 	PCFX_Shutdown();
+#else
+	S_Shutdown();
 #endif
 }
 

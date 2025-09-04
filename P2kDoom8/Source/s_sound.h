@@ -56,6 +56,8 @@ void S_Init(int16_t sfxVolume, int16_t musicVolume);
 //
 void S_Start(void);
 
+void S_Shutdown(void);
+
 //
 // Start sound for thing at <origin>
 //  using <sound_id> from sounds.h
