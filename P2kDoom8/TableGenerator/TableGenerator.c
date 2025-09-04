@@ -44,7 +44,7 @@ static int32_t centerxfrac;
 static int32_t viewangletox[FINEANGLES / 2];
 static angle_t xtoviewangle[SCREENWIDTH + 1];
 
-// TODO: Drop union
+#if defined(USE_INT64_U)
 union int64_u {
 	int64_t ll;
 	struct {
@@ -53,23 +53,33 @@ union int64_u {
 		int16_t wh;
 	} __attribute__((packed)) s;
 };
+#endif
 
 static inline fixed_t FixedMul(fixed_t a, fixed_t b) {
+#if defined(USE_INT64_U)
 	union int64_u r;
-	r.ll = (int64_t)a * b;
-	return r.s.dw; // r.ll >> FRACBITS;
+	r.ll = (int64_t) a * b;
+	return r.s.dw;
+#else
+	int64_t ll = (int64_t) a * b;
+	return ll >> FRACBITS;
+#endif
 }
 
 static inline fixed_t FixedDiv(fixed_t a, fixed_t b) {
 	if (((uint32_t) labs(a) >> 14) >= (uint32_t) labs(b)) {
 		return ((a ^ b) >> 31) ^ INT32_MAX;
 	} else {
+#if defined(USE_INT64_U)
 		union int64_u r;
-		// r.ll = (int64_t)a << FRACBITS;
 		r.s.wl = 0;
 		r.s.dw = a;
 		r.s.wh = (a < 0) ? 0xffff : 0x0000;
 		return r.ll / b;
+#else
+		int64_t ll = (int64_t) a << FRACBITS;
+		return ll / b;
+#endif
 	}
 }
 
