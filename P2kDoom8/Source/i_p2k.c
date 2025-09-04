@@ -950,6 +950,22 @@ static void FPS_Meter(void) {
 #error "VIDEO_H not defined! Please compile it with -DVIDEO_H=<value> (e.g., -DVIDEO_H=320)."
 #endif
 
+#if (VIDEO_W == 320 || VIDEO_W == 240) && (VIDEO_W == 240 || VIDEO_W == 320)
+#define UNROLL_LOOP_STEP (16)
+#endif
+
+#if (VIDEO_W == 176 || VIDEO_W == 220) && (VIDEO_W == 220 || VIDEO_W == 176)
+#define UNROLL_LOOP_STEP (22)
+#endif
+
+#if (VIDEO_W == 128 || VIDEO_W == 160) && (VIDEO_W == 160 || VIDEO_W == 128)
+#define UNROLL_LOOP_STEP (16)
+#endif
+
+#if !defined(UNROLL_LOOP_STEP)
+#error "UNROLL_LOOP_STEP not defined! Please check VIDEO_W and VIDEO_H macros."
+#endif
+
 static UINT32 doom_current_palette[256];
 
 #if defined(FTR_GFX_ATI)
@@ -1816,21 +1832,93 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 
 #if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
 #if !defined(FULLSCREEN) && !defined(FTR_C650)
-	for (int i = 0; i < SCREENWIDTH * SCREENHEIGHT; i++) {
-		pp_bitmap[i] = doom_current_palette[buffer[i]];
+	const int end = (SCREENWIDTH * SCREENHEIGHT) - ((SCREENWIDTH * SCREENHEIGHT) % UNROLL_LOOP_STEP);
+	for (int i = 0; i < end; i += UNROLL_LOOP_STEP) {
+		pp_bitmap[i+ 0] = doom_current_palette[buffer[i+ 0]];
+		pp_bitmap[i+ 1] = doom_current_palette[buffer[i+ 1]];
+		pp_bitmap[i+ 2] = doom_current_palette[buffer[i+ 2]];
+		pp_bitmap[i+ 3] = doom_current_palette[buffer[i+ 3]];
+		pp_bitmap[i+ 4] = doom_current_palette[buffer[i+ 4]];
+		pp_bitmap[i+ 5] = doom_current_palette[buffer[i+ 5]];
+		pp_bitmap[i+ 6] = doom_current_palette[buffer[i+ 6]];
+		pp_bitmap[i+ 7] = doom_current_palette[buffer[i+ 7]];
+		pp_bitmap[i+ 8] = doom_current_palette[buffer[i+ 8]];
+		pp_bitmap[i+ 9] = doom_current_palette[buffer[i+ 9]];
+		pp_bitmap[i+10] = doom_current_palette[buffer[i+10]];
+		pp_bitmap[i+11] = doom_current_palette[buffer[i+11]];
+		pp_bitmap[i+12] = doom_current_palette[buffer[i+12]];
+		pp_bitmap[i+13] = doom_current_palette[buffer[i+13]];
+		pp_bitmap[i+14] = doom_current_palette[buffer[i+14]];
+		pp_bitmap[i+15] = doom_current_palette[buffer[i+15]];
+#if (UNROLL_LOOP_STEP > 16)
+		pp_bitmap[i+16] = doom_current_palette[buffer[i+16]];
+		pp_bitmap[i+17] = doom_current_palette[buffer[i+17]];
+		pp_bitmap[i+18] = doom_current_palette[buffer[i+18]];
+		pp_bitmap[i+19] = doom_current_palette[buffer[i+19]];
+		pp_bitmap[i+20] = doom_current_palette[buffer[i+20]];
+		pp_bitmap[i+21] = doom_current_palette[buffer[i+21]];
+#endif
 	}
 #else
 	#if defined(LANDSCAPE)
 		for (int y = 0; y < VIDEO_W; ++y) {
-			for (int x = 0; x < VIDEO_H; ++x) {
+			const int end = VIDEO_H - (VIDEO_H % UNROLL_LOOP_STEP);
+			for (int x = 0; x < end; x += UNROLL_LOOP_STEP) {
 				// CCW 90deg: dest(x, y) <- src(y', x').
 				// src index = xtable[x] + ytable[y].
-				pp_bitmap[y * VIDEO_H + x] = doom_current_palette[buffer[xtable[x] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x +  0)] = doom_current_palette[buffer[xtable[x +  0] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x +  1)] = doom_current_palette[buffer[xtable[x +  1] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x +  2)] = doom_current_palette[buffer[xtable[x +  2] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x +  3)] = doom_current_palette[buffer[xtable[x +  3] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x +  4)] = doom_current_palette[buffer[xtable[x +  4] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x +  5)] = doom_current_palette[buffer[xtable[x +  5] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x +  6)] = doom_current_palette[buffer[xtable[x +  6] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x +  7)] = doom_current_palette[buffer[xtable[x +  7] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x +  8)] = doom_current_palette[buffer[xtable[x +  8] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x +  9)] = doom_current_palette[buffer[xtable[x +  9] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x + 10)] = doom_current_palette[buffer[xtable[x + 10] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x + 11)] = doom_current_palette[buffer[xtable[x + 11] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x + 12)] = doom_current_palette[buffer[xtable[x + 12] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x + 13)] = doom_current_palette[buffer[xtable[x + 13] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x + 14)] = doom_current_palette[buffer[xtable[x + 14] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x + 15)] = doom_current_palette[buffer[xtable[x + 15] + ytable[y]]];
+#if (UNROLL_LOOP_STEP > 16)
+				pp_bitmap[y * VIDEO_H + (x + 16)] = doom_current_palette[buffer[xtable[x + 16] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x + 17)] = doom_current_palette[buffer[xtable[x + 17] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x + 18)] = doom_current_palette[buffer[xtable[x + 18] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x + 19)] = doom_current_palette[buffer[xtable[x + 19] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x + 20)] = doom_current_palette[buffer[xtable[x + 20] + ytable[y]]];
+				pp_bitmap[y * VIDEO_H + (x + 21)] = doom_current_palette[buffer[xtable[x + 21] + ytable[y]]];
+#endif
 			}
 		}
 	#else
-		for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
-			pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
+		const int end = (VIDEO_W * VIDEO_H) - ((VIDEO_W * VIDEO_H) % UNROLL_LOOP_STEP);
+		for (int i = 0; i < end; i += UNROLL_LOOP_STEP) {
+			pp_bitmap[i+ 0] = doom_current_palette[buffer[indextable[i+ 0]]];
+			pp_bitmap[i+ 1] = doom_current_palette[buffer[indextable[i+ 1]]];
+			pp_bitmap[i+ 2] = doom_current_palette[buffer[indextable[i+ 2]]];
+			pp_bitmap[i+ 3] = doom_current_palette[buffer[indextable[i+ 3]]];
+			pp_bitmap[i+ 4] = doom_current_palette[buffer[indextable[i+ 4]]];
+			pp_bitmap[i+ 5] = doom_current_palette[buffer[indextable[i+ 5]]];
+			pp_bitmap[i+ 6] = doom_current_palette[buffer[indextable[i+ 6]]];
+			pp_bitmap[i+ 7] = doom_current_palette[buffer[indextable[i+ 7]]];
+			pp_bitmap[i+ 8] = doom_current_palette[buffer[indextable[i+ 8]]];
+			pp_bitmap[i+ 9] = doom_current_palette[buffer[indextable[i+ 9]]];
+			pp_bitmap[i+10] = doom_current_palette[buffer[indextable[i+10]]];
+			pp_bitmap[i+11] = doom_current_palette[buffer[indextable[i+11]]];
+			pp_bitmap[i+12] = doom_current_palette[buffer[indextable[i+12]]];
+			pp_bitmap[i+13] = doom_current_palette[buffer[indextable[i+13]]];
+			pp_bitmap[i+14] = doom_current_palette[buffer[indextable[i+14]]];
+			pp_bitmap[i+15] = doom_current_palette[buffer[indextable[i+15]]];
+#if (UNROLL_LOOP_STEP > 16)
+			pp_bitmap[i+16] = doom_current_palette[buffer[indextable[i+16]]];
+			pp_bitmap[i+17] = doom_current_palette[buffer[indextable[i+17]]];
+			pp_bitmap[i+18] = doom_current_palette[buffer[indextable[i+18]]];
+			pp_bitmap[i+19] = doom_current_palette[buffer[indextable[i+19]]];
+			pp_bitmap[i+20] = doom_current_palette[buffer[indextable[i+20]]];
+			pp_bitmap[i+21] = doom_current_palette[buffer[indextable[i+21]]];
+#endif
 		}
 	#endif
 #endif
