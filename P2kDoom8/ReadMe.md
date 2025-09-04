@@ -28,7 +28,7 @@ A collection of **P2kDoom8** screenshots taken from various Motorola phones. The
 
 ![RAZR V3x P2kDoom8 Screenshot Portrait No Scale 1](Media/Screen_P2kDoom8_V3x_00_01.png) ![RAZR V3x P2kDoom8 Screenshot Portrait No Scale 2](Media/Screen_P2kDoom8_V3x_00_02.png) ![RAZR V3x P2kDoom8 Screenshot Portrait No Scale 3](Media/Screen_P2kDoom8_V3x_00_03.png) ![RAZR V3x P2kDoom8 Screenshot Portrait No Scale 4](Media/Screen_P2kDoom8_V3x_00_04.png)
 
-![RAZR V3x P2kDoom8 Screenshot Portrait 1](Media/Screen_P2kDoom8_V3x_01_01.png) ![RAZR V3x P2kDoom8 Screenshot Portrait 2](Media/Screen_P2kDoom8_V3x_01_02.png) ![RAZR V3x P2kDoom8 Screenshot Portrait 3](Media/Screen_P2kDoom8_V3x_01_03.png) ![RAZR V3x P2kDoom8 Screenshot Portrait 4](Media/Screen_P2kDoom8_V3x_01_04.png)
+![RAZR V3x P2kDoom8 Screenshot Portrait 1](Media/Screen_P2kDoom8_V3x_E_01_01.png) ![RAZR V3x P2kDoom8 Screenshot Portrait 2](Media/Screen_P2kDoom8_V3x_E_01_02.png) ![RAZR V3x P2kDoom8 Screenshot Portrait 3](Media/Screen_P2kDoom8_V3x_E_01_03.png) ![RAZR V3x P2kDoom8 Screenshot Portrait 4](Media/Screen_P2kDoom8_V3x_E_01_04.png)
 
 ![RAZR V3x P2kDoom8 Screenshot Landscape 1](Media/Screen_P2kDoom8_V3x_02_01.png) ![RAZR V3x P2kDoom8 Screenshot Landscape 2](Media/Screen_P2kDoom8_V3x_02_02.png)
 
@@ -101,15 +101,23 @@ Please install the [P2K-ELF-SDK](https://github.com/MotoFanRu/P2K-ELF-SDK/) firs
 PHONE=E398 make -f Makefile.eg1
 PHONE=C650 make -f Makefile.eg1
 
+# Neptune + IRAM
+NEPTUNE=IRAM_YES PHONE=E398 make -f Makefile.eg1
+NEPTUNE=IRAM_YES PHONE=C650 make -f Makefile.eg1
+
 # Rainbow
-RES=240x160 make -f Makefile.em2
-RES=240x320 make -f Makefile.em2
-RES=320x240 make -f Makefile.em2
-RES=176x220 make -f Makefile.em2
-RES=220x176 make -f Makefile.em2
+RES=240x160  make -f Makefile.em2
+RES=240x320  make -f Makefile.em2
+RES=240x320E make -f Makefile.em2
+RES=320x240  make -f Makefile.em2
+RES=176x220  make -f Makefile.em2
+RES=220x176  make -f Makefile.em2
 
 # Argon
-# TODO:
+RES=240x160  GFX=NVIDIA QUALITY=MID make -f Makefile.ea1
+RES=240x320  GFX=NVIDIA QUALITY=MID make -f Makefile.ea1
+RES=240x320E GFX=NVIDIA QUALITY=MID make -f Makefile.ea1
+RES=320x240  GFX=NVIDIA QUALITY=MID make -f Makefile.ea1
 ```
 
 ## WAD Recipe
