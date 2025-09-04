@@ -968,7 +968,11 @@ static void FPS_Meter(void) {
 #error "UNROLL_LOOP_STEP not defined! Please check VIDEO_W and VIDEO_H macros."
 #endif
 
+#if defined(FTR_GFX_ATI)
+static UINT32 doom_current_palette[256];
+#else
 static UINT16 doom_current_palette[256];
+#endif
 
 #if defined(FTR_GFX_ATI)
 static UINT32 ATI_Driver_Log(APPLICATION_T *app) {
