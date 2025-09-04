@@ -641,7 +641,7 @@ static void ST_drawWidgets(void)
 
 static void ST_refreshBackground(void)
 {
-	static const uint16_t st_offset = (SCREENHEIGHT - ST_HEIGHT) * SCREENWIDTH;
+	static const UINT16_OR_UINT32 st_offset = (SCREENHEIGHT - ST_HEIGHT) * SCREENWIDTH;
 	V_DrawRaw(statusbarnum, st_offset);
 }
 

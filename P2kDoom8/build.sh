@@ -45,7 +45,7 @@ build_neptune_iram() {
 
 build_rainbow() {
 	echo -e "\033[32mBuilding for P2K/Rainbow...\033[0m"
-	for res in "240x160" "240x320" "320x240" "176x220" "220x176"; do
+	for res in "240x160" "240x320" "240x320E" "320x240" "176x220" "220x176"; do
 		make -f Makefile.em2 clean
 		RES="$res" make -f Makefile.em2
 		mv *.elf "Release/Rainbow" 2>/dev/null || true
@@ -56,7 +56,7 @@ build_rainbow() {
 
 build_argon() {
 	echo -e "\033[32mBuilding for P2K/Argon...\033[0m"
-	for res in "240x160" "240x320" "320x240"; do
+	for res in "240x160" "240x320" "240x320E" "320x240"; do
 		make -f Makefile.ea1 clean
 		RES="$res" GFX=NVIDIA QUALITY=MID make -f Makefile.ea1
 		mv *.elf "Release/Argon" 2>/dev/null || true

@@ -75,6 +75,8 @@
 #error "FPS not defined! Please compile it with -DFPS=<value> (e.g., -DFPS=30)."
 #endif
 
+#define RGB565(R, G, B) ((UINT16) ((R & 0xF8) << 8 | (G & 0xFC) << 3 | (B & 0xF8) >> 3))
+
 typedef enum {
 	APP_STATE_ANY,
 	APP_STATE_INIT,
@@ -966,7 +968,7 @@ static void FPS_Meter(void) {
 #error "UNROLL_LOOP_STEP not defined! Please check VIDEO_W and VIDEO_H macros."
 #endif
 
-static UINT32 doom_current_palette[256];
+static UINT16 doom_current_palette[256];
 
 #if defined(FTR_GFX_ATI)
 static UINT32 ATI_Driver_Log(APPLICATION_T *app) {
@@ -1324,7 +1326,7 @@ static UINT32 ATI_Driver_Start(APPLICATION_T *app) {
 
 	status |= AhiDrawSurfDstSet(appi->ahi.context, appi->ahi.screen, 0);
 
-	status |= AhiDrawBrushFgColorSet(appi->ahi.context, ATI_565RGB(0x88, 0x88, 0x88));
+	status |= AhiDrawBrushFgColorSet(appi->ahi.context, RGB565(0x88, 0x88, 0x88));
 	status |= AhiDrawBrushSet(appi->ahi.context, NULL, NULL, 0, AHIFLAG_BRUSH_SOLID);
 	status |= AhiDrawRopSet(appi->ahi.context, AHIROP3(AHIROP_PATCOPY));
 	status |= AhiDrawSpans(appi->ahi.context, &appi->ahi.update_params.rect, 1, 0);
@@ -1678,10 +1680,6 @@ static const uint8_t colors[14][3] =
 };
 #endif
 
-#if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
-#define ATI_565RGB(r, g, b) (UINT32)((r & 0xf8) << 8 | (g & 0xFC) << 3 | (b & 0xf8) >> 3)
-#endif
-
 static void I_UploadNewPalette(int8_t pal)
 {
 	// This is used to replace the current 256 colour cmap with a new one
@@ -1698,7 +1696,7 @@ static void I_UploadNewPalette(int8_t pal)
 #endif
 
 		for(int p = 0; p < 256; p++) {
-			doom_current_palette[p] = ATI_565RGB(palette[3*p], palette[(3*p)+1], palette[(3*p)+2]);
+			doom_current_palette[p] = RGB565(palette[3*p], palette[(3*p)+1], palette[(3*p)+2]);
 		}
 
 #if 0
@@ -1831,7 +1829,7 @@ static void I_DrawBuffer(uint8_t __far* buffer)
 #endif
 
 #if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
-#if !defined(FULLSCREEN) && !defined(FTR_C650)
+#if (SCREENHEIGHT >= 320) || (!defined(FULLSCREEN) && !defined(FTR_C650))
 	const int end = (SCREENWIDTH * SCREENHEIGHT) - ((SCREENWIDTH * SCREENHEIGHT) % UNROLL_LOOP_STEP);
 	for (int i = 0; i < end; i += UNROLL_LOOP_STEP) {
 		pp_bitmap[i+ 0] = doom_current_palette[buffer[i+ 0]];
@@ -2376,14 +2374,34 @@ void V_DrawBackground(int16_t backgroundnum)
 	Z_ChangeTagToCache(src);
 }
 
-void V_DrawRaw(int16_t num, uint16_t offset)
+void V_DrawRaw(int16_t num, UINT16_OR_UINT32 offset)
 {
 	const uint8_t __far* lump = W_TryGetLumpByNum(num);
 
 	if (lump != NULL)
 	{
 		uint16_t lumpLength = W_LumpLength(num);
-		_fmemcpy(&_s_screen[offset], lump, lumpLength);
+#if (SCREENHEIGHT >= 320)
+		if (lumpLength >= 38400) {
+			/* Scale lump texture from 240x160 to 240x320 if it is fullscreen texture. */
+			const uint16_t width = 240;
+			const uint16_t height = 160;
+			uint8_t* dst = &_s_screen[offset];
+			for (uint16_t y = 0; y < height; ++y) {
+				// Source row in lump
+				const uint8_t* src_row = lump + y * width;
+
+				// Destination rows in _s_screen (stretched)
+				uint8_t* dst_row1 = dst + (y * 2) * width;
+				uint8_t* dst_row2 = dst + (y * 2 + 1) * width;
+
+				// Copy the row twice
+				_fmemcpy(dst_row1, src_row, width);
+				_fmemcpy(dst_row2, src_row, width);
+			}
+		} else
+#endif
+			_fmemcpy(&_s_screen[offset], lump, lumpLength);
 		Z_ChangeTagToCache(lump);
 	}
 	else
@@ -2529,7 +2547,15 @@ static  int16_t __far* wipe_y_lookup;
 
 void wipe_StartScreen(void)
 {
+#if (SCREENHEIGHT >= 320)
+	INT32 error;
+	frontbuffer = uisAllocateMemory(SCREENWIDTH * SCREENHEIGHT, &error);
+	if (error != RESULT_OK) {
+		LOG("Cannot allocate %d bytes for the frontbuffer!\n", SCREENWIDTH * SCREENHEIGHT);
+	}
+#else
 	frontbuffer = Z_TryMallocStatic(SCREENWIDTH * SCREENHEIGHT);
+#endif
 	if (frontbuffer)
 	{
 		// copy back buffer to front buffer
@@ -2664,7 +2690,11 @@ void D_Wipe(void)
 
 	} while (!done);
 
+#if (SCREENHEIGHT >= 320)
+	uisFreeMemory(frontbuffer);
+#else
 	Z_Free(frontbuffer);
+#endif
 	Z_Free(wipe_y_lookup);
 }
 

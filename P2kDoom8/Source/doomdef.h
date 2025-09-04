@@ -77,8 +77,12 @@
 
 
 // SCREENWIDTH and SCREENHEIGHT define the visible size
+#if !defined SCREENWIDTH
 #define SCREENWIDTH  240u
+#endif
+#if !defined SCREENHEIGHT
 #define SCREENHEIGHT 160 /*(VIEWWINDOWHEIGHT+ST_HEIGHT)*/
+#endif
 
 #define SCREENWIDTH_VGA  320
 #define SCREENHEIGHT_VGA 200
@@ -203,5 +207,11 @@ typedef enum {
 
 #define ORIG_FRICTION          0xE800      // original value
 #define ORIG_FRICTION_FACTOR   2048L       // original value
+
+#if (SCREENHEIGHT >= 320)
+#define UINT16_OR_UINT32 uint32_t
+#else
+#define UINT16_OR_UINT32 uint16_t
+#endif
 
 #endif          // __DOOMDEF__
