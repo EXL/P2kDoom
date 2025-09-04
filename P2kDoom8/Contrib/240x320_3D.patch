@@ -1,0 +1,336 @@
+From 52d22d9042dc5c6a0db1edc96ac57e7b2ab04ad1 Mon Sep 17 00:00:00 2001
+From: EXL <exlmotodev@gmail.com>
+Date: Wed, 3 Sep 2025 12:36:42 +0700
+Subject: [PATCH] 240x320
+
+---
+ P2kDoom8/Makefile.em2      |  4 +--
+ P2kDoom8/Source/doomdef.h  |  4 +--
+ P2kDoom8/Source/i_p2k.c    | 60 ++++++++++++++++++++++++++++++++------
+ P2kDoom8/Source/i_sdl2.c   | 45 +++++++++++++++++++++-------
+ P2kDoom8/Source/i_video.h  |  2 +-
+ P2kDoom8/Source/r_draw.c   |  2 +-
+ P2kDoom8/Source/st_stuff.c |  2 +-
+ P2kDoom8/Source/v_video.h  |  2 +-
+ 8 files changed, 93 insertions(+), 28 deletions(-)
+
+diff --git a/P2kDoom8/Makefile.em2 b/P2kDoom8/Makefile.em2
+index 0872f33..bc8f75a 100644
+--- a/P2kDoom8/Makefile.em2
++++ b/P2kDoom8/Makefile.em2
+@@ -12,8 +12,8 @@ DEFINES_HIGH      = -DVIEWWINDOWWIDTH=240 -DHIGH_DETAIL
+ 
+ RES              ?= 240x320
+ DEFINES_240x160   = -DFPS=35 -DVIDEO_W=240 -DVIDEO_H=160 -DKEYS_PORTRAIT
+-DEFINES_240x320   = -DFPS=21 -DVIDEO_W=240 -DVIDEO_H=320 -DFULLSCREEN -DKEYS_PORTRAIT
+-DEFINES_320x240   = -DFPS=22 -DVIDEO_W=320 -DVIDEO_H=240 -DLANDSCAPE -DFULLSCREEN
++DEFINES_240x320   = -DFPS=35 -DVIDEO_W=240 -DVIDEO_H=320 -DFULLSCREEN -DKEYS_PORTRAIT
++DEFINES_320x240   = -DFPS=35 -DVIDEO_W=320 -DVIDEO_H=240 -DLANDSCAPE -DFULLSCREEN
+ DEFINES_176x220   = -DFPS=35 -DVIDEO_W=176 -DVIDEO_H=220 -DFULLSCREEN -DKEYS_PORTRAIT
+ DEFINES_220x176   = -DFPS=35 -DVIDEO_W=220 -DVIDEO_H=176 -DLANDSCAPE -DFULLSCREEN
+ 
+diff --git a/P2kDoom8/Source/doomdef.h b/P2kDoom8/Source/doomdef.h
+index cf95643..b1a66de 100644
+--- a/P2kDoom8/Source/doomdef.h
++++ b/P2kDoom8/Source/doomdef.h
+@@ -72,13 +72,13 @@
+ #endif
+ 
+ #if !defined VIEWWINDOWHEIGHT
+-#define VIEWWINDOWHEIGHT 128
++#define VIEWWINDOWHEIGHT 288
+ #endif
+ 
+ 
+ // SCREENWIDTH and SCREENHEIGHT define the visible size
+ #define SCREENWIDTH  240u
+-#define SCREENHEIGHT 160 /*(VIEWWINDOWHEIGHT+ST_HEIGHT)*/
++#define SCREENHEIGHT 320 /*(VIEWWINDOWHEIGHT+ST_HEIGHT)*/
+ 
+ #define SCREENWIDTH_VGA  320
+ #define SCREENHEIGHT_VGA 200
+diff --git a/P2kDoom8/Source/i_p2k.c b/P2kDoom8/Source/i_p2k.c
+index 7cefa5f..c212235 100644
+--- a/P2kDoom8/Source/i_p2k.c
++++ b/P2kDoom8/Source/i_p2k.c
+@@ -950,7 +950,7 @@ static void FPS_Meter(void) {
+ #error "VIDEO_H not defined! Please compile it with -DVIDEO_H=<value> (e.g., -DVIDEO_H=320)."
+ #endif
+ 
+-static UINT32 doom_current_palette[256];
++static UINT16 doom_current_palette[256];
+ 
+ #if defined(FTR_GFX_ATI)
+ static UINT32 ATI_Driver_Log(APPLICATION_T *app) {
+@@ -1663,7 +1663,7 @@ static const uint8_t colors[14][3] =
+ #endif
+ 
+ #if defined(FTR_GFX_NVIDIA) || defined(FTR_GFX_DAL)
+-#define ATI_565RGB(r, g, b) (UINT32)((r & 0xf8) << 8 | (g & 0xFC) << 3 | (b & 0xf8) >> 3)
++#define ATI_565RGB(r, g, b) (UINT16)((r & 0xf8) << 8 | (g & 0xFC) << 3 | (b & 0xf8) >> 3)
+ #endif
+ 
+ static void I_UploadNewPalette(int8_t pal)
+@@ -1829,9 +1829,32 @@ static void I_DrawBuffer(uint8_t __far* buffer)
+ 			}
+ 		}
+ 	#else
+-		for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
+-			pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
+-		}
++//		appi_g->gfsdk.fb0 = buffer;
++
++	int count = (SCREENWIDTH * SCREENHEIGHT);
++	int remainder = count % 16;
++	for (int i = 0; i < count - remainder; i += 16) {
++		pp_bitmap[i+ 0] = doom_current_palette[buffer[i+ 0]];
++		pp_bitmap[i+ 1] = doom_current_palette[buffer[i+ 1]];
++		pp_bitmap[i+ 2] = doom_current_palette[buffer[i+ 2]];
++		pp_bitmap[i+ 3] = doom_current_palette[buffer[i+ 3]];
++		pp_bitmap[i+ 4] = doom_current_palette[buffer[i+ 4]];
++		pp_bitmap[i+ 5] = doom_current_palette[buffer[i+ 5]];
++		pp_bitmap[i+ 6] = doom_current_palette[buffer[i+ 6]];
++		pp_bitmap[i+ 7] = doom_current_palette[buffer[i+ 7]];
++		pp_bitmap[i+ 8] = doom_current_palette[buffer[i+ 8]];
++		pp_bitmap[i+ 9] = doom_current_palette[buffer[i+ 9]];
++		pp_bitmap[i+10] = doom_current_palette[buffer[i+10]];
++		pp_bitmap[i+11] = doom_current_palette[buffer[i+11]];
++		pp_bitmap[i+12] = doom_current_palette[buffer[i+12]];
++		pp_bitmap[i+13] = doom_current_palette[buffer[i+13]];
++		pp_bitmap[i+14] = doom_current_palette[buffer[i+14]];
++		pp_bitmap[i+15] = doom_current_palette[buffer[i+15]];
++	}
++
++//		for (int i = 0; i < VIDEO_W * VIDEO_H; ++i) {
++//			pp_bitmap[i] = doom_current_palette[buffer[indextable[i]]];
++//		}
+ 	#endif
+ #endif
+ #endif
+@@ -2288,14 +2311,33 @@ void V_DrawBackground(int16_t backgroundnum)
+ 	Z_ChangeTagToCache(src);
+ }
+ 
+-void V_DrawRaw(int16_t num, uint16_t offset)
++void V_DrawRaw(int16_t num, uint32_t offset)
+ {
+ 	const uint8_t __far* lump = W_TryGetLumpByNum(num);
+ 
+ 	if (lump != NULL)
+ 	{
+ 		uint16_t lumpLength = W_LumpLength(num);
+-		_fmemcpy(&_s_screen[offset], lump, lumpLength);
++		if (lumpLength >= 38400) {
++			const uint16_t width = 240;
++			const uint16_t height = 160;
++			uint8_t* dst = &_s_screen[offset];
++
++			for (uint16_t y = 0; y < height; ++y) {
++				// Source row in lump
++				const uint8_t* src_row = lump + y * width;
++
++				// Destination rows in _s_screen (stretched)
++				uint8_t* dst_row1 = dst + (y * 2) * width;
++				uint8_t* dst_row2 = dst + (y * 2 + 1) * width;
++
++				// Copy the row twice
++				_fmemcpy(dst_row1, src_row, width);
++				_fmemcpy(dst_row2, src_row, width);
++			}
++		}
++		else
++			_fmemcpy(&_s_screen[offset], lump, lumpLength);
+ 		Z_ChangeTagToCache(lump);
+ 	}
+ 	else
+@@ -2441,7 +2483,7 @@ static  int16_t __far* wipe_y_lookup;
+ 
+ void wipe_StartScreen(void)
+ {
+-	frontbuffer = Z_TryMallocStatic(SCREENWIDTH * SCREENHEIGHT);
++	frontbuffer = uisAllocateMemory(SCREENWIDTH * SCREENHEIGHT, NULL);
+ 	if (frontbuffer)
+ 	{
+ 		// copy back buffer to front buffer
+@@ -2576,7 +2618,7 @@ void D_Wipe(void)
+ 
+ 	} while (!done);
+ 
+-	Z_Free(frontbuffer);
++	uisFreeMemory(frontbuffer);
+ 	Z_Free(wipe_y_lookup);
+ }
+ 
+diff --git a/P2kDoom8/Source/i_sdl2.c b/P2kDoom8/Source/i_sdl2.c
+index a50e342..05b09d6 100644
+--- a/P2kDoom8/Source/i_sdl2.c
++++ b/P2kDoom8/Source/i_sdl2.c
+@@ -192,8 +192,8 @@ static void genscalexytable(int video_w, int video_h)
+     }
+ }
+ 
+-#define VIDEO_W 320
+-#define VIDEO_H 240
++#define VIDEO_W 240
++#define VIDEO_H 320
+ 
+ void I_InitGraphicsHardwareSpecificCode(void)
+ {
+@@ -248,7 +248,7 @@ void I_InitGraphicsHardwareSpecificCode(void)
+ #if 0
+ 	vgascreen = D_MK_FP(0xa000, ((SCREENWIDTH_VGA - SCREENWIDTH) / 2) + (((SCREENHEIGHT_VGA - SCREENHEIGHT) / 2) * SCREENWIDTH_VGA) + __djgpp_conventional_base);
+ #endif
+-	_s_screen = Z_MallocStatic(SCREENWIDTH * SCREENHEIGHT);
++	_s_screen = surface->pixels; //malloc(SCREENWIDTH * SCREENHEIGHT);
+ 	_fmemset(_s_screen, 0, SCREENWIDTH * SCREENHEIGHT);
+ }
+ 
+@@ -256,8 +256,10 @@ static boolean drawStatusBar = true;
+ 
+ static void I_DrawBuffer(uint8_t __far* buffer)
+ {
+-	uint8_t __far* src = buffer;
+-	uint8_t __far* dst = surface->pixels;
++//	uint8_t __far* src = buffer;
++	surface->pixels = buffer;
++
++
+ 
+ #if 0
+ 	for (uint_fast8_t y = 0; y < SCREENHEIGHT - ST_HEIGHT; y++)
+@@ -290,8 +292,8 @@ static void I_DrawBuffer(uint8_t __far* buffer)
+ 	}
+ #endif
+ 
+-	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i)
+-		dst[i] = src[indextable[i]];
++//	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i)
++//		dst[i] = src[indextable[i]];
+ }
+ 
+ 
+@@ -780,14 +782,33 @@ void V_DrawBackground(int16_t backgroundnum)
+ }
+ 
+ 
+-void V_DrawRaw(int16_t num, uint16_t offset)
++void V_DrawRaw(int16_t num, uint32_t offset)
+ {
+ 	const uint8_t __far* lump = W_TryGetLumpByNum(num);
+ 
+ 	if (lump != NULL)
+ 	{
+ 		uint16_t lumpLength = W_LumpLength(num);
+-		_fmemcpy(&_s_screen[offset], lump, lumpLength);
++		if (lumpLength >= 38400) {
++			const uint16_t width = 240;
++			const uint16_t height = 160;
++			uint8_t* dst = &_s_screen[offset];
++
++			for (uint16_t y = 0; y < height; ++y) {
++				// Source row in lump
++				const uint8_t* src_row = lump + y * width;
++
++				// Destination rows in _s_screen (stretched)
++				uint8_t* dst_row1 = dst + (y * 2) * width;
++				uint8_t* dst_row2 = dst + (y * 2 + 1) * width;
++
++				// Copy the row twice
++				_fmemcpy(dst_row1, src_row, width);
++				_fmemcpy(dst_row2, src_row, width);
++			}
++		}
++		else
++			_fmemcpy(&_s_screen[offset], lump, lumpLength);
+ 		Z_ChangeTagToCache(lump);
+ 	}
+ 	else
+@@ -938,7 +959,7 @@ static  int16_t __far* wipe_y_lookup;
+ 
+ void wipe_StartScreen(void)
+ {
+-	frontbuffer = Z_TryMallocStatic(SCREENWIDTH * SCREENHEIGHT);
++	frontbuffer = malloc(SCREENWIDTH * SCREENHEIGHT);
+ 	if (frontbuffer)
+ 	{
+ 		// copy back buffer to front buffer
+@@ -949,6 +970,7 @@ void wipe_StartScreen(void)
+ 
+ static boolean wipe_ScreenWipe(int16_t ticks)
+ {
++//	return;
+ 	boolean done = true;
+ 
+ 	uint16_t __far* backbuffer = (uint16_t __far*)_s_screen;
+@@ -1022,6 +1044,7 @@ static boolean wipe_ScreenWipe(int16_t ticks)
+ 
+ static void wipe_initMelt()
+ {
++//	return;
+ 	wipe_y_lookup = Z_MallocStatic((SCREENWIDTH / 2) * sizeof(int16_t));
+ 
+ 	// setup initial column positions (y<0 => not ready to scroll yet)
+@@ -1074,7 +1097,7 @@ void D_Wipe(void)
+ 
+ 	} while (!done);
+ 
+-	Z_Free(frontbuffer);
++	free(frontbuffer);
+ 	Z_Free(wipe_y_lookup);
+ }
+ 
+diff --git a/P2kDoom8/Source/i_video.h b/P2kDoom8/Source/i_video.h
+index 356c450..0c89799 100644
+--- a/P2kDoom8/Source/i_video.h
++++ b/P2kDoom8/Source/i_video.h
+@@ -58,7 +58,7 @@ void V_InitDrawLine(void);
+ void V_ShutdownDrawLine(void);
+ void V_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color);
+ void V_DrawBackground(int16_t backgroundnum);
+-void V_DrawRaw(int16_t num, uint16_t offset);
++void V_DrawRaw(int16_t num, uint32_t offset);
+ 
+ void ST_Drawer(void);
+ 
+diff --git a/P2kDoom8/Source/r_draw.c b/P2kDoom8/Source/r_draw.c
+index db30c80..5db4f14 100644
+--- a/P2kDoom8/Source/r_draw.c
++++ b/P2kDoom8/Source/r_draw.c
+@@ -548,7 +548,7 @@ static const fixed_t PROJECTION = (VIEWWINDOWWIDTH / 2L) << FRACBITS;
+ static const uint16_t PSPRITESCALE  = FRACUNIT * VIEWWINDOWWIDTH / SCREENWIDTH_VGA;
+ static const fixed_t  PSPRITEISCALE = FRACUNIT * SCREENWIDTH_VGA / VIEWWINDOWWIDTH; // = FixedReciprocal(PSPRITESCALE)
+ 
+-static const uint16_t PSPRITEYSCALE = FRACUNIT * (VIEWWINDOWHEIGHT * 5 / 4) / SCREENHEIGHT_VGA;
++static const uint32_t PSPRITEYSCALE = FRACUNIT * (VIEWWINDOWHEIGHT * 5 / 4) / SCREENHEIGHT_VGA;
+ static const uint16_t PSPRITEYFRACSTEP = (FRACUNIT * SCREENHEIGHT_VGA / (VIEWWINDOWHEIGHT * 5 / 4)) >> COLEXTRABITS; // = FixedReciprocal(PSPRITEYSCALE) >> COLEXTRABITS
+ 
+ static const angle16_t clipangle = 0x2008; // = xtoviewangleTable[0]
+diff --git a/P2kDoom8/Source/st_stuff.c b/P2kDoom8/Source/st_stuff.c
+index 43d0d9a..53a2c67 100644
+--- a/P2kDoom8/Source/st_stuff.c
++++ b/P2kDoom8/Source/st_stuff.c
+@@ -641,7 +641,7 @@ static void ST_drawWidgets(void)
+ 
+ static void ST_refreshBackground(void)
+ {
+-	static const uint16_t st_offset = (SCREENHEIGHT - ST_HEIGHT) * SCREENWIDTH;
++	static const uint32_t st_offset = (SCREENHEIGHT - ST_HEIGHT) * SCREENWIDTH;
+ 	V_DrawRaw(statusbarnum, st_offset);
+ }
+ 
+diff --git a/P2kDoom8/Source/v_video.h b/P2kDoom8/Source/v_video.h
+index c1f4691..d332026 100644
+--- a/P2kDoom8/Source/v_video.h
++++ b/P2kDoom8/Source/v_video.h
+@@ -50,7 +50,7 @@
+ 
+ void V_DrawBackground(int16_t backgroundnum);
+ 
+-void V_DrawRaw(int16_t num, uint16_t offset);
++void V_DrawRaw(int16_t num, uint32_t offset);
+ void V_DrawRawFullScreen(int16_t num);
+ 
+ // V_DrawNumPatchScaled - Draws the patch from lump num
+-- 
+2.34.1
+

@@ -1,0 +1,398 @@
+From 6ced757917bcc11e6fe0af9dd3bddac6eccdf815 Mon Sep 17 00:00:00 2001
+From: EXL <exlmotodev@gmail.com>
+Date: Wed, 3 Sep 2025 12:36:42 +0700
+Subject: [PATCH 1/2] 176x220
+
+---
+ P2kDoom8/Makefile.sdl2     |  2 +-
+ P2kDoom8/Source/doomdef.h  |  8 ++--
+ P2kDoom8/Source/i_p2k.c    |  2 +-
+ P2kDoom8/Source/i_sdl2.c   | 53 ++++++++++++++------------
+ P2kDoom8/Source/i_video.h  |  2 +-
+ P2kDoom8/Source/r_draw.c   | 76 +++++++++++++++++++++++++++++++++++++-
+ P2kDoom8/Source/st_stuff.c |  2 +-
+ P2kDoom8/Source/tables.c   | 13 +++++++
+ P2kDoom8/Source/v_video.h  |  2 +-
+ 9 files changed, 126 insertions(+), 34 deletions(-)
+
+diff --git a/P2kDoom8/Makefile.sdl2 b/P2kDoom8/Makefile.sdl2
+index 7c42fec..723b827 100644
+--- a/P2kDoom8/Makefile.sdl2
++++ b/P2kDoom8/Makefile.sdl2
+@@ -4,7 +4,7 @@ SRC_DIR  = Source
+ OBJ_DIR  = $(SRC_DIR)/objs
+ 
+ QUALITY ?= LOW
+-DEF_LOW  = -DVIEWWINDOWWIDTH=60
++DEF_LOW  = -DVIEWWINDOWWIDTH=44
+ DEF_MID  = -DVIEWWINDOWWIDTH=120
+ DEF_HIGH = -DVIEWWINDOWWIDTH=240 -DHIGH_DETAIL
+ 
+diff --git a/P2kDoom8/Source/doomdef.h b/P2kDoom8/Source/doomdef.h
+index cf95643..3fbcc38 100644
+--- a/P2kDoom8/Source/doomdef.h
++++ b/P2kDoom8/Source/doomdef.h
+@@ -68,17 +68,17 @@
+ 
+ 
+ #if !defined VIEWWINDOWWIDTH
+-#define VIEWWINDOWWIDTH  60
++#define VIEWWINDOWWIDTH  44
+ #endif
+ 
+ #if !defined VIEWWINDOWHEIGHT
+-#define VIEWWINDOWHEIGHT 128
++#define VIEWWINDOWHEIGHT 188
+ #endif
+ 
+ 
+ // SCREENWIDTH and SCREENHEIGHT define the visible size
+-#define SCREENWIDTH  240u
+-#define SCREENHEIGHT 160 /*(VIEWWINDOWHEIGHT+ST_HEIGHT)*/
++#define SCREENWIDTH  176u
++#define SCREENHEIGHT 220 /*(VIEWWINDOWHEIGHT+ST_HEIGHT)*/
+ 
+ #define SCREENWIDTH_VGA  320
+ #define SCREENHEIGHT_VGA 200
+diff --git a/P2kDoom8/Source/i_p2k.c b/P2kDoom8/Source/i_p2k.c
+index 7cefa5f..974c727 100644
+--- a/P2kDoom8/Source/i_p2k.c
++++ b/P2kDoom8/Source/i_p2k.c
+@@ -2288,7 +2288,7 @@ void V_DrawBackground(int16_t backgroundnum)
+ 	Z_ChangeTagToCache(src);
+ }
+ 
+-void V_DrawRaw(int16_t num, uint16_t offset)
++void V_DrawRaw(int16_t num, uint32_t offset)
+ {
+ 	const uint8_t __far* lump = W_TryGetLumpByNum(num);
+ 
+diff --git a/P2kDoom8/Source/i_sdl2.c b/P2kDoom8/Source/i_sdl2.c
+index a50e342..8dbf2bb 100644
+--- a/P2kDoom8/Source/i_sdl2.c
++++ b/P2kDoom8/Source/i_sdl2.c
+@@ -192,8 +192,8 @@ static void genscalexytable(int video_w, int video_h)
+     }
+ }
+ 
+-#define VIDEO_W 320
+-#define VIDEO_H 240
++#define VIDEO_W 176
++#define VIDEO_H 220
+ 
+ void I_InitGraphicsHardwareSpecificCode(void)
+ {
+@@ -248,7 +248,7 @@ void I_InitGraphicsHardwareSpecificCode(void)
+ #if 0
+ 	vgascreen = D_MK_FP(0xa000, ((SCREENWIDTH_VGA - SCREENWIDTH) / 2) + (((SCREENHEIGHT_VGA - SCREENHEIGHT) / 2) * SCREENWIDTH_VGA) + __djgpp_conventional_base);
+ #endif
+-	_s_screen = Z_MallocStatic(SCREENWIDTH * SCREENHEIGHT);
++	_s_screen = surface->pixels; //malloc(SCREENWIDTH * SCREENHEIGHT);
+ 	_fmemset(_s_screen, 0, SCREENWIDTH * SCREENHEIGHT);
+ }
+ 
+@@ -256,8 +256,10 @@ static boolean drawStatusBar = true;
+ 
+ static void I_DrawBuffer(uint8_t __far* buffer)
+ {
+-	uint8_t __far* src = buffer;
+-	uint8_t __far* dst = surface->pixels;
++//	uint8_t __far* src = buffer;
++	surface->pixels = buffer;
++
++
+ 
+ #if 0
+ 	for (uint_fast8_t y = 0; y < SCREENHEIGHT - ST_HEIGHT; y++)
+@@ -290,8 +292,8 @@ static void I_DrawBuffer(uint8_t __far* buffer)
+ 	}
+ #endif
+ 
+-	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i)
+-		dst[i] = src[indextable[i]];
++//	for (int i = 0; i < VIDEO_W * VIDEO_H; ++i)
++//		dst[i] = src[indextable[i]];
+ }
+ 
+ 
+@@ -378,24 +380,24 @@ uint8_t __far* dest;
+ 
+ inline static void R_DrawColumnPixel(uint8_t __far* dest, const byte __far* source, uint16_t frac)
+ {
+-#if VIEWWINDOWWIDTH == 60
++//#if VIEWWINDOWWIDTH == 44
+ 	uint16_t color = colormap[source[frac>>COLBITS]];
+ 	color = (color | (color << 8));
+ 
+ 	uint16_t __far* d = (uint16_t __far*) dest;
+ 	*d++ = color;
+ 	*d   = color;
+-#elif VIEWWINDOWWIDTH == 120
+-	uint16_t color = colormap[source[frac>>COLBITS]];
+-	color = (color | (color << 8));
+-
+-	uint16_t __far* d = (uint16_t __far*) dest;
+-	*d   = color;
+-#elif VIEWWINDOWWIDTH == 240
+-	*dest = colormap[source[frac>>COLBITS]];
+-#else
+-#error unsupported VIEWWINDOWWIDTH value
+-#endif
++//#elif VIEWWINDOWWIDTH == 120
++//	uint16_t color = colormap[source[frac>>COLBITS]];
++//	color = (color | (color << 8));
++
++//	uint16_t __far* d = (uint16_t __far*) dest;
++//	*d   = color;
++//#elif VIEWWINDOWWIDTH == 240
++//	*dest = colormap[source[frac>>COLBITS]];
++//#else
++//#error unsupported VIEWWINDOWWIDTH value
++//#endif
+ }
+ 
+ 
+@@ -462,7 +464,7 @@ void R_DrawColumnSprite(const draw_column_vars_t *dcvars)
+ 
+ 	colormap = dcvars->colormap;
+ 
+-	dest = _s_screen + (dcvars->yl * SCREENWIDTH) + (dcvars->x * 4 * 60 / VIEWWINDOWWIDTH);
++	dest = _s_screen + (dcvars->yl * SCREENWIDTH) + (dcvars->x * 4 * 44 / VIEWWINDOWWIDTH);
+ 
+ 	const uint16_t fracstep = dcvars->fracstep;
+ 	uint16_t frac = (dcvars->texturemid >> COLEXTRABITS) + (dcvars->yl - CENTERY) * fracstep;
+@@ -548,7 +550,7 @@ void R_DrawColumnFlat(uint8_t col, const draw_column_vars_t *dcvars)
+ 	if (count <= 0)
+ 		return;
+ 
+-	dest = _s_screen + (dcvars->yl * SCREENWIDTH) + (dcvars->x * 4 * 60 / VIEWWINDOWWIDTH);
++	dest = _s_screen + (dcvars->yl * SCREENWIDTH) + (dcvars->x * 4 * 44 / VIEWWINDOWWIDTH);
+ 
+ 	R_DrawColumnFlat2(col, col, count);
+ }
+@@ -780,8 +782,9 @@ void V_DrawBackground(int16_t backgroundnum)
+ }
+ 
+ 
+-void V_DrawRaw(int16_t num, uint16_t offset)
++void V_DrawRaw(int16_t num, uint32_t offset)
+ {
++	return;
+ 	const uint8_t __far* lump = W_TryGetLumpByNum(num);
+ 
+ 	if (lump != NULL)
+@@ -938,7 +941,7 @@ static  int16_t __far* wipe_y_lookup;
+ 
+ void wipe_StartScreen(void)
+ {
+-	frontbuffer = Z_TryMallocStatic(SCREENWIDTH * SCREENHEIGHT);
++	frontbuffer = malloc(SCREENWIDTH * SCREENHEIGHT);
+ 	if (frontbuffer)
+ 	{
+ 		// copy back buffer to front buffer
+@@ -949,6 +952,7 @@ void wipe_StartScreen(void)
+ 
+ static boolean wipe_ScreenWipe(int16_t ticks)
+ {
++//	return;
+ 	boolean done = true;
+ 
+ 	uint16_t __far* backbuffer = (uint16_t __far*)_s_screen;
+@@ -1022,6 +1026,7 @@ static boolean wipe_ScreenWipe(int16_t ticks)
+ 
+ static void wipe_initMelt()
+ {
++//	return;
+ 	wipe_y_lookup = Z_MallocStatic((SCREENWIDTH / 2) * sizeof(int16_t));
+ 
+ 	// setup initial column positions (y<0 => not ready to scroll yet)
+@@ -1074,7 +1079,7 @@ void D_Wipe(void)
+ 
+ 	} while (!done);
+ 
+-	Z_Free(frontbuffer);
++	free(frontbuffer);
+ 	Z_Free(wipe_y_lookup);
+ }
+ 
+diff --git a/P2kDoom8/Source/i_video.h b/P2kDoom8/Source/i_video.h
+index 356c450..0c89799 100644
+--- a/P2kDoom8/Source/i_video.h
++++ b/P2kDoom8/Source/i_video.h
+@@ -58,7 +58,7 @@ void V_InitDrawLine(void);
+ void V_ShutdownDrawLine(void);
+ void V_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint8_t color);
+ void V_DrawBackground(int16_t backgroundnum);
+-void V_DrawRaw(int16_t num, uint16_t offset);
++void V_DrawRaw(int16_t num, uint32_t offset);
+ 
+ void ST_Drawer(void);
+ 
+diff --git a/P2kDoom8/Source/r_draw.c b/P2kDoom8/Source/r_draw.c
+index db30c80..aa7d606 100644
+--- a/P2kDoom8/Source/r_draw.c
++++ b/P2kDoom8/Source/r_draw.c
+@@ -100,6 +100,8 @@ static int16_t* lastopening;
+ #define VIEWANGLETOXMAX 1040
+ #elif VIEWWINDOWWIDTH == 60
+ #define VIEWANGLETOXMAX 1046
++#elif VIEWWINDOWWIDTH == 44
++#define VIEWANGLETOXMAX 1054
+ #elif VIEWWINDOWWIDTH == 40
+ #define VIEWANGLETOXMAX 1057
+ #elif VIEWWINDOWWIDTH == 30
+@@ -272,6 +274,20 @@ static int16_t screenheightarray[VIEWWINDOWWIDTH] =
+ 	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
+ 	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
+ 	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT
++#elif VIEWWINDOWWIDTH == 44
++	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
++	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
++	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
++	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
++	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
++
++	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
++	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
++	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
++	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
++	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
++
++	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT
+ #elif VIEWWINDOWWIDTH == 40
+ 	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
+ 	VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT, VIEWWINDOWHEIGHT,
+@@ -405,6 +421,20 @@ static int16_t negonearray[VIEWWINDOWWIDTH] =
+ 	-1, -1, -1, -1, -1, -1,
+ 	-1, -1, -1, -1, -1, -1,
+ 	-1, -1, -1, -1, -1, -1
++#elif VIEWWINDOWWIDTH == 44
++	-1, -1, -1, -1,
++	-1, -1, -1, -1,
++	-1, -1, -1, -1,
++	-1, -1, -1, -1,
++	-1, -1, -1, -1,
++
++	-1, -1, -1, -1,
++	-1, -1, -1, -1,
++	-1, -1, -1, -1,
++	-1, -1, -1, -1,
++	-1, -1, -1, -1,
++
++	-1, -1, -1, -1,
+ #elif VIEWWINDOWWIDTH == 40
+ 	-1, -1, -1, -1,
+ 	-1, -1, -1, -1,
+@@ -548,7 +578,7 @@ static const fixed_t PROJECTION = (VIEWWINDOWWIDTH / 2L) << FRACBITS;
+ static const uint16_t PSPRITESCALE  = FRACUNIT * VIEWWINDOWWIDTH / SCREENWIDTH_VGA;
+ static const fixed_t  PSPRITEISCALE = FRACUNIT * SCREENWIDTH_VGA / VIEWWINDOWWIDTH; // = FixedReciprocal(PSPRITESCALE)
+ 
+-static const uint16_t PSPRITEYSCALE = FRACUNIT * (VIEWWINDOWHEIGHT * 5 / 4) / SCREENHEIGHT_VGA;
++static const uint32_t PSPRITEYSCALE = FRACUNIT * (VIEWWINDOWHEIGHT * 5 / 4) / SCREENHEIGHT_VGA;
+ static const uint16_t PSPRITEYFRACSTEP = (FRACUNIT * SCREENHEIGHT_VGA / (VIEWWINDOWHEIGHT * 5 / 4)) >> COLEXTRABITS; // = FixedReciprocal(PSPRITEYSCALE) >> COLEXTRABITS
+ 
+ static const angle16_t clipangle = 0x2008; // = xtoviewangleTable[0]
+@@ -3467,6 +3497,50 @@ static const uint8_t viewangletoxTable[4096 - 1023 - VIEWANGLETOXMAX] =
+     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+     2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
++#elif VIEWWINDOWWIDTH == 44
++    43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43,
++    42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,
++    41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41,
++    40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40,
++    39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
++    38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38,
++    37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
++    36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
++    35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
++    34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
++    33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, 33,
++    32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32,
++    31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31,
++    30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
++    29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29,
++    28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28,
++    27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
++    26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
++    25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
++    24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
++    23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
++    22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
++    21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
++    20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
++    19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19,
++    18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18,
++    17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
++    16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
++    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
++    14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
++    13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
++    12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
++    11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
++    10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
++    9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
++    8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
++    7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
++    6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
++    5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
++    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
++    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
++    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
++    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ #elif VIEWWINDOWWIDTH == 40
+     39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39,
+     38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38,
+diff --git a/P2kDoom8/Source/st_stuff.c b/P2kDoom8/Source/st_stuff.c
+index 43d0d9a..53a2c67 100644
+--- a/P2kDoom8/Source/st_stuff.c
++++ b/P2kDoom8/Source/st_stuff.c
+@@ -641,7 +641,7 @@ static void ST_drawWidgets(void)
+ 
+ static void ST_refreshBackground(void)
+ {
+-	static const uint16_t st_offset = (SCREENHEIGHT - ST_HEIGHT) * SCREENWIDTH;
++	static const uint32_t st_offset = (SCREENHEIGHT - ST_HEIGHT) * SCREENWIDTH;
+ 	V_DrawRaw(statusbarnum, st_offset);
+ }
+ 
+diff --git a/P2kDoom8/Source/tables.c b/P2kDoom8/Source/tables.c
+index 5de01e6..974779a 100644
+--- a/P2kDoom8/Source/tables.c
++++ b/P2kDoom8/Source/tables.c
+@@ -514,6 +514,19 @@ const angle16_t xtoviewangleTable[VIEWWINDOWWIDTH + 1] =
+ 	0xE638, 0xE558, 0xE480, 0xE3B0,
+ 	0xE2E0, 0xE220, 0xE160, 0xE0B0,
+ 	0xDFF8
++#elif VIEWWINDOWWIDTH == 44
++	0x2008, 0x1F10, 0x1E10, 0x1D08,
++	0x1BF8, 0x1AD0, 0x19A0, 0x1868,
++	0x1718, 0x15C0, 0x1458, 0x12E8,
++	0x1168, 0x0FD8, 0x0E38, 0x0C90,
++	0x0AD8, 0x0920, 0x0758, 0x0588,
++	0x03B0, 0x01D8, 0x0000, 0xFE28,
++	0xFC50, 0xFA78, 0xF8A8, 0xF6E0,
++	0xF528, 0xF370, 0xF1C8, 0xF028,
++	0xEE98, 0xED18, 0xEBA8, 0xEA40,
++	0xE8E8, 0xE798, 0xE660, 0xE530,
++	0xE408, 0xE2F8, 0xE1F0, 0xE0F0,
++	0xDFF8
+ #elif VIEWWINDOWWIDTH == 40
+ 	0x2008,         0x1EF8,
+ 	0x1DE0,         0x1CB8,
+diff --git a/P2kDoom8/Source/v_video.h b/P2kDoom8/Source/v_video.h
+index c1f4691..d332026 100644
+--- a/P2kDoom8/Source/v_video.h
++++ b/P2kDoom8/Source/v_video.h
+@@ -50,7 +50,7 @@
+ 
+ void V_DrawBackground(int16_t backgroundnum);
+ 
+-void V_DrawRaw(int16_t num, uint16_t offset);
++void V_DrawRaw(int16_t num, uint32_t offset);
+ void V_DrawRawFullScreen(int16_t num);
+ 
+ // V_DrawNumPatchScaled - Draws the patch from lump num
+-- 
+2.34.1
+
