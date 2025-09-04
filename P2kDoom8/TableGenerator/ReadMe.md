@@ -10,7 +10,7 @@ Utility for generating lookup tables and constants used in graphics and renderin
 
 ## Compilation
 
-```bash
+```sh
 gcc TableGenerator.c -o TableGenerator
 ```
 

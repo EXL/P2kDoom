@@ -131,6 +131,17 @@ mvn package -DskipTests=true
 java -jar target/jwadutil-1.0-SNAPSHOT.jar
 ```
 
+## Tables Recipe
+
+If you want to compile the P2kDoom8/Doom8088 engine with an arbitrary width for the 3D world view, you need to regenerate certain engine tables and predefined values. Use the [TableGenerator](TableGenerator) utility for this purpose.
+
+```sh
+gcc TableGenerator.c -o TableGenerator
+
+TableGenerator [VIEWWINDOWWIDTH]
+TableGenerator 60
+```
+
 ## Revision
 
 The [Source](Source) directory of the **[Doom8088](https://github.com/FrenkelS/Doom8088)** project was forked from the [`d16dca29e8d0d17920a32bac9e0f49878dad7fb7`](https://github.com/FrenkelS/Doom8088/commit/d16dca29e8d0d17920a32bac9e0f49878dad7fb7) revision.
