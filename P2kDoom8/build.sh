@@ -1,27 +1,10 @@
 #!/usr/bin/env bash
 
-# Exit on error.
 set -e
-
-main() {
-	setup_directories
-
-	build_sdl 1
-	build_sdl 2
-	build_sdl 3
-	build_neptune
-	build_neptune_iram
-	build_rainbow
-	build_argon
-
-	get_files_info
-}
 
 setup_directories() {
 	echo -e "\033[32mSetup directories...\033[0m"
-	if [ -d "Release" ]; then
-		rm -rf Release
-	fi
+	rm -rf Release
 	mkdir -p Release/Neptune Release/Rainbow Release/Argon
 	echo -e "\033[32mSetup directories...done!\033[0m"
 }
@@ -53,7 +36,7 @@ build_neptune_iram() {
 	for phone in "C650" "E1"; do
 		make -f Makefile.eg1 clean
 		NEPTUNE=IRAM_YES PHONE="$phone" make -f Makefile.eg1
-		rm -f P2kDoom8_IRAM.elf P2kDoom8_$phone.elf
+		rm -f P2kDoom8_IRAM.elf P2kDoom8_"$phone".elf
 		mv *.elf "Release/Neptune" 2>/dev/null || true
 		make -f Makefile.eg1 clean
 	done
@@ -84,7 +67,7 @@ build_argon() {
 
 get_files_info() {
 	echo -e "\033[32mGenerating checksums, permissions, and file sizes...\033[0m"
-	for file in $(find Release -type f); do
+	find Release -type f | sort | while read -r file; do
 		md5=$(md5sum "$file" | cut -d' ' -f1)
 		perm=$(stat -c %a "$file")
 		perm=$(printf "%04d" "$perm")
@@ -96,4 +79,68 @@ get_files_info() {
 	echo -e "\n\033[32mGenerating checksums, permissions, and file sizes...done!\033[0m"
 }
 
-main
+usage() {
+	echo "Usage: $0 [all|rainbow|neptune|neptune-iram|argon|sdl [1|2|3]]"
+	echo
+	echo "Examples:"
+	echo "  $0                  # Build all"
+	echo "  $0 all              # Build all"
+	echo "  $0 rainbow          # Build Rainbow only"
+	echo "  $0 neptune          # Build Neptune only"
+	echo "  $0 neptune-iram     # Build Neptune IRAM only"
+	echo "  $0 argon            # Build Argon only"
+	echo "  $0 sdl              # Build SDL 1, 2, 3"
+	echo "  $0 sdl 2            # Build SDL version 2 only"
+	exit 1
+}
+
+main() {
+	setup_directories
+
+	case "$1" in
+		""|"all")
+			build_sdl 1
+			build_sdl 2
+			build_sdl 3
+			build_neptune
+			build_neptune_iram
+			build_rainbow
+			build_argon
+			;;
+		"rainbow")
+			build_rainbow
+			;;
+		"neptune")
+			build_neptune
+			;;
+		"neptune-iram")
+			build_neptune_iram
+			;;
+		"argon")
+			build_argon
+			;;
+		"sdl")
+			if [ -z "$2" ]; then
+				build_sdl 1
+				build_sdl 2
+				build_sdl 3
+			else
+				case "$2" in
+					1|2|3)
+						build_sdl "$2"
+						;;
+					*)
+						usage
+						;;
+				esac
+			fi
+			;;
+		*)
+			usage
+			;;
+	esac
+
+	get_files_info
+}
+
+main "$@"
